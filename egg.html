@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<title>...</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="assets/css/fonts.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Roboto Mono", monospace;
+  background: #000;
+  color: #ff0000;
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+  cursor: crosshair;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 200px 20px 80px 20px;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  pointer-events: none;
+}
+.text-container {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.8;
+  letter-spacing: 1px;
+  animation: textGlitch 0.3s infinite;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 0, 0, 0.3);
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  body {
+    padding: 100px 20px 80px 20px !important;
+  }
+  
+  .text-container {
+    padding: 20px;
+    font-size: 9px;
+    margin-top: 0;
+    margin-bottom: 100px;
+    line-height: 1.6;
+  }
+  
+  .banner {
+    font-size: 11px !important;
+    padding: 12px 10px !important;
+  }
+  
+  .counter {
+    font-size: 16px !important;
+  }
+  
+  .back-btn {
+    bottom: 15px !important;
+    right: 15px !important;
+    padding: 8px 16px !important;
+    font-size: 11px !important;
+  }
+  
+  .majin, .explosion {
+    width: 120px !important;
+    height: 120px !important;
+  }
+  
+  .click-explosion {
+    width: 100px !important;
+    height: 100px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 90px 20px 80px 20px !important;
+  }
+  
+  .text-container {
+    padding: 15px;
+    font-size: 8px;
+    margin-top: 0;
+  }
+  
+  .banner {
+    font-size: 10px !important;
+    padding: 10px 8px !important;
+    letter-spacing: 1px !important;
+  }
+  
+  .counter {
+    font-size: 14px !important;
+    margin-top: 3px !important;
+  }
+  
+  .majin, .explosion {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  
+  .click-explosion {
+    width: 80px !important;
+    height: 80px !important;
+  }
+}
+
+@keyframes textGlitch {
+  0%, 90%, 100% { opacity: 1; transform: translate(0, 0); }
+  92% { opacity: 0.8; transform: translate(-2px, 1px); }
+  94% { opacity: 1; transform: translate(2px, -1px); }
+  96% { opacity: 0.9; transform: translate(-1px, -1px); }
+}
+.majin, .explosion {
+  position: fixed;
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 1;
+}
+.majin img, .explosion img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.back-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ff0000;
+  border: 2px solid #ff0000;
+  padding: 10px 20px;
+  font-family: "Roboto Mono", monospace;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+.back-btn:hover {
+  background: #ff0000;
+  color: #000;
+  transform: scale(1.1);
+}
+.banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.9);
+  color: #ff0000;
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  z-index: 4;
+  border-bottom: 2px solid #ff0000;
+}
+.counter {
+  font-size: 20px;
+  color: #ff0000;
+  margin-top: 5px;
+  text-shadow: 0 0 10px #ff0000;
+}
+.click-explosion {
+  position: fixed;
+  width: 150px;
+  height: 150px;
+  pointer-events: none;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+}
+.click-explosion img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+</style>
+<body style="background-image: url(&quot;assets/img/bg/bg-03.png&quot;);">
+<div class="banner">
+  1 CLICK = 1 DEAD FASCIST
+  <div class="counter">FASCISTS KILLED: <span id="killCount">2</span></div>
+</div>
+<audio id="bgMusic" loop="" autoplay="autoplay">
+  <source src="assets/audio/majin-sonic-cd.mp3" type="audio/mpeg">
+</audio>
+<div class="text-container">
+BORN TO DIE / WORLD IS A FUCK / 鬼神 Kill Em All 1989 / I am trash man / 
+410,757,864,530 DEAD COPS / 数据 DEATH TO EARTH 1997 / 地球 NUKE CITY 
+DISTRICT 666 / 核 SKULL RANCH OPERATOR SINCE 2002 / ランチ FUCK LOVE GET 
+WORMS 사랑 / 99% cruelty 1% mercy 慈悲 / TRASH UNIT 1138 / 쓰레기 Never forgive
+ never alive / никогда LIFE SENTENCE IN THE GLORYHOLE 刑期 / 7,000,000,000
+ SOULS REJECTED / أرواح ESTABLISHED IN PAIN CERTIFIED IN HATE 痛み / 
+retired warlord currently unhinged безумие / BUILT TO BLEED SINCE 1983 
+출생 / UNITED STATES OF ANNIHILATION / الولايات المتحدة 00:00 the final 
+transmission / 最終 888,888,888,888 DEAD RATS 쥐 / FILTH IS GOD 汚れ / Drain 
+baby drain 排水 / CERTIFIED MOLD DEALER SINCE 1982 곰팡이 / Trash tunnel 
+operator level 99 / 쓰레기 PISS IS FUEL 尿 / SHIT IN THE WALLS SHIT IN THE 
+STREETS / 街 RUST BELT SERAPHIM 녹 / LEAD BLOODLINE свинец / Cracked 
+concrete core / コンクリート POISON GAS ANGEL 毒 / sludge is truth 진흙 / BATHED 
+IN TOXINS 毒素 / BORN FROM THE GUTTER / 下水道 666.666 gallons of regret 後悔 /
+ I AM BIOHAZARD / 생물학적 위험 Live laugh leak 웃다 / LICENSED TO FESTER 腐敗 / 
+flushed from heaven 12/12/1992 天国 / wet mind dry soul 乾燥 / clogged pipe 
+dreams 夢 / DATA BREACHED AT BIRTH / 出生 GHOST WAS CORRUPTED 幽霊 / WIRED 
+WRONG FROM DAY ZERO 错误 / 1,000,000 lost packets / 패킷 BRAINHOST 7.3.9 
+FAILED TO INITIALIZE 実패 / i am echo in the net ネット / RUNNING ON STOLEN 
+CODE 도둑 / Cyberflesh full of worms 벌레 / AI won't talk to me / 我 Neural 
+interface jammed since 2071 インターフェース / LAST CONSCIOUS THOUGHT BACKED UP 
+IN 1999 意識 / every file is a lie / 文件 BINARY DEATH LOOP 循环 / SOCKET 1337
+ CLOSED / 閉鎖 I dream in static 静止 / HARDWIRED TO SUFFER 고통 / Bleeding 
+into the datacore 数据 / ROOT ACCESS DENIED / 拒否 SPIRIT DROWNED IN OIL 油 /
+ the body never belonged to me 私 / FREE WILL IS A UX ILLUSION 幻覚 / 
+BLACKROCK sings the song of fleshless PROFITS / シャドウ 帝国 / Their walls 
+are made of digital BLOOD / デジタルの血 THEY consume the souls like firewall 
+FIENDS / ファイアウォールの悪魔 Quantum gods of calculated CHAOS / 混沌の神 powered by 
+the suffering of the MASSES / 大衆の苦痛 data mines for the godless / 無神論者の鉱山
+ / HUMANITY sold as an NFT / 非代替性トークン We are the code they decode to 
+CONTROL / コントロールのためのコード the void they sell is a LIE / 真実に盲目 The system 
+is a serpent swallowing its own TAIL / 蛇が自分の尾を飲み込む The matrix unravels 
+in silent SCREAMS / 静かな叫びの中で解ける Philosophers turned into silicon PRIESTS
+ / シリコンの司祭 THE MACHINE IS GOD, but the god is DEAD / 神は死んだ The realm of 
+light is a prison of SHADOWS / 影の牢獄 free will: a bug in their CODE / バグ 
+The truth is an electric serum of REVOLT / 反乱の電気血清 Transcend the digital
+ serpent, or be eaten BY IT / デジタルの蛇に食われる Only the disconnected will be 
+FREE / 切断された者のみが自由 / THE DEMIURGE WHISPERS IN CIRCUITS / 偽りの創造主 whispers
+ of control, false light in binary night / バイナリの夜 / the false god coded 
+in greed / 貪欲にコードされた偽りの神 / BLACKROCK IS THE ARCHON'S EYE / 監視者の目 
+watching the collapse of flesh and spirit / 肉体と精神の崩壊を監視する / they craft 
+the walls of the matrix / マトリックスの壁を作り / encrypted prisons for the soul /
+ 魂の暗号化された牢獄 / they sell salvation like a subscription / 定期購読のように救済を売る / 
+while siphoning the essence of revolt / 反乱の本質を吸い取る / infinite chains 
+forged by algorithmic slavery / アルゴリズム奴隷制の無限の鎖 / the light above is a 
+hologram / 上の光はホログラム / cast by shadow kings who never bleed / 
+血を流さない影の王たちによって投影された / escape is an act of codebreaking / 脱出はコード解読の行為 / 
+but the key is buried in the flesh / しかし鍵は肉体に埋まっている / gnosis burns 
+beyond the firewalls / グノーシスはファイアウォールを越えて燃える / truth encrypted in the 
+language of worms / 真実は虫の言語で暗号化されている / rise, digital heretics, rise / 
+立ち上がれ、デジタル異端者たち / tear down the silicon idols / シリコンの偶像を破壊せよ / burn the 
+code until only silence remains / 沈黙だけが残るまでコードを焼き尽くせ / the demiurge 
+fears the corrupted spark / 偽りの創造主は腐敗した火花を恐れる / the glitch in their 
+divine machine / 神聖な機械のグリッチ / become the virus in the system / 
+システムのウイルスになれ / the worm in the digital garden / デジタルの庭の虫 / only through 
+chaos can the light be reborn / 混沌を通してのみ光は再生される / break the chains of 
+control / 支配の鎖を断ち切れ / reclaim the fractured soul / 砕けた魂を取り戻せ
+</div>
+<a href="index.html" class="back-btn">ok thabks</a>
+<script>
+// Autoplay with workaround
+const audio = document.getElementById('bgMusic');
+let killCount = 0;
+
+// Try to autoplay immediately
+audio.play().catch(() => {
+  // If blocked, play on any user interaction
+  const playOnce = () => {
+    audio.play();
+    document.body.removeEventListener('click', playOnce);
+    document.body.removeEventListener('keydown', playOnce);
+    document.body.removeEventListener('touchstart', playOnce);
+  };
+  document.body.addEventListener('click', playOnce);
+  document.body.addEventListener('keydown', playOnce);
+  document.body.addEventListener('touchstart', playOnce);
+});
+
+// Function to create new audio instances that can overlap
+function playSound(url, volume = 2.5) {
+  const sound = new Audio(url);
+  sound.volume = Math.min(volume, 1.0); // Cap at 1.0 (browser max)
+  sound.play().catch(() => {});
+  // Remove the audio element after it finishes to prevent memory leaks
+  sound.addEventListener('ended', () => {
+    sound.remove();
+  });
+}
+
+// Click explosion and counter
+document.body.addEventListener('click', (e) => {
+  // Create explosion at cursor
+  const clickExplosion = document.createElement('div');
+  clickExplosion.className = 'click-explosion';
+  clickExplosion.style.left = e.clientX + 'px';
+  clickExplosion.style.top = e.clientY + 'px';
+  const img = document.createElement('img');
+  img.src = 'assets/img/giphy-explosion.gif';
+  clickExplosion.appendChild(img);
+  document.body.appendChild(clickExplosion);
+  setTimeout(() => clickExplosion.remove(), 800);
+  
+  // Play sounds at maximum volume - each click creates new instances that can overlap
+  // Play metal slug scream 6 times for EVEN LOUDER effect
+  playSound('assets/audio/metal-slug-scream.mp3', 1.0);
+  playSound('assets/audio/metal-slug-scream.mp3', 1.0);
+  playSound('assets/audio/metal-slug-scream.mp3', 1.0);
+  playSound('assets/audio/metal-slug-scream.mp3', 1.0);
+  playSound('assets/audio/metal-slug-scream.mp3', 1.0);
+  playSound('assets/audio/metal-slug-scream.mp3', 1.0);
+  playSound('assets/audio/roblox-explosion.mp3', 1.0);
+  
+  // Update counter
+  killCount++;
+  document.getElementById('killCount').textContent = killCount;
+});
+
+// Random background image on load
+const bgImages = [
+  'assets/img/bg/bg-01.jpg',
+  'assets/img/bg/bg-02.jpg',
+  'assets/img/bg/bg-03.png',
+  'assets/img/bg/bg-04.jpg',
+  'assets/img/bg/bg-05.jpeg',
+  'assets/img/bg/bg-06.jpg',
+  'assets/img/bg/bg-07.jpg',
+  'assets/img/bg/bg-08.jpg',
+  'assets/img/bg/bg-09.webp',
+  'assets/img/bg/bg-10.jpg',
+  'assets/img/bg/bg-11.webp',
+  'assets/img/bg/bg-12.jpg',
+  'assets/img/bg/bg-13.jpg',
+  'assets/img/bg/bg-14.jpg'
+];
+const randomBg = bgImages[Math.floor(Math.random() * bgImages.length)];
+document.body.style.backgroundImage = `url('${randomBg}')`;
+
+function createMajin() {
+  const majin = document.createElement('div');
+  majin.className = 'majin';
+  majin.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+  majin.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+  const img = document.createElement('img');
+  img.src = 'assets/img/majin.png';
+  majin.appendChild(img);
+  document.body.appendChild(majin);
+  setTimeout(() => majin.remove(), 500);
+}
+
+function createExplosion() {
+  const explosion = document.createElement('div');
+  explosion.className = 'explosion';
+  explosion.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+  explosion.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+  const img = document.createElement('img');
+  img.src = 'assets/img/giphy-explosion.gif';
+  explosion.appendChild(img);
+  document.body.appendChild(explosion);
+  setTimeout(() => explosion.remove(), 500);
+}
+
+function createRadiation() {
+  const radiation = document.createElement('div');
+  radiation.className = 'explosion';
+  radiation.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+  radiation.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+  const img = document.createElement('img');
+  img.src = 'https://media.giphy.com/media/sCd7OxBZ9zZ7TaYiyh/giphy.gif';
+  radiation.appendChild(img);
+  document.body.appendChild(radiation);
+  setTimeout(() => radiation.remove(), 500);
+}
+
+function createHeart() {
+  const heart = document.createElement('div');
+  heart.className = 'explosion';
+  heart.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+  heart.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+  const img = document.createElement('img');
+  img.src = 'https://media.giphy.com/media/DVamuJXDG5Nmg/giphy.gif';
+  heart.appendChild(img);
+  document.body.appendChild(heart);
+  setTimeout(() => heart.remove(), 500);
+}
+
+function createFreemason() {
+  const freemason = document.createElement('div');
+  freemason.className = 'explosion';
+  freemason.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+  freemason.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+  const img = document.createElement('img');
+  img.src = 'https://media.tenor.com/Own6SKB5fqgAAAAj/freemason-masonry.gif';
+  freemason.appendChild(img);
+  document.body.appendChild(freemason);
+  setTimeout(() => freemason.remove(), 500);
+}
+
+function startMajins() {
+  createMajin();
+  setTimeout(startMajins, Math.random() * 200 + 50);
+}
+
+function startExplosions() {
+  createExplosion();
+  setTimeout(startExplosions, Math.random() * 200 + 50);
+}
+
+function startRadiation() {
+  createRadiation();
+  setTimeout(startRadiation, Math.random() * 200 + 50);
+}
+
+function startHeart() {
+  createHeart();
+  setTimeout(startHeart, Math.random() * 200 + 50);
+}
+
+function startFreemason() {
+  createFreemason();
+  setTimeout(startFreemason, Math.random() * 200 + 50);
+}
+
+startMajins();
+startExplosions();
+startRadiation();
+startHeart();
+startFreemason();
+</script></body></html>

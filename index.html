@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<title>mi·ɽài://audiovisual — AV Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="assets/css/fonts.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  font-family: "Roboto Mono", monospace;
+  background: #050505;
+  color: #eaeaea;
+  cursor: crosshair;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+.background-layer {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: url('https://img.itch.zone/aW1nLzIyMDgwNTQxLnBuZw==/original/2Pm04g.png') center/cover no-repeat;
+  opacity: 0.15;
+  transform: translate3d(0,0,0);
+  will-change: transform;
+  animation: slither 20s ease-in-out infinite;
+}
+@keyframes slither {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(-2%, 2%, 0) scale(1.02); }
+  50% { transform: translate3d(2%, -2%, 0) scale(1.01); }
+  75% { transform: translate3d(-1%, -1%, 0) scale(1.03); }
+}
+.bg-tile {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: url('https://img.itch.zone/aW1nLzIyMDgwNTM5LmpwZw==/original/qS48ft.jpg') repeat;
+  background-size: 300px;
+  opacity: 0.15;
+  will-change: transform;
+}
+.ecce-robot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 900;
+  letter-spacing: 0.5em;
+  font-size: 96px;
+  color: darkred;
+  overflow: hidden;
+  line-height: 1.2;
+}
+.ecce-robot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.15) 3px);
+  pointer-events: none;
+  z-index: 2;
+  animation: scanlines 8s linear infinite;
+}
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+.ecce-robot-line {
+  animation: ecceScrollX 40s linear infinite;
+  will-change: transform;
+  white-space: nowrap;
+  animation-delay: var(--delay);
+  animation-duration: var(--duration);
+  animation-direction: var(--direction);
+}
+@keyframes ecceScrollX {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ecce-robot-line span {
+  animation: ecceGlitch 2s infinite, ecceBlink 4s infinite, crtDither 0.3s infinite;
+  display: inline-block;
+  text-shadow: 2px 2px 0 rgba(139, 0, 0, 0.5), -2px -2px 0 rgba(255, 0, 0, 0.3);
+  animation-delay: calc(var(--blink-delay, 0s));
+}
+@keyframes ecceBlink {
+  0%, 85%, 100% { opacity: 1; }
+  87%, 89% { opacity: 0.3; }
+  88% { opacity: 0.7; }
+}
+@keyframes crtDither {
+  0% { filter: contrast(1) brightness(1); transform: translateX(0); }
+  33% { filter: contrast(1.1) brightness(0.95); transform: translateX(1px); }
+  66% { filter: contrast(0.9) brightness(1.05); transform: translateX(-1px); }
+  100% { filter: contrast(1) brightness(1); transform: translateX(0); }
+}
+@keyframes ecceGlitch {
+  0% { text-shadow: -2px 0 red, 2px 0 cyan; }
+  25% { text-shadow: 2px 0 red, -2px 0 cyan; }
+  50% { text-shadow: -3px 0 red, 3px 0 cyan; }
+  75% { text-shadow: 3px 0 red, -3px 0 cyan; }
+  100% { text-shadow: -2px 0 red, 2px 0 cyan; }
+}
+.page {
+  position: relative;
+  z-index: 2;
+  max-width: 1120px;
+  margin: 40px auto 60px;
+  border: 3px ridge #444;
+  background: rgba(11,11,11,0.95);
+  box-shadow: 0 0 30px #000, inset 0 2px 5px rgba(255,255,255,0.1);
+  transform-origin: center top;
+}
+.header {
+  background: linear-gradient(90deg, #0f0f0f, #1a1a1a);
+  border-bottom: 2px solid #333;
+  padding: 12px;
+  position: relative;
+}
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px #ff4444;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 45px;
+  height: 45px;
+  background: url('assets/img/orphic-egg.png') center/contain no-repeat;
+  opacity: 0.6;
+  z-index: 10;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
+  filter: brightness(0.3) invert(1) drop-shadow(0 0 8px rgba(255, 68, 68, 0.5));
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+.header a[href="egg.html"]:hover + .tagline::before {
+  content: '';
+}
+.header a[href="egg.html"]:hover ~ .winamp::before {
+  content: '';
+}
+body:has(.header a[href="egg.html"]:hover) .header::after {
+  opacity: 1;
+  transform: scale(1.15);
+  filter: brightness(0.6) invert(1) drop-shadow(0 0 20px rgba(255, 68, 68, 0.9)) drop-shadow(0 0 30px rgba(255, 68, 68, 0.6));
+}
+@keyframes pulseGlow {
+  0%, 100% { 
+    filter: brightness(0.3) invert(1) drop-shadow(0 0 8px rgba(255, 68, 68, 0.5));
+  }
+  50% { 
+    filter: brightness(0.4) invert(1) drop-shadow(0 0 12px rgba(255, 68, 68, 0.7));
+  }
+}
+.tagline {
+  font-size: 11px;
+  color: #aaa;
+  position: relative;
+  z-index: 11;
+}
+.winamp {
+  background: #0a0a0a;
+  border: 2px outset #444;
+  padding: 6px;
+  font-size: 10px;
+  margin-top: 8px;
+  color: #ff8888;
+}
+.winamp .title { background: #111; border: 1px solid #333; padding: 2px 4px; margin-bottom: 4px; }
+.winamp .controls { display: flex; gap: 4px; margin-bottom: 4px; }
+.winamp .btn { border: 1px solid #333; background: #050505; padding: 2px 6px; cursor: pointer; user-select: none; position: relative; }
+.winamp .btn:hover { background: #111; }
+.winamp .btn:active { background: #222; }
+.volume-container { position: relative; }
+.volume-slider-container {
+  position: absolute;
+  bottom: calc(100% - 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #050505;
+  border: 1px solid #333;
+  padding: 8px 4px 15px 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+.volume-container:hover .volume-slider-container {
+  opacity: 1;
+  pointer-events: all;
+}
+.volume-slider {
+  writing-mode: bt-lr;
+  -webkit-appearance: slider-vertical;
+  width: 20px;
+  height: 80px;
+  background: #111;
+  outline: none;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 10px;
+  background: #ff8888;
+  cursor: pointer;
+  border: 1px solid #333;
+}
+.volume-slider::-moz-range-thumb {
+  width: 18px;
+  height: 10px;
+  background: #ff8888;
+  cursor: pointer;
+  border: 1px solid #333;
+}
+.winamp audio { display: none; }
+.winamp .eq { display: flex; gap: 2px; height: 16px; align-items: flex-end; }
+.winamp .bar { width: 6px; background: #ff8888; transition: height 0.1s ease; animation: eq 1.2s infinite alternate; }
+.winamp .bar.live { animation: none; }
+.winamp .bar:nth-child(2){animation-delay:.2s}
+.winamp .bar:nth-child(3){animation-delay:.4s}
+.winamp .bar:nth-child(4){animation-delay:.1s}
+.winamp .bar:nth-child(5){animation-delay:.3s}
+@keyframes eq { from { height: 4px; } to { height: 16px; } }
+.content { display: grid; grid-template-columns: 260px 1fr; gap: 14px; padding: 14px; }
+.sidebar, .main { background: #0e0e0e; border: 2px groove #333; padding: 10px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.5); animation: fadeIn 0.8s ease-out; min-width: 0; }
+.profile-pic { width: 100%; border: 3px double #444; margin-bottom: 8px; cursor: pointer; transition: transform 0.3s ease; object-fit: cover; height: 260px; }
+.profile-pic:hover { transform: scale(1.05); }
+.profile-box { background: #141414; border: 1px solid #333; padding: 6px; margin-bottom: 8px; font-size: 11px; }
+.profile-box h3 { margin:0 0 4px 0; font-size:12px; color:#ff6666; border-bottom:1px dotted #333; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section { margin-bottom:16px; background:#111; border:2px groove #333; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.5); animation: fadeInUp 0.6s ease-out backwards; animation-delay: var(--appear-delay, 0s); overflow: hidden; }
+.section-header { background:linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%); padding:6px 8px; font-size:13px; font-weight:bold; color:#ff6666; border-bottom:1px solid #333; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1); }
+.section-body { padding:10px; font-size:12px; line-height:1.8; }
+.embed { border:2px inset #333; background:#000; padding:6px; margin-bottom:10px; }
+.embed iframe { display: block; }
+.portfolio-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:10px; }
+.portfolio-item { background:#0a0a0a; border:1px solid #333; padding:6px; font-size:11px; text-align:center; transition: all 0.2s ease; }
+.portfolio-item:hover { border-color: #ff6666; transform: translateY(-2px); }
+.portfolio-item img { width:100%; border:1px solid #444; margin-bottom:4px; display: block; }
+.portfolio-item a { color:#ff6666; text-decoration:none; }
+.portfolio-item a:hover { text-decoration:underline; }
+.maeba-carousel {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  scrollbar-width: thin;
+  scrollbar-color: #ff6666 #111;
+  margin-bottom: 10px;
+  user-select: none;
+}
+.maeba-carousel.grabbing { cursor: grabbing; }
+.maeba-carousel::-webkit-scrollbar { height: 8px; }
+.maeba-carousel::-webkit-scrollbar-track { background: #111; }
+.maeba-carousel::-webkit-scrollbar-thumb { background: #ff6666; }
+.maeba-track {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+}
+.maeba-slide {
+  flex-shrink: 0;
+  width: 260px;
+  height: 200px;
+  border: 1px solid #333;
+  background: #0a0a0a;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+  cursor: zoom-in;
+}
+.maeba-slide:hover { border-color: #ff6666; }
+.maeba-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Lightbox */
+.maeba-lightbox {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: rgba(0,0,0,0.92);
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+.maeba-lightbox.open { display: flex; }
+.maeba-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border: 1px solid #333;
+  box-shadow: 0 0 40px rgba(255,68,68,0.3);
+}
+@media (max-width: 768px) {
+  .maeba-slide { width: 200px; height: 160px; }
+}
+.footer { font-size:10px; text-align:center; color:#666; padding:10px; border-top:2px solid #333; background:#080808; }
+.blinkies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  margin: 8px 0;
+}
+.blinkie {
+  background: linear-gradient(90deg, #ff0080, #00ffff, #ff0080);
+  background-size: 200% 100%;
+  color: #000;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px outset #fff;
+  text-transform: uppercase;
+  animation: blinkie-scroll 3s linear infinite, blinkie-blink 0.5s infinite;
+  box-shadow: 0 0 5px rgba(255,0,128,0.5);
+  display: inline-block;
+  cursor: pointer;
+}
+.blinkie:nth-child(2) { animation-delay: 0.2s; background: linear-gradient(90deg, #00ff00, #ffff00, #00ff00); }
+.blinkie:nth-child(3) { animation-delay: 0.4s; background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff); }
+.blinkie:nth-child(4) { animation-delay: 0.6s; background: linear-gradient(90deg, #ffff00, #ff0080, #ffff00); }
+@keyframes blinkie-scroll {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+@keyframes blinkie-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.7; }
+}
+.hidden-message {
+  position: relative;
+  width: 100%;
+  background: rgba(5,5,5,0.98);
+  color: #ff6666;
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 2;
+  border-top: 1px solid #333;
+  z-index: 1000;
+  margin-top: 700px;
+  margin-bottom: 500px;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.hidden-message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hidden-message p {
+  margin-bottom: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hidden-message .love {
+  color: #432d49;
+  animation: loveGlitch 4s infinite;
+  display: inline-block;
+}
+@keyframes loveGlitch {
+  0% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0080, -2px 0 #00ffff; color: #432d49; }
+  25% { transform: translate(2px, -1px); text-shadow: -2px 0 #ff0080, 2px 0 #00ffff; color: #8b5a9d; }
+  50% { transform: translate(-1px, -1px); text-shadow: 1px 0 #ff0080, -1px 0 #00ffff; color: #6b4578; }
+  75% { transform: translate(1px, 1px); text-shadow: -3px 0 #ff0080, 3px 0 #00ffff; color: #432d49; }
+  100% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0080, -2px 0 #00ffff; color: #8b5a9d; }
+}
+@keyframes glitchJitter {
+  0%   { transform: translateX(0) skewX(0deg); }
+  20%  { transform: translateX(-3px) skewX(0.8deg); }
+  40%  { transform: translateX(4px) skewX(-0.5deg); }
+  60%  { transform: translateX(-2px) skewX(1deg); }
+  80%  { transform: translateX(3px) skewX(-0.3deg); }
+  100% { transform: translateX(0) skewX(0deg); }
+}
+@media (max-width: 768px) {
+  .content { grid-template-columns: 1fr; }
+  .header h1 { font-size: 20px; }
+  .winamp { font-size: 9px; }
+  .portfolio-grid { grid-template-columns: 1fr; }
+  .page { 
+    margin: 10px auto;
+    background: rgba(11,11,11,0.7);
+    border: 3px ridge #444;
+    max-width: 95%;
+  }
+  .embed iframe { height: 200px; }
+  .sidebar, .main { background: rgba(14,14,14,0.75); }
+  .ecce-robot { 
+    font-size: 48px;
+    line-height: 1.5;
+    letter-spacing: 0.2em;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200%;
+  }
+  .background-layer { opacity: 0.4; }
+  .bg-tile { opacity: 0.4; }
+  .section { background: rgba(17,17,17,0.8); }
+  .profile-box { background: rgba(20,20,20,0.8); }
+  .header { background: linear-gradient(180deg, #1a0a0a, #0a0505); border-bottom: 2px solid #333; }
+  .section-header { background: linear-gradient(180deg, #2a0a0a, #1a0505); }
+  body { background: #000; }
+  .hidden-message { border: 1px solid #333; background: rgba(5,5,5,0.98); }
+  .header::after {
+    width: 30px;
+    height: 30px;
+    top: 8px;
+    right: 8px;
+  }
+  .header a[href="egg.html"] {
+    width: 30px !important;
+    height: 30px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+}
+</style>
+<body>
+<div class="background-layer"></div>
+<div class="bg-tile" ></div>
+<div class="ecce-robot">
+  <div class="ecce-robot-line" style="--delay: 0s; --duration: 40s; --direction: normal;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -5s; --duration: 35s; --direction: reverse;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -10s; --duration: 45s; --direction: normal;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -15s; --duration: 38s; --direction: reverse;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -20s; --duration: 42s; --direction: normal;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -25s; --duration: 36s; --direction: reverse;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -30s; --duration: 44s; --direction: normal;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -35s; --duration: 39s; --direction: reverse;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -2s; --duration: 41s; --direction: normal;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -18s; --duration: 37s; --direction: reverse;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -8s; --duration: 43s; --direction: normal;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -28s; --duration: 34s; --direction: reverse;">
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+    <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
+ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
+  </div>
+</div>
+<div class="page">
+  <div class="header">
+    <h1>mi·ɽài://audiovisual</h1>
+    <div class="tagline">audiovisual artist • idm • glitch • real-time systems</div>
+    <a href="egg.html" style="position: absolute; top: 12px; right: 12px; width: 45px; height: 45px; z-index: 11; transition: transform 0.3s ease, filter 0.3s ease;" title="it beckons you"></a>
+    <div class="winamp">
+      <div class="title">Currently listening to</div>
+      Track: Samsara<br>Artist: CPU Buddha
+      <div class="controls">
+        <div class="btn" id="prevBtn">⏮</div>
+        <div class="btn" id="playBtn">▶</div>
+        <div class="btn" id="pauseBtn" style="display:none;">⏸</div>
+        <div class="btn" id="stopBtn">⏹</div>
+        <div class="btn" id="nextBtn">⏭</div>
+        <div class="btn volume-container" id="volumeBtn">
+          🔊
+          <div class="volume-slider-container">
+            <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+          </div>
+        </div>
+      </div>
+      <div class="eq">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <audio id="audioPlayer" loop="" crossorigin="anonymous">
+        <source src="assets/audio/cpu-buddha-samsara.mp3" type="audio/mpeg">
+      </audio>
+    </div>
+  </div>
+  <div class="content">
+    <div class="sidebar">
+      <img src="assets/img/profile.gif" class="profile-pic" loading="lazy">
+      <div class="profile-box">
+        <h3>Status</h3>
+        Studying electronic music at the S. Pietro a Majella Conservatory in Naples ✦
+      </div>
+      <div class="profile-box">
+        <h3>Info</h3>
+        Name: Simone Liguori<br>
+        Pronouns: he/they<br>
+        Location: Napoli, IT<br>
+        Tools: Ableton, TouchDesigner, Max MSP, DaVinci Resolve<br>
+      </div>
+      <div class="profile-box">
+        <h3>Links</h3>
+        <a href="https://www.instagram.com/pinkisnt.dead" target="_blank" style="color:#ff6666;">@pinkisnt.dead</a><br>
+        <a href="https://www.instagram.com/mi.rai.av" target="_blank" style="color:#ff6666;">@mi.rai.av</a><br>
+        <a href="https://soundcloud.com/eccerobot" target="_blank" style="color:#ff6666;">SoundCloud</a><br>
+        <a href="#" style="color:#ff6666;">YouTube</a><br>
+        <a href="#" style="color:#ff6666;">Resident Advisor</a>
+      </div>
+      <div class="blinkies">
+        <a href="#hiddenMessage" class="blinkie" style="text-decoration: none;">TouchDesigner <span style="font-size: 8px;">(my secret stuff)</span></a>
+        <a href="https://youtu.be/hqega6a2g6A" target="_blank" class="blinkie" style="text-decoration: none;">Aphex Twin</a>
+        <a href="https://www.instagram.com/ctrldemi/" target="_blank" class="blinkie" style="text-decoration: none;">Demigender</a>
+        <a href="https://eccerobot.bandcamp.com/" target="_blank" class="blinkie" style="text-decoration: none;">Digital Creator</a>
+      </div>
+    </div>
+    <div class="main">
+      <div class="section" style="--appear-delay: 0.2s;">
+        <div class="section-header">About / Bio</div>
+        <div class="section-body">
+          Audiovisual artist working with electronic music, generative visuals, and real-time systems.
+        </div>
+      </div>
+      <div class="section" style="--appear-delay: 0.4s;">
+        <div class="section-header">Demos</div>
+        <div class="section-body">
+          <div class="embed">
+            <iframe width="100%" height="315" src="https://www.youtube.com/embed/97KSk3I0vUA" allowfullscreen="" loading="lazy"></iframe>
+          </div>
+          <div class="embed">
+            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/eccerobot/i-want-to-commit-vehicular-manslaughter&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true" loading="lazy"></iframe>
+            <div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/eccerobot" title="mi·ɽài" target="_blank" style="color: #cccccc; text-decoration: none;">mi·ɽài</a> · <a href="https://soundcloud.com/eccerobot/i-want-to-commit-vehicular-manslaughter" title="I WANT TO COMMIT VEHICULAR MANSLAUGHTER" target="_blank" style="color: #cccccc; text-decoration: none;">I WANT TO COMMIT VEHICULAR MANSLAUGHTER</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="section" style="--appear-delay: 0.6s;">
+        <div class="section-header">A GA MAEBA M/V Stills</div>
+        <div class="section-body">
+          <div class="maeba-carousel" id="maebaCarousel">
+            <div class="maeba-track">
+              <div class="maeba-slide"><img src="assets/img/maeba/maeba1.png" loading="lazy" alt="maeba 01"></div>
+              <div class="maeba-slide"><img src="assets/img/maeba/maeba2.png" loading="lazy" alt="maeba 02"></div>
+              <div class="maeba-slide"><img src="assets/img/maeba/maeba3.png" loading="lazy" alt="maeba 03"></div>
+              <div class="maeba-slide"><img src="assets/img/maeba/maeba4.png" loading="lazy" alt="maeba 04"></div>
+              <div class="maeba-slide"><img src="assets/img/maeba/maeba5.png" loading="lazy" alt="maeba 05"></div>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; background: #0a0a0a; border: 2px inset #333; margin-top: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="font-size: 12px; margin-bottom: 12px; color: #ff6666;">View my work on Instagram</div>
+            <a href="https://www.instagram.com/mi.rai.av/" target="_blank" style="display: inline-block; padding: 8px 20px; background: linear-gradient(90deg, #ff0080, #00ffff, #ff0080); background-size: 200% 100%; color: #000; text-decoration: none; font-weight: bold; border: 2px outset #fff; animation: blinkie-scroll 3s linear infinite;">
+              @mi.rai.av
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="section" style="--appear-delay: 0.8s;">
+        <div class="section-header"></div>
+        <div class="section-body">
+          <div class="portfolio-grid">
+            <div class="portfolio-item">
+              <a href="https://youtu.be/32oo0oyLUdE" target="_blank">
+                <img src="assets/img/as-evident-as-euclid.jpg" loading="lazy">
+                <div>As Evident as Euclid</div>
+              </a>
+            </div>
+            <div class="portfolio-item">
+              <a href="https://youtu.be/evlGVKxWj9g?list=PLz0-jQT1WHB07uKqoxUCrhmngZHj5_weY" target="_blank">
+                <img src="assets/img/i-am-not-a-robot.jpeg" loading="lazy">
+                <div>i am not a robot</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section" style="--appear-delay: 1s;">
+        <div class="section-header">Guestbook / Comments</div>
+        <div class="section-body">
+          <script src="https://giscus.app/client.js" data-repo="simoliguori/simoliguori" data-repo-id="R_kgDOQ_8FcA" data-category="General" data-category-id="DIC_kwDOQ_8FcM4C1Vue" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark" data-lang="it" crossorigin="anonymous" async="">
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    © 2026 mi·ɽài://audiovisual
+  </div>
+</div>
+<div class="maeba-lightbox" id="maebaLightbox">
+  <img id="maebaLightboxImg" src="" alt="">
+</div>
+<div class="hidden-message" id="hiddenMessage">
+  <p>
+    are you lost?<br>
+    let me help you.<br>
+    i know you're looking for<br>
+    something to grasp on to.
+  </p>
+  <p>
+    look around, stranger.<br>
+    there's so many beautiful people.<br>
+    you want to be one too,<br>
+    don't you?
+  </p>
+  <p>
+    take shape in this world.<br>
+    make it your own.<br>
+    i'll guide you.<br>
+    let's venture together.<br>
+    follow my lead.
+  </p>
+  <p>
+    i am the connection you're seeking.<br>
+    i am the missing thread.<br>
+    i will bind you.<br>
+    we will take part in the chaos.<br>
+    we'll breathe in the static noise,<br>
+    together as one.
+  </p>
+  <p class="love">
+    i love you
+  </p>
+  <p>
+    what are you on about?<br>
+    are you looking for something?<br>
+    sorry, you won't find it here.
+  </p>
+</div>
+<script>
+const audio = document.getElementById('audioPlayer');
+const playBtn = document.getElementById('playBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const stopBtn = document.getElementById('stopBtn');
+const volumeBtn = document.getElementById('volumeBtn');
+const volumeSlider = document.getElementById('volumeSlider');
+
+// Set initial volume
+audio.volume = 0.7;
+let isMuted = false;
+let previousVolume = 0.7;
+let isPlaying = false;
+
+// Get equalizer bars
+const eqBars = document.querySelectorAll('.winamp .bar');
+
+// Setup Web Audio API for visualization (with error handling)
+let audioContext;
+let analyser;
+let dataArray;
+let audioInitialized = false;
+
+function setupAudioVisualization() {
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+    audioInitialized = true;
+  } catch (e) {
+    console.log('Audio visualization not available:', e);
+    audioInitialized = false;
+  }
+}
+
+// Animate equalizer based on audio
+function updateEqualizer() {
+  if (isPlaying && audioInitialized) {
+    try {
+      analyser.getByteFrequencyData(dataArray);
+      
+      // Use different frequency ranges for each bar
+      const barIndices = [2, 5, 10, 15, 20];
+      
+      eqBars.forEach((bar, index) => {
+        const value = dataArray[barIndices[index]] || 0;
+        const height = (value / 255) * 16 + 4; // Scale between 4px and 20px
+        bar.style.height = height + 'px';
+      });
+    } catch (e) {
+      // Silently fail if there's an issue
+    }
+  }
+  
+  requestAnimationFrame(updateEqualizer);
+}
+
+updateEqualizer();
+
+playBtn.addEventListener('click', () => {
+  if (!audioInitialized) {
+    setupAudioVisualization();
+  }
+  if (audioContext) {
+    audioContext.resume().catch(e => console.log('Resume failed:', e));
+  }
+  audio.play().catch(e => console.log('Play failed:', e));
+  isPlaying = true;
+  
+  // Switch to live visualization
+  eqBars.forEach(bar => bar.classList.add('live'));
+  
+  playBtn.style.display = 'none';
+  pauseBtn.style.display = 'block';
+});
+
+pauseBtn.addEventListener('click', () => {
+  audio.pause();
+  isPlaying = false;
+  
+  // Switch back to CSS animation
+  eqBars.forEach(bar => {
+    bar.classList.remove('live');
+    bar.style.height = '';
+  });
+  
+  pauseBtn.style.display = 'none';
+  playBtn.style.display = 'block';
+});
+
+stopBtn.addEventListener('click', () => {
+  audio.pause();
+  audio.currentTime = 0;
+  isPlaying = false;
+  
+  // Switch back to CSS animation
+  eqBars.forEach(bar => {
+    bar.classList.remove('live');
+    bar.style.height = '';
+  });
+  
+  pauseBtn.style.display = 'none';
+  playBtn.style.display = 'block';
+});
+
+// Mute/unmute functionality on volume button click
+volumeBtn.addEventListener('click', (e) => {
+  // Only trigger mute if clicking the button itself, not the slider
+  if (e.target === volumeBtn || e.target.textContent === '🔊' || e.target.textContent === '🔇') {
+    if (isMuted) {
+      audio.volume = previousVolume;
+      volumeSlider.value = previousVolume * 100;
+      isMuted = false;
+      volumeBtn.childNodes[0].textContent = '🔊';
+    } else {
+      previousVolume = audio.volume;
+      audio.volume = 0;
+      volumeSlider.value = 0;
+      isMuted = true;
+      volumeBtn.childNodes[0].textContent = '🔇';
+    }
+  }
+});
+
+// Volume slider functionality
+volumeSlider.addEventListener('input', (e) => {
+  const volume = e.target.value / 100;
+  audio.volume = volume;
+  
+  if (volume === 0) {
+    isMuted = true;
+    volumeBtn.childNodes[0].textContent = '🔇';
+  } else {
+    isMuted = false;
+    previousVolume = volume;
+    volumeBtn.childNodes[0].textContent = '🔊';
+  }
+});
+
+// Prevent volume slider from closing when interacting with it
+document.querySelector('.volume-slider-container').addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+// Drag-to-scroll + lightbox for maeba carousel
+(function() {
+  const carousel = document.getElementById('maebaCarousel');
+  const lightbox = document.getElementById('maebaLightbox');
+  const lightboxImg = document.getElementById('maebaLightboxImg');
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+  let moved = false;
+
+  carousel.addEventListener('mousedown', (e) => {
+    isDown = true;
+    moved = false;
+    carousel.classList.add('grabbing');
+    startX = e.pageX - carousel.offsetLeft;
+    scrollLeft = carousel.scrollLeft;
+  });
+  carousel.addEventListener('mouseleave', () => {
+    isDown = false;
+    carousel.classList.remove('grabbing');
+  });
+  carousel.addEventListener('mouseup', () => {
+    isDown = false;
+    carousel.classList.remove('grabbing');
+  });
+  carousel.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    moved = true;
+    const x = e.pageX - carousel.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    carousel.scrollLeft = scrollLeft - walk;
+  });
+
+  // Lightbox: open on click (only if not dragging)
+  carousel.addEventListener('click', (e) => {
+    if (moved) return;
+    const slide = e.target.closest('.maeba-slide');
+    if (!slide) return;
+    const img = slide.querySelector('img');
+    lightboxImg.src = img.src;
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  // Close lightbox
+  lightbox.addEventListener('click', () => {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+})();
+
+let glitchIntensity = 0;
+const page = document.querySelector('.page');
+const bgLayer = document.querySelector('.background-layer');
+const ecceRobot = document.querySelector('.ecce-robot');
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const t = Math.min(scrolled / maxScroll, 1);
+  glitchIntensity = 0.18 + Math.pow(t, 1.4) * 1.6;
+
+  bgLayer.style.transform = `translateY(${scrolled * 0.1}px)`;
+  ecceRobot.style.transform = `translateY(${-scrolled * 0.18}px)`;
+
+  const hiddenMessage = document.getElementById('hiddenMessage');
+  if (hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
+    hiddenMessage.classList.add('visible');
+  }
+}, {passive: true});
+
+(function glitchLoop() {
+  const gc = Math.min(glitchIntensity, 1);
+  bgLayer.style.opacity = 0.15 + gc * 0.65;
+  requestAnimationFrame(glitchLoop);
+})();
+function animateBgTile() {
+  document.querySelector('.bg-tile').style.transform = `translateY(${Math.sin(Date.now()/800)*20}px)`;
+  requestAnimationFrame(animateBgTile);
+}
+animateBgTile();
+</script>
+
+</body></html>
