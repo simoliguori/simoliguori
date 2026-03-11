@@ -276,7 +276,7 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
   user-select: none;
 }
 .maeba-carousel.grabbing { cursor: grabbing; }
-.maeba-carousel::-webkit-scrollbar { height: 8px; }
+.maeba-carousel::-webkit-scrollbar { height: 14px; }
 .maeba-carousel::-webkit-scrollbar-track { background: #111; }
 .maeba-carousel::-webkit-scrollbar-thumb { background: #ff6666; }
 .maeba-track {
@@ -287,44 +287,108 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
 .maeba-slide {
   flex-shrink: 0;
   width: 260px;
-  height: 200px;
   border: 1px solid #333;
   background: #0a0a0a;
-  overflow: hidden;
   transition: border-color 0.2s ease;
   cursor: zoom-in;
 }
 .maeba-slide:hover { border-color: #ff6666; }
 .maeba-slide img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
 }
 /* Lightbox */
 .maeba-lightbox {
-  display: none;
+  display: flex;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
   z-index: 9999;
   background: rgba(0,0,0,0.92);
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.75s ease, visibility 0.75s ease;
+  perspective: 1000px;
 }
-.maeba-lightbox.open { display: flex; }
+.maeba-lightbox.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.lb-wrap {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease;
+  will-change: transform;
+}
+/* laminatura olografica — segue la traiettoria del flare */
+.lb-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      var(--holo-angle, 125deg),
+      rgba(255,0,120,0)    0%,
+      rgba(255,0,120,0.2) 8%,
+      rgba(255,210,0,0.2) 22%,
+      rgba(0,255,120,0.2) 38%,
+      rgba(0,120,255,0.2) 54%,
+      rgba(180,0,255,0.2) 70%,
+      rgba(255,0,120,0.2) 84%,
+      rgba(255,0,120,0)    100%
+    );
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: var(--holo-opacity, 0.2);
+  z-index: 2;
+}
+/* lens flare */
+.lb-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--flare-opacity, 0);
+  transition: opacity 0.12s ease;
+  background:
+    radial-gradient(ellipse 7% 7%   at var(--fx, 50%) var(--fy, 50%), rgba(255,255,255,1)     0%, transparent 65%),
+    radial-gradient(ellipse 5% 5%   at var(--gx, 50%) var(--gy, 50%), rgba(255,140,50,1)      0%, transparent 60%),
+    radial-gradient(ellipse 3.5% 3.5% at var(--sx, 50%) var(--sy, 50%), rgba(120,170,255,0.95) 0%, transparent 60%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 3;
+}
+/* griglia olografica stile Pokemon */
+.lb-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.28) 0px, transparent 1px, transparent 9px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0px, transparent 1px, transparent 9px);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 4;
+  opacity: var(--holo-opacity, 0.6);
+  transition: opacity 0.1s ease;
+}
 .maeba-lightbox img {
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 55vw;
+  max-height: 55vh;
   object-fit: contain;
   border: 1px solid #333;
   box-shadow: 0 0 40px rgba(255,68,68,0.3);
+  display: block;
+  opacity: 0;
+  transition: opacity 0.65s ease 0.25s;
 }
+.maeba-lightbox.open img { opacity: 1; }
 @media (max-width: 768px) {
-  .maeba-slide { width: 200px; height: 160px; }
+  .maeba-slide { width: 200px; }
 }
 .footer { font-size:10px; text-align:center; color:#666; padding:10px; border-top:2px solid #333; background:#080808; }
 .blinkies {
@@ -656,7 +720,10 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
   </div>
 </div>
 <div class="maeba-lightbox" id="maebaLightbox">
-  <img id="maebaLightboxImg" src="" alt="">
+  <div class="lb-wrap" id="maebaLbWrap">
+    <img id="maebaLightboxImg" src="" alt="">
+    <div class="lb-grid"></div>
+  </div>
 </div>
 <div class="hidden-message" id="hiddenMessage">
   <p>
@@ -889,16 +956,78 @@ document.querySelector('.volume-slider-container').addEventListener('click', (e)
     document.body.style.overflow = 'hidden';
   });
 
-  // Close lightbox
-  lightbox.addEventListener('click', () => {
+  const lbWrap = document.getElementById('maebaLbWrap');
+
+  // Direzione luce fissa (top-left), normalizzata
+  const _lx = -0.5, _ly = -0.7, _lz = 0.9;
+  const _ll = Math.sqrt(_lx*_lx + _ly*_ly + _lz*_lz);
+  const LL = { x: _lx/_ll, y: _ly/_ll, z: _lz/_ll };
+
+  // Stato lerp: target (aggiornato dal mouse) e current (insegue con lag)
+  let tRotX = 0, tRotY = 0;   // target
+  let cRotX = 0, cRotY = 0;   // current (con inerzia)
+  const LERP = 0.07;           // 0 = infinito lag, 1 = nessun lag
+
+  // Il mousemove aggiorna solo i target
+  lightbox.addEventListener('mousemove', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    const rect = lbWrap.getBoundingClientRect();
+    const dx = (e.clientX - (rect.left + rect.width  / 2)) / (rect.width  / 2);
+    const dy = (e.clientY - (rect.top  + rect.height / 2)) / (rect.height / 2);
+    tRotX = -dy * 3.5;
+    tRotY =  dx * 3.5;
+  });
+
+  lightbox.addEventListener('mouseleave', () => { tRotX = 0; tRotY = 0; });
+
+  // Loop rAF: lerp + applica tutti gli effetti ai valori correnti (laggati)
+  (function lbLoop() {
+    cRotX += (tRotX - cRotX) * LERP;
+    cRotY += (tRotY - cRotY) * LERP;
+
+    lbWrap.style.transform = `rotateX(${cRotX.toFixed(3)}deg) rotateY(${cRotY.toFixed(3)}deg)`;
+
+    // Normale della carta ruotata
+    const rXr = cRotX * Math.PI / 180;
+    const rYr = cRotY * Math.PI / 180;
+    const nx =  Math.sin(rYr);
+    const ny = -Math.sin(rXr) * Math.cos(rYr);
+    const nz =  Math.cos(rXr) * Math.cos(rYr);
+
+    // Speculare: dot(N,L)^5
+    const dot  = nx * LL.x + ny * LL.y + nz * LL.z;
+    const spec = Math.pow(Math.max(0, dot), 5);
+    lbWrap.style.setProperty('--flare-opacity', spec.toFixed(3));
+
+    // Posizione flare: normalizzata al tilt max (3.5°) → bordo opposto alla direzione del tilt
+    const MAX_ROT = 3.5;
+    const fxVal = 50 - (cRotY / MAX_ROT) * 52;
+    const fyVal = 50 + (cRotX / MAX_ROT) * 52;
+    lbWrap.style.setProperty('--fx', fxVal.toFixed(2) + '%');
+    lbWrap.style.setProperty('--fy', fyVal.toFixed(2) + '%');
+    lbWrap.style.setProperty('--gx', (100 - fxVal).toFixed(2) + '%');
+    lbWrap.style.setProperty('--gy', (100 - fyVal).toFixed(2) + '%');
+    lbWrap.style.setProperty('--sx', ((fxVal + 50) / 2).toFixed(2) + '%');
+    lbWrap.style.setProperty('--sy', ((fyVal + 50) / 2).toFixed(2) + '%');
+
+    // Ologramma: angolo perpendicolare al flare + opacità dinamica
+    const flareAngleDeg = Math.atan2(fyVal - 50, fxVal - 50) * 180 / Math.PI;
+    lbWrap.style.setProperty('--holo-angle', (flareAngleDeg + 90).toFixed(2) + 'deg');
+    lbWrap.style.setProperty('--holo-opacity', (0.2 + spec * 0.5).toFixed(3));
+
+    requestAnimationFrame(lbLoop);
+  })();
+
+  function closeLightbox() {
     lightbox.classList.remove('open');
     document.body.style.overflow = '';
-  });
+    tRotX = 0; tRotY = 0;
+  }
+
+  // Close lightbox
+  lightbox.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      lightbox.classList.remove('open');
-      document.body.style.overflow = '';
-    }
+    if (e.key === 'Escape') closeLightbox();
   });
 })();
 
