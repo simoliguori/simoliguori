@@ -1404,11 +1404,14 @@ window.addEventListener('scroll', () => {
     ? `translateX(-50%) translateY(${-scrolled * 0.18}px)`
     : `translateY(${-scrolled * 0.18}px)`;
 
-  // Black overlay: fades in as user scrolls past the main page
+  // Black overlay: starts when page leaves viewport, reaches 1 exactly when HM triggers
   const pageRect = page.getBoundingClientRect();
-  const pageBottom = pageRect.bottom; // distance from viewport top to page bottom
-  const pastPage = Math.max(0, -pageBottom); // how many px below viewport the page bottom is
-  const darkProgress = Math.min(pastPage / 1200, 1);
+  const hmRect = hiddenMessage.getBoundingClientRect();
+  const pastPage = Math.max(0, -pageRect.bottom);
+  const toHMTrigger = Math.max(0, hmRect.top - window.innerHeight / 1.3);
+  const darkProgress = (pastPage === 0) ? 0
+    : (toHMTrigger === 0) ? 1
+    : pastPage / (pastPage + toHMTrigger);
   blackOverlay.style.opacity = darkProgress;
 
   if (!hmTriggered && hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
