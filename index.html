@@ -954,6 +954,22 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
     }
   }
 
+  const isMobile = window.innerWidth <= 768;
+  const TYPE_SPEED = isMobile ? 3 : 6;
+  const REVEAL_GAP = isMobile ? 90 : 180;
+  const POST_TYPE_GAP = isMobile ? 25 : 60;
+
+  async function runStream(items) {
+    for (const d of items) {
+      d.c.classList.add('reveal-on');
+      await delay(REVEAL_GAP);
+      for (let i = 0; i < d.nodes.length; i++) {
+        await typeNode(d.nodes[i], d.orig[i], TYPE_SPEED);
+      }
+      await delay(POST_TYPE_GAP);
+    }
+  }
+
   async function run() {
     await typeLoader('loading...', 75);
     await delay(500);
@@ -963,14 +979,28 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
     await delay(900);
     loader.style.display = 'none';
 
-    for (const d of data) {
-      d.c.classList.add('reveal-on');
-      await delay(180);
-      for (let i = 0; i < d.nodes.length; i++) {
-        await typeNode(d.nodes[i], d.orig[i], 6);
-      }
-      await delay(60);
+    // Wait for fonts to finish loading so the typing doesn't show a mid-animation font swap
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch (e) {}
     }
+
+    const headerEl = document.querySelector('.header');
+    const footerEl = document.querySelector('.footer');
+    const headerItems = data.filter(d => d.c === headerEl);
+    const sidebarItems = data.filter(d => d.c.closest && d.c.closest('.sidebar'));
+    const mainItems = data.filter(d => d.c.closest && d.c.closest('.main'));
+    const footerItems = data.filter(d => d.c === footerEl);
+
+    const isDesktop = window.innerWidth > 768;
+
+    await runStream(headerItems);
+    if (isDesktop) {
+      await Promise.all([runStream(sidebarItems), runStream(mainItems)]);
+    } else {
+      await runStream(sidebarItems);
+      await runStream(mainItems);
+    }
+    await runStream(footerItems);
   }
 
   run();
