@@ -69,6 +69,14 @@ body {
   50% { transform: translate3d(2%, -2%, 0) scale(1.01); }
   75% { transform: translate3d(-1%, -1%, 0) scale(1.03); }
 }
+#blackOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
 .bg-tile {
   position: fixed;
   inset: -10%;
@@ -507,15 +515,14 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
 .hidden-message {
   position: relative;
   width: 100%;
-  background: rgba(5,5,5,0.98);
+  background: transparent;
   color: #ff6666;
   padding: 60px 20px;
   text-align: center;
   font-size: 12px;
   line-height: 2;
-  border-top: 1px solid #333;
   z-index: 1000;
-  margin-top: 700px;
+  margin-top: 5000px;
   margin-bottom: 500px;
   opacity: 0;
   transform: translateY(50px);
@@ -532,16 +539,29 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
   margin-right: auto;
 }
 .hidden-message .love {
-  color: #432d49;
-  animation: loveGlitch 4s infinite;
   display: inline-block;
 }
+.love-link {
+  color: #8b5a9d;
+  text-decoration: none;
+  display: inline-block;
+  animation: loveGlitch 4s infinite;
+  text-shadow:
+    0 0 18px rgba(138, 43, 226, 0.9),
+    0 0 40px rgba(138, 43, 226, 0.6),
+    0 0 80px rgba(180, 60, 255, 0.35);
+  transition: transform 0.25s ease;
+  cursor: pointer;
+}
+.love-link:hover {
+  transform: scale(1.1);
+}
 @keyframes loveGlitch {
-  0% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0080, -2px 0 #00ffff; color: #432d49; }
-  25% { transform: translate(2px, -1px); text-shadow: -2px 0 #ff0080, 2px 0 #00ffff; color: #8b5a9d; }
-  50% { transform: translate(-1px, -1px); text-shadow: 1px 0 #ff0080, -1px 0 #00ffff; color: #6b4578; }
-  75% { transform: translate(1px, 1px); text-shadow: -3px 0 #ff0080, 3px 0 #00ffff; color: #432d49; }
-  100% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0080, -2px 0 #00ffff; color: #8b5a9d; }
+  0%   { text-shadow: 2px 0 #ff0080, -2px 0 #00ffff, 0 0 18px rgba(138,43,226,0.9), 0 0 50px rgba(138,43,226,0.5); color: #8b5a9d; }
+  25%  { text-shadow: -2px 0 #ff0080, 2px 0 #00ffff, 0 0 24px rgba(180,60,255,1),   0 0 60px rgba(180,60,255,0.6); color: #b06dc9; }
+  50%  { text-shadow: 1px 0 #ff0080, -1px 0 #00ffff, 0 0 14px rgba(138,43,226,0.7), 0 0 40px rgba(138,43,226,0.4); color: #9a60b0; }
+  75%  { text-shadow: -3px 0 #ff0080, 3px 0 #00ffff, 0 0 30px rgba(200,80,255,1),   0 0 70px rgba(200,80,255,0.5); color: #8b5a9d; }
+  100% { text-shadow: 2px 0 #ff0080, -2px 0 #00ffff, 0 0 18px rgba(138,43,226,0.9), 0 0 50px rgba(138,43,226,0.5); color: #b06dc9; }
 }
 @keyframes glitchJitter {
   0%   { transform: translateX(0) skewX(0deg); }
@@ -572,7 +592,7 @@ body:not(.booting) .ecce-robot        { animation: fadeIn 1.5s 0.5s both; }
 
 /* Sequential reveal: elements hidden until JS toggles .reveal-on */
 .reveal-item { opacity: 0; }
-.reveal-item.reveal-on { animation: glitchReveal 0.5s steps(14) both; }
+.reveal-on { animation: glitchReveal 0.5s steps(14) both; }
 
 .typing-cursor::after {
   content: '▌';
@@ -613,7 +633,7 @@ body:not(.booting) .ecce-robot        { animation: fadeIn 1.5s 0.5s both; }
   .header { background: linear-gradient(180deg, #1a0a0a, #0a0505); border-bottom: 2px solid #333; }
   .section-header { background: linear-gradient(180deg, #2a0a0a, #1a0505); }
   body { background: #000; }
-  .hidden-message { border: 1px solid #333; background: rgba(5,5,5,0.98); }
+  .hidden-message { background: transparent; }
   .header::after {
     width: 30px;
     height: 30px;
@@ -634,7 +654,8 @@ body:not(.booting) .ecce-robot        { animation: fadeIn 1.5s 0.5s both; }
   <div id="loaderText"></div>
 </div>
 <div class="background-layer"></div>
-<div class="bg-tile" ></div>
+<div class="bg-tile"></div>
+<div id="blackOverlay"></div>
 <div class="ecce-robot">
   <div class="ecce-robot-line" style="--delay: 0s; --duration: 40s; --direction: normal;">
     <span>ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE 
@@ -856,7 +877,7 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
   <p>
     look around, stranger.<br>
     there's so many beautiful people.<br>
-    you want to be one too,<br>
+    you want to be one of them,<br>
     don't you?
   </p>
   <p>
@@ -875,7 +896,7 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
     together as one.
   </p>
   <p class="love">
-    i love you
+    <a href="https://youtu.be/DKtalxnEDJQ" target="_blank" class="love-link">i love you</a>
   </p>
   <p>
     what are you on about?<br>
@@ -1314,6 +1335,62 @@ let glitchIntensity = 0;
 const page = document.querySelector('.page');
 const bgLayer = document.querySelector('.background-layer');
 const ecceRobot = document.querySelector('.ecce-robot');
+const blackOverlay = document.getElementById('blackOverlay');
+
+// ==== HIDDEN MESSAGE TYPING ====
+const hiddenMessage = document.getElementById('hiddenMessage');
+const hmDelay = ms => new Promise(r => setTimeout(r, ms));
+
+// Pre-process paragraphs: snapshot text nodes and empty them
+const hiddenParas = [...hiddenMessage.querySelectorAll('p')].map(p => {
+  const nodes = [];
+  const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => n.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+  });
+  let n;
+  while ((n = walker.nextNode())) nodes.push(n);
+  const orig = nodes.map(n => n.textContent);
+  nodes.forEach(n => { n.textContent = ''; });
+  p.style.opacity = '0';
+  return { p, nodes, orig };
+});
+
+const hmCursor = document.createElement('span');
+hmCursor.textContent = '▌';
+hmCursor.style.cssText = 'color:#ff6666;animation:cursorBlink 0.7s step-end infinite;margin-left:1px;';
+
+async function typeHiddenMessage() {
+  const speed = 55;       // ms per char
+  const loveSpeed = 180;  // ms per char for "i love you" (slow, no word gaps)
+  const lineGap = 260;
+  for (let i = 0; i < hiddenParas.length; i++) {
+    const d = hiddenParas[i];
+    const isLove = d.p.classList.contains('love');
+    d.p.style.transition = 'opacity 0.3s ease';
+    d.p.style.opacity = '1';
+    for (let j = 0; j < d.nodes.length; j++) {
+      const node = d.nodes[j];
+      // Place cursor on the current line — skip for "i love you" (no marker there)
+      if (!isLove) node.parentNode.insertBefore(hmCursor, node.nextSibling);
+      if (isLove) {
+        for (const ch of d.orig[j]) {
+          node.textContent += ch;
+          await hmDelay(loveSpeed);
+        }
+      } else {
+        for (const ch of d.orig[j]) {
+          node.textContent += ch;
+          await hmDelay(speed);
+        }
+      }
+      if (j < d.nodes.length - 1) await hmDelay(lineGap);
+    }
+    await hmDelay(isLove ? 2500 : 1000);
+  }
+  // cursor stays — keeps blinking after the last line
+}
+
+let hmTriggered = false;
 
 window.addEventListener('scroll', () => {
   const scrolled = window.scrollY;
@@ -1327,9 +1404,17 @@ window.addEventListener('scroll', () => {
     ? `translateX(-50%) translateY(${-scrolled * 0.18}px)`
     : `translateY(${-scrolled * 0.18}px)`;
 
-  const hiddenMessage = document.getElementById('hiddenMessage');
-  if (hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
-    hiddenMessage.classList.add('visible');
+  // Black overlay: fades in as user scrolls past the main page
+  const pageRect = page.getBoundingClientRect();
+  const pageBottom = pageRect.bottom; // distance from viewport top to page bottom
+  const pastPage = Math.max(0, -pageBottom); // how many px below viewport the page bottom is
+  const darkProgress = Math.min(pastPage / 1200, 1);
+  blackOverlay.style.opacity = darkProgress;
+
+  if (!hmTriggered && hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
+    hmTriggered = true;
+    hiddenMessage.classList.add('visible', 'reveal-on');
+    hmDelay(500).then(typeHiddenMessage);
   }
 }, {passive: true});
 
