@@ -4,7 +4,10 @@
       "Bash(git -C /c/Users/simol/Documents/GitHub/simoliguori log --all --oneline)",
       "mcp__Claude_Preview__preview_start",
       "Bash(curl -L \"https://img.itch.zone/aW1nLzIyMDgwNTQxLnBuZw==/original/2Pm04g.png\" -o \"C:/Users/simol/Documents/GitHub/simoliguori/assets/img/bg-serpent.png\")",
-      "Bash(curl -L \"https://img.itch.zone/aW1nLzIyMDgwNTM5LmpwZw==/original/qS48ft.jpg\" -o \"C:/Users/simol/Documents/GitHub/simoliguori/assets/img/bg-tile.jpg\")"
+      "Bash(curl -L \"https://img.itch.zone/aW1nLzIyMDgwNTM5LmpwZw==/original/qS48ft.jpg\" -o \"C:/Users/simol/Documents/GitHub/simoliguori/assets/img/bg-tile.jpg\")",
+      "WebFetch(domain:year0001.com)",
+      "WebFetch(domain:nesso.xyz)",
+      "mcp__Windows-MCP__Scrape"
     ]
   }
 }

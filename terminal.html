@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mi·ɽài://audiovisual — TERMINAL</title>
+<link rel="icon" type="image/gif" href="assets/img/profile.gif">
+<link href="assets/css/fonts.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #000;
+  color: #cc3333;
+  font-family: "Roboto Mono", "Courier New", monospace;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* CRT scanlines */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.13) 0px,
+    transparent 1px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.13) 3px
+  );
+  animation: scanMove 10s linear infinite;
+}
+@keyframes scanMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 4px; }
+}
+
+/* Init overlay */
+#initOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  cursor: pointer;
+  transition: opacity 0.6s ease;
+}
+#initOverlay.fade-out { opacity: 0; pointer-events: none; }
+
+#initLogo {
+  font-size: clamp(8px, 1.1vw, 13px);
+  line-height: 1.15;
+  color: rgba(200, 30, 30, 0.22);
+  white-space: pre;
+  letter-spacing: 0;
+  pointer-events: none;
+  user-select: none;
+}
+#initText {
+  font-size: 18px;
+  color: #ff4444;
+  letter-spacing: 0.25em;
+  text-shadow: 0 0 12px rgba(255,60,60,0.7);
+}
+#initText::after {
+  content: '█';
+  animation: blink 0.8s step-end infinite;
+}
+#initHint {
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 0.2em;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulse { 0%,100%{color:#333} 50%{color:#882222} }
+
+/* Terminal container */
+#terminal {
+  min-height: 100vh;
+  padding: 20px 24px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Header: box with real cosmic serpent background */
+#headerArea {
+  position: relative;
+  padding: 36px 28px 28px;
+  margin-bottom: 14px;
+  min-height: 200px;
+  overflow: hidden;
+  background: #0b0505;
+  border: 1px solid #2a0808;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 50, 50, 0.08),
+    0 0 28px rgba(120, 0, 0, 0.18);
+}
+
+/* Cosmic serpent — scrolls vertically behind the ASCII art, seamless loop */
+#serpentLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.38;
+  filter: brightness(0.8) contrast(1.2) hue-rotate(-10deg) saturate(1.3);
+}
+#serpentTrack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  will-change: transform;
+  animation: serpentScroll 55s linear infinite;
+}
+#serpentTrack img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@keyframes serpentScroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+/* Subtle scanline overlay on header for CRT feel */
+#headerArea::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.18) 0px,
+    transparent 1px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+#asciiArt {
+  position: relative;
+  z-index: 1;
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-size: clamp(6px, 1.15vw, 14px);
+  line-height: 1.18;
+  color: #ff3333;
+  text-shadow: 0 0 10px rgba(255, 40, 40, 0.55);
+  white-space: pre;
+  letter-spacing: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ascii-sub {
+  display: block;
+  color: #882222;
+  font-size: 0.9em;
+  text-shadow: none;
+  margin-top: 0.4em;
+}
+.ascii-tag {
+  color: #551111;
+  font-size: 0.78em;
+}
+
+/* Boot output */
+#output {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #883333;
+  margin-bottom: 24px;
+  min-height: 1em;
+}
+.out-prompt { color: #ff4444; }
+.out-ok     { color: #33aa55; }
+.out-dim    { color: #442222; }
+
+/* Cursor blink on active element */
+.typing-cursor::after {
+  content: '█';
+  color: #ff4444;
+  animation: blink 0.7s step-end infinite;
+}
+
+/* Menu */
+#menu {
+  display: none;
+  margin-bottom: 24px;
+}
+.menu-prompt-label {
+  font-size: 11px;
+  color: #aa5555;
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 9px 14px;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: #883333;
+  user-select: none;
+  transition: border-color 0.08s, color 0.08s, background 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-item::before {
+  content: '  ';
+  white-space: pre;
+  margin-right: 6px;
+  color: #ff4444;
+}
+.menu-item.selected {
+  color: #ff6666;
+  border-color: #ff3333;
+  background: rgba(255, 30, 30, 0.07);
+  text-shadow: 0 0 8px rgba(255,50,50,0.6);
+}
+.menu-item.selected::before { content: '▶ '; }
+.menu-item:hover:not(.selected) { color: #cc4444; border-color: #441111; }
+.menu-item .item-badge {
+  margin-left: 10px;
+  font-size: 9px;
+  color: #ff3333;
+  letter-spacing: 0.1em;
+  border: 1px solid #ff3333;
+  padding: 1px 4px;
+}
+.menu-hint {
+  font-size: 10px;
+  color: #aa6666;
+  margin-top: 10px;
+  letter-spacing: 0.1em;
+}
+
+/* Section windows */
+.section-window {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
+  margin-bottom: 0;
+  border: 0px solid transparent;
+}
+.section-window.open {
+  max-height: 1200px;
+  opacity: 1;
+  margin-bottom: 14px;
+  border: 1px solid #330000;
+  box-shadow: 0 0 24px rgba(200,0,0,0.12), inset 0 0 30px rgba(0,0,0,0.5);
+}
+.win-titlebar {
+  background: linear-gradient(90deg, #120000, #200000);
+  border-bottom: 1px solid #330000;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+.win-title { color: #ff5555; }
+.win-chrome { color: #441111; font-size: 10px; }
+.win-close {
+  cursor: pointer;
+  color: #cc6666;
+  border: 1px solid #552222;
+  padding: 1px 6px;
+  font-size: 12px;
+  transition: all 0.1s;
+  user-select: none;
+}
+.win-close:hover { background: #ff3333; color: #000; border-color: #ff3333; }
+.win-body {
+  padding: 16px 20px 20px;
+  font-size: 12px;
+  line-height: 2;
+  background: rgba(6, 0, 0, 0.85);
+}
+.win-line {
+  display: block;
+  color: #aa3333;
+}
+.win-line::before { content: '> '; color: #ff3333; }
+.win-link {
+  color: #ff5555;
+  text-decoration: none;
+  transition: text-shadow 0.15s;
+}
+.win-link:hover { text-shadow: 0 0 10px rgba(255,80,80,0.8); text-decoration: underline; }
+.win-section-label {
+  display: block;
+  color: #aa6666;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  margin: 12px 0 4px;
+  border-top: 1px solid #331111;
+  padding-top: 10px;
+}
+.win-section-label:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+
+/* Portfolio grid */
+.pf-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 8px 0 6px;
+}
+.pf-card {
+  display: block;
+  text-decoration: none;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 4px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative;
+}
+.pf-card:hover {
+  border-color: #ff3333;
+  box-shadow: 0 0 24px rgba(255, 50, 50, 0.22);
+  transform: translateY(-2px);
+}
+.pf-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.35) contrast(1.1) saturate(0.65) sepia(0.15) brightness(0.88);
+  transition: filter 0.25s;
+}
+.pf-card:hover .pf-img { filter: none; }
+.pf-label {
+  color: #ff5555;
+  font-size: 11px;
+  padding: 6px 4px 2px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.pf-grid-sm {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 8px 0 6px;
+}
+.pf-thumb {
+  border: 1px solid #2a0808;
+  padding: 3px;
+  background: #080303;
+  transition: border-color 0.2s, transform 0.2s;
+  display: block;
+}
+.pf-thumb img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.4) contrast(1.1) saturate(0.55) sepia(0.18) brightness(0.85);
+  transition: filter 0.25s;
+}
+.pf-thumb:hover {
+  border-color: #ff3333;
+  transform: scale(1.03);
+}
+.pf-thumb:hover img { filter: none; }
+
+.pf-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a0505 0%, #050000 100%);
+  color: #ff3333;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  border: 1px dashed #330000;
+}
+
+/* Sub-focus (arrow-key navigation inside a section) */
+.sub-focused { position: relative; }
+
+.pf-card.sub-focused {
+  border-color: #ff5555;
+  box-shadow: 0 0 28px rgba(255, 60, 60, 0.55);
+  transform: translateY(-3px);
+}
+.pf-card.sub-focused .pf-img { filter: none; }
+.pf-card.sub-focused .pf-label {
+  color: #ff9999;
+  text-shadow: 0 0 10px rgba(255, 100, 100, 0.7);
+}
+
+.pf-thumb.sub-focused {
+  border-color: #ff5555;
+  transform: scale(1.07);
+  box-shadow: 0 0 22px rgba(255, 60, 60, 0.5);
+}
+.pf-thumb.sub-focused img { filter: none; }
+
+.win-link.sub-focused {
+  background: rgba(255, 50, 50, 0.12);
+  outline: 1px solid #ff3333;
+  outline-offset: 2px;
+  padding: 0 5px;
+  text-shadow: 0 0 10px rgba(255, 80, 80, 0.8);
+  color: #ff9999;
+}
+
+/* Dim the selected menu item while we're diving into its section */
+.menu-item.selected.menu-dimmed {
+  border-color: #661111;
+  background: rgba(255, 30, 30, 0.03);
+  opacity: 0.55;
+  text-shadow: none;
+}
+.menu-item.selected.menu-dimmed::before { content: '▷ '; }
+
+/* Footer */
+#footer {
+  text-align: center;
+  font-size: 10px;
+  color: #996666;
+  padding: 20px;
+  border-top: 1px solid #331111;
+  margin-top: 40px;
+  letter-spacing: 0.15em;
+}
+#footer a { color: #bb7777; text-decoration: none; transition: color 0.15s, text-shadow 0.15s; }
+#footer a:hover { color: #ff7777; text-shadow: 0 0 8px rgba(255,100,100,0.6); }
+
+/* Glitch flash on header */
+@keyframes headerGlitch {
+  0%   { filter: none; transform: none; }
+  15%  { filter: hue-rotate(90deg) brightness(1.5); transform: translateX(-2px) skewX(1deg); }
+  30%  { filter: hue-rotate(-60deg) brightness(0.8); transform: translateX(3px); }
+  45%  { filter: none; transform: translateX(-1px) skewX(-0.5deg); }
+  100% { filter: none; transform: none; }
+}
+#asciiArt.glitching { animation: headerGlitch 0.18s steps(3) forwards; }
+
+/* SoundCloud embed wrapper */
+.pf-embed {
+  margin: 10px 0 8px;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 4px;
+}
+.pf-embed iframe { display: block; width: 100%; border: 0; }
+
+/* ═══ PORTFOLIO LIGHTBOX ═══ */
+.pf-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.78);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  perspective: 1100px;
+  cursor: zoom-out;
+}
+.pf-lightbox.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.pf-lb-wrap {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.08s ease-out;
+  will-change: transform;
+  max-width: 80vw;
+  max-height: 80vh;
+  cursor: default;
+}
+.pf-lb-wrap.spin-in {
+  animation: pfLbSpin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards;
+}
+@keyframes pfLbSpin {
+  0%   { transform: rotateY(0deg)   scale(0.35); opacity: 0.0; }
+  18%  { transform: rotateY(60deg)  scale(0.55); opacity: 1; }
+  100% { transform: rotateY(360deg) scale(1);   opacity: 1; }
+}
+.pf-lb-wrap img {
+  display: block;
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border: 1px solid #551111;
+  box-shadow: 0 0 50px rgba(255, 68, 68, 0.35), 0 0 120px rgba(255, 30, 30, 0.2);
+}
+/* holo laminate (ported from index.html maeba lightbox) */
+.pf-lb-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--holo-angle, 125deg),
+    rgba(255,0,120,0)    0%,
+    rgba(255,0,120,0.2)  8%,
+    rgba(255,210,0,0.2)  22%,
+    rgba(0,255,120,0.2)  38%,
+    rgba(0,120,255,0.2)  54%,
+    rgba(180,0,255,0.2)  70%,
+    rgba(255,0,120,0.2)  84%,
+    rgba(255,0,120,0)    100%
+  );
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: var(--holo-opacity, 0.2);
+  z-index: 2;
+}
+.pf-lb-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--flare-opacity, 0);
+  transition: opacity 0.12s ease;
+  background:
+    radial-gradient(ellipse 7% 7%     at var(--fx, 50%) var(--fy, 50%), rgba(255,255,255,1)     0%, transparent 65%),
+    radial-gradient(ellipse 5% 5%     at var(--gx, 50%) var(--gy, 50%), rgba(255,140,50,1)      0%, transparent 60%),
+    radial-gradient(ellipse 3.5% 3.5% at var(--sx, 50%) var(--sy, 50%), rgba(120,170,255,0.95)  0%, transparent 60%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 3;
+}
+.pf-lb-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.28) 0px, transparent 1px, transparent 9px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0px, transparent 1px, transparent 9px);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 4;
+  opacity: var(--holo-opacity, 0.6);
+}
+.pf-lb-close {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  width: 36px;
+  height: 36px;
+  background: rgba(20, 10, 10, 0.85);
+  border: 1px solid #551111;
+  color: #ff8888;
+  font-size: 18px;
+  line-height: 34px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10001;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+.pf-lb-close:hover { background: #ff4444; color: #fff; }
+.pf-lb-counter {
+  position: fixed;
+  top: 24px;
+  left: 28px;
+  color: #ff9999;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  z-index: 10001;
+  pointer-events: none;
+  text-shadow: 0 0 6px rgba(255,70,70,0.4);
+}
+.pf-lb-hint {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #551111;
+  color: #ffaaaa;
+  font-size: 11px;
+  padding: 7px 16px;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10001;
+  text-transform: uppercase;
+}
+.pf-lb-visit {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  color: #ffaaaa;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 7px 14px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #551111;
+  text-decoration: none;
+  z-index: 10001;
+  text-transform: uppercase;
+  transition: background 0.2s, color 0.2s;
+}
+.pf-lb-visit:hover { background: #ff4444; color: #fff; }
+
+@media (max-width: 768px) {
+  #terminal { padding: 12px 14px 40px; }
+  #asciiArt { font-size: clamp(5px, 2.3vw, 11px); }
+  .menu-item { font-size: 13px; padding: 11px 10px; }
+  .win-body { font-size: 12px; padding: 12px 14px 16px; }
+  #headerArea { min-height: 150px; padding: 24px 16px 20px; }
+  .pf-grid { grid-template-columns: repeat(2, 1fr); }
+  .pf-grid-sm { grid-template-columns: repeat(3, 1fr); }
+  .pf-lb-wrap img { max-width: 92vw; max-height: 62vh; }
+  .pf-lb-hint { font-size: 9px; padding: 6px 10px; bottom: 14px; }
+  .pf-lb-visit { display: none; }
+  .pf-lb-counter { font-size: 9px; top: 14px; left: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ INIT OVERLAY ═══ -->
+<div id="initOverlay">
+  <pre id="initLogo">███╗   ███╗██╗██████╗  █████╗ ██╗
+████╗ ████║██║██╔══██╗██╔══██╗██║
+██╔████╔██║██║██████╔╝███████║██║
+██║╚██╔╝██║██║██╔══██╗██╔══██║██║
+██║ ╚═╝ ██║██║██║  ██║██║  ██║██║
+╚═╝     ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝</pre>
+  <div id="initText">&gt; SYSTEM READY</div>
+  <div id="initHint">[ CLICK ANYWHERE TO INITIALIZE ]</div>
+</div>
+
+<!-- ═══ MAIN TERMINAL ═══ -->
+<div id="terminal">
+
+  <!-- Header: serpent background + ASCII art -->
+  <div id="headerArea">
+    <div id="serpentLayer">
+      <div id="serpentTrack">
+        <img src="assets/img/bg-serpent.png" alt="" aria-hidden="true">
+        <img src="assets/img/bg-serpent.png" alt="" aria-hidden="true">
+      </div>
+    </div>
+    <pre id="asciiArt"></pre>
+  </div>
+
+  <!-- Boot log -->
+  <div id="output"></div>
+
+  <!-- Navigation menu -->
+  <div id="menu">
+    <div class="menu-prompt-label">// SELECT SECTION :</div>
+    <div class="menu-item selected" data-key="about">
+      [01] ABOUT / BIO
+    </div>
+    <div class="menu-item" data-key="portfolio">
+      [02] PORTFOLIO
+    </div>
+    <div class="menu-item" data-key="links">
+      [03] LINKS
+    </div>
+    <div class="menu-item" data-key="contact">
+      [04] GUESTBOOK
+    </div>
+    <div class="menu-hint" id="menuHint">↑↓ NAV &nbsp;·&nbsp; ENTER OPEN &nbsp;·&nbsp; → DIVE IN &nbsp;·&nbsp; ← / ESC BACK</div>
+  </div>
+
+  <!-- ── ABOUT ── -->
+  <div class="section-window" id="sec-about">
+    <div class="win-titlebar">
+      <span class="win-title">// ABOUT / BIO</span>
+      <span class="win-chrome">─────────────────────────────────</span>
+      <span class="win-close" data-close="about">✕</span>
+    </div>
+    <div class="win-body">
+      <span class="win-section-label">[ IDENTITY ]</span>
+      <span class="win-line">Name: Simone Liguori — mi·ɽài</span>
+      <span class="win-line">Pronouns: he / they</span>
+      <span class="win-line">Location: Napoli, IT</span>
+      <span class="win-section-label">[ STATUS ]</span>
+      <span class="win-line">Studying electronic music @ Conservatorio S. Pietro a Majella</span>
+      <span class="win-line">Audiovisual artist · electronic music · generative visuals</span>
+      <span class="win-line">Real-time performance systems · IDM · glitch · noise</span>
+      <span class="win-section-label">[ TOOLS ]</span>
+      <span class="win-line">Ableton Live · TouchDesigner · Max/MSP · DaVinci Resolve</span>
+    </div>
+  </div>
+
+  <!-- ── PORTFOLIO ── -->
+  <div class="section-window" id="sec-portfolio">
+    <div class="win-titlebar">
+      <span class="win-title">// PORTFOLIO</span>
+      <span class="win-chrome">────────────────────────────────────────</span>
+      <span class="win-close" data-close="portfolio">✕</span>
+    </div>
+    <div class="win-body">
+      <span class="win-section-label">[ VIDEO ]</span>
+      <div class="pf-grid">
+        <a href="https://youtu.be/97KSk3I0vUA" target="_blank" class="pf-card">
+          <div class="pf-placeholder">▶ A GA MAEBA — M/V</div>
+          <div class="pf-label">↳ watch on YouTube</div>
+        </a>
+      </div>
+
+      <span class="win-section-label">[ A GA MAEBA — M/V STILLS ]</span>
+      <div class="pf-grid-sm">
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba1.png">
+          <img src="assets/img/maeba/maeba1.png" loading="lazy" alt="maeba 01">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba2.png">
+          <img src="assets/img/maeba/maeba2.png" loading="lazy" alt="maeba 02">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba3.png">
+          <img src="assets/img/maeba/maeba3.png" loading="lazy" alt="maeba 03">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba4.png">
+          <img src="assets/img/maeba/maeba4.png" loading="lazy" alt="maeba 04">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba5.png">
+          <img src="assets/img/maeba/maeba5.png" loading="lazy" alt="maeba 05">
+        </a>
+      </div>
+
+      <span class="win-section-label">[ AUDIO ]</span>
+      <div class="pf-embed">
+        <iframe width="100%" height="140" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/eccerobot/i-want-to-commit-vehicular-manslaughter&color=%23ff4444&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false" loading="lazy"></iframe>
+      </div>
+      <span class="win-line">
+        <a href="https://soundcloud.com/eccerobot/i-want-to-commit-vehicular-manslaughter" target="_blank" class="win-link">↳ I WANT TO COMMIT VEHICULAR MANSLAUGHTER [SoundCloud]</a>
+      </span>
+      <span class="win-line">
+        <a href="https://eccerobot.bandcamp.com/" target="_blank" class="win-link">↳ eccerobot [Bandcamp]</a>
+      </span>
+
+      <span class="win-section-label">[ RESOURCES ]</span>
+      <div class="pf-grid">
+        <a href="https://youtu.be/32oo0oyLUdE" target="_blank" class="pf-card">
+          <img src="assets/img/as-evident-as-euclid.jpg" loading="lazy" class="pf-img" alt="">
+          <div class="pf-label">↳ As Evident as Euclid</div>
+        </a>
+        <a href="https://youtu.be/evlGVKxWj9g?list=PLz0-jQT1WHB07uKqoxUCrhmngZHj5_weY" target="_blank" class="pf-card">
+          <img src="assets/img/i-am-not-a-robot.jpeg" loading="lazy" class="pf-img" alt="">
+          <div class="pf-label">↳ i am not a robot</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LINKS ── -->
+  <div class="section-window" id="sec-links">
+    <div class="win-titlebar">
+      <span class="win-title">// LINKS</span>
+      <span class="win-chrome">────────────────────────────────────────────</span>
+      <span class="win-close" data-close="links">✕</span>
+    </div>
+    <div class="win-body">
+      <span class="win-section-label">[ SOCIAL ]</span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/mi.rai.av" target="_blank" class="win-link">↳ @mi.rai.av — Instagram [AV work]</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/pinkisnt.dead" target="_blank" class="win-link">↳ @pinkisnt.dead — Instagram [personal]</a>
+      </span>
+      <span class="win-section-label">[ MUSIC ]</span>
+      <span class="win-line">
+        <a href="https://soundcloud.com/eccerobot" target="_blank" class="win-link">↳ eccerobot — SoundCloud</a>
+      </span>
+      <span class="win-line">
+        <a href="https://eccerobot.bandcamp.com/" target="_blank" class="win-link">↳ eccerobot — Bandcamp</a>
+      </span>
+      <span class="win-section-label">[ COMING SOON ]</span>
+      <span class="win-line" style="color:#774444;">↳ YouTube channel</span>
+      <span class="win-line" style="color:#774444;">↳ Resident Advisor profile</span>
+    </div>
+  </div>
+
+  <!-- ── GUESTBOOK ── -->
+  <div class="section-window" id="sec-contact">
+    <div class="win-titlebar">
+      <span class="win-title">// GUESTBOOK</span>
+      <span class="win-chrome">──────────────────────────────────────</span>
+      <span class="win-close" data-close="contact">✕</span>
+    </div>
+    <div class="win-body" id="guestbookBody">
+      <!-- giscus loaded lazily on first open -->
+    </div>
+  </div>
+
+  <div id="footer">© 2026 mi·ɽài://audiovisual &nbsp;·&nbsp; <a href="index.html">← back to main site</a></div>
+
+  <!-- ═══ PORTFOLIO LIGHTBOX ═══ -->
+  <div id="pfLightbox" class="pf-lightbox" role="dialog" aria-hidden="true">
+    <div class="pf-lb-counter" id="pfLbCounter">01 / 07</div>
+    <div class="pf-lb-close" id="pfLbClose">✕</div>
+    <div class="pf-lb-wrap" id="pfLbWrap">
+      <img id="pfLbImg" src="" alt="">
+      <div class="pf-lb-grid"></div>
+    </div>
+    <a id="pfLbVisit" class="pf-lb-visit" href="#" target="_blank" rel="noopener">↳ open source</a>
+    <div class="pf-lb-hint">← → swipe / arrows · esc to close · move to tilt</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const ASCII_ART = `███╗   ███╗██╗██████╗  █████╗ ██╗
+████╗ ████║██║██╔══██╗██╔══██╗██║
+██╔████╔██║██║██████╔╝███████║██║
+██║╚██╔╝██║██║██╔══██╗██╔══██║██║
+██║ ╚═╝ ██║██║██║  ██║██║  ██║██║
+╚═╝     ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝
+
+  mi·ɽài://audiovisual
+  audiovisual artist · idm · glitch · real-time systems`;
+
+const SECTION_KEYS = ['about', 'portfolio', 'links', 'contact'];
+const BOOT_LINES = [
+  { text: '> INITIALIZING mi·ɽài://audiovisual OS v0.1', cls: 'out-prompt', pre: 0 },
+  { text: '> LOADING AUDIO ENGINE............... [OK]',    cls: 'out-ok',     pre: 180 },
+  { text: '> LOADING VISUAL ENGINE.............. [OK]',   cls: 'out-ok',     pre: 80  },
+  { text: '> SPAWNING COSMIC ENTITY............. [OK]',   cls: 'out-ok',     pre: 120 },
+  { text: '> RENDERING HEADER...',                        cls: 'out-prompt', pre: 200 },
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let audioCtx = null;
+let selectedIdx = 0;
+let openSections = new Set();
+let guestbookLoaded = false;
+let headerGlitchTimer = null;
+
+// Sub-focus state: when user "dives into" an open section via Right arrow
+let focusMode = 'menu';       // 'menu' | 'section'
+let focusSectionKey = null;   // which section key we dove into
+let focusItemIdx = 0;         // index in that section's focusable items
+
+// ─────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ─────────────────────────────────────────────
+// AUDIO ENGINE
+// ─────────────────────────────────────────────
+function initAudio() {
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch(e) { audioCtx = null; }
+}
+
+function playGlitch(cp) {
+  if (!audioCtx || !cp) return;
+  // Skip whitespace
+  if (cp <= 32) return;
+  // 65% play rate
+  if (Math.random() > 0.65) return;
+
+  try {
+    const isBlock = cp > 9000; // Unicode box-drawing / block chars
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    // Base pitch: block chars → higher freq, normal chars → lower
+    const basePitch = isBlock
+      ? 350 + (cp % 600) * 0.4 + Math.random() * 1400
+      : 80  + (cp % 180) * 0.3 + Math.random() * 380;
+
+    osc.frequency.setValueAtTime(basePitch, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(
+      Math.max(40, basePitch * (0.3 + Math.random() * 2.4)),
+      audioCtx.currentTime + 0.055
+    );
+
+    osc.type = Math.random() < 0.58 ? 'square' : 'sawtooth';
+
+    const dur = 0.011 + Math.random() * 0.068;
+    gain.gain.setValueAtTime(0.085, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + dur + 0.008);
+  } catch(e) {}
+}
+
+function playMenuNav() {
+  if (!audioCtx) return;
+  try {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.setValueAtTime(900 + Math.random() * 300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.04);
+    osc.type = 'square';
+    gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+function playMenuOpen(opening) {
+  if (!audioCtx) return;
+  try {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const [f0, f1] = opening ? [180, 520] : [520, 180];
+    osc.frequency.setValueAtTime(f0, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(f1, audioCtx.currentTime + 0.12);
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.16);
+  } catch(e) {}
+}
+
+// CRT power-on: sub thump + ascending sweep + static crackle + chime
+function playBootSfx() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+
+    // 1) Sub-bass power-on thump
+    const sub = audioCtx.createOscillator();
+    const subG = audioCtx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(90, now);
+    sub.frequency.exponentialRampToValueAtTime(28, now + 0.45);
+    subG.gain.setValueAtTime(0.0001, now);
+    subG.gain.exponentialRampToValueAtTime(0.34, now + 0.015);
+    subG.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    sub.connect(subG); subG.connect(audioCtx.destination);
+    sub.start(now); sub.stop(now + 0.55);
+
+    // 2) Ascending CRT sweep
+    const sweep = audioCtx.createOscillator();
+    const sweepF = audioCtx.createBiquadFilter();
+    const sweepG = audioCtx.createGain();
+    sweep.type = 'sawtooth';
+    sweep.frequency.setValueAtTime(95, now);
+    sweep.frequency.exponentialRampToValueAtTime(1900, now + 0.55);
+    sweepF.type = 'bandpass';
+    sweepF.frequency.setValueAtTime(380, now);
+    sweepF.frequency.exponentialRampToValueAtTime(3200, now + 0.55);
+    sweepF.Q.value = 4.5;
+    sweepG.gain.setValueAtTime(0.0001, now);
+    sweepG.gain.exponentialRampToValueAtTime(0.14, now + 0.05);
+    sweepG.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    sweep.connect(sweepF); sweepF.connect(sweepG); sweepG.connect(audioCtx.destination);
+    sweep.start(now); sweep.stop(now + 0.65);
+
+    // 3) Static crackle burst
+    const nLen = Math.floor(audioCtx.sampleRate * 0.3);
+    const nBuf = audioCtx.createBuffer(1, nLen, audioCtx.sampleRate);
+    const nData = nBuf.getChannelData(0);
+    for (let i = 0; i < nLen; i++) {
+      nData[i] = (Math.random()*2 - 1) * Math.pow(1 - i/nLen, 1.4);
+    }
+    const nSrc = audioCtx.createBufferSource();
+    nSrc.buffer = nBuf;
+    const nF = audioCtx.createBiquadFilter();
+    nF.type = 'highpass'; nF.frequency.value = 2200;
+    const nG = audioCtx.createGain();
+    nG.gain.setValueAtTime(0.085, now + 0.02);
+    nG.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+    nSrc.connect(nF); nF.connect(nG); nG.connect(audioCtx.destination);
+    nSrc.start(now + 0.02);
+
+    // 4) "Ready" chime — high triangle with a tiny detune
+    const chime = audioCtx.createOscillator();
+    const chimeG = audioCtx.createGain();
+    chime.type = 'triangle';
+    chime.frequency.setValueAtTime(1760, now + 0.55);   // A6
+    chime.frequency.exponentialRampToValueAtTime(1770, now + 1.0);
+    chimeG.gain.setValueAtTime(0.0001, now + 0.55);
+    chimeG.gain.exponentialRampToValueAtTime(0.17, now + 0.58);
+    chimeG.gain.exponentialRampToValueAtTime(0.0001, now + 1.05);
+    chime.connect(chimeG); chimeG.connect(audioCtx.destination);
+    chime.start(now + 0.55); chime.stop(now + 1.1);
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────────
+// TYPING ENGINE
+// ─────────────────────────────────────────────
+async function typeAscii(el, text, speed) {
+  for (const ch of text) {
+    el.textContent += ch;
+    if (ch !== ' ' && ch !== '\n') playGlitch(ch.codePointAt(0));
+    await sleep(speed);
+  }
+}
+
+async function addOutputLine(container, text, cls, preDelay = 0) {
+  if (preDelay) await sleep(preDelay);
+  const line = document.createElement('span');
+  line.style.display = 'block';
+  if (cls) {
+    // Apply class color via inline style (simpler than dynamic class)
+    if (cls === 'out-ok')     line.style.color = '#336644';
+    else if (cls === 'out-prompt') line.style.color = '#883333';
+    else if (cls === 'out-dim')    line.style.color = '#331111';
+  }
+  line.classList.add('typing-cursor');
+  container.appendChild(line);
+
+  const SPEED = 22;
+  for (const ch of text) {
+    line.textContent += ch;
+    if (ch !== ' ') playGlitch(ch.codePointAt(0));
+    await sleep(SPEED);
+  }
+  line.classList.remove('typing-cursor');
+}
+
+// ─────────────────────────────────────────────
+// HEADER GLITCH (post-boot random corruption)
+// ─────────────────────────────────────────────
+function scheduleHeaderGlitch() {
+  const delay = 3000 + Math.random() * 7000;
+  headerGlitchTimer = setTimeout(() => {
+    const el = document.getElementById('asciiArt');
+    el.classList.add('glitching');
+    setTimeout(() => {
+      el.classList.remove('glitching');
+      scheduleHeaderGlitch();
+    }, 220);
+  }, delay);
+}
+
+// ─────────────────────────────────────────────
+// BOOT SEQUENCE
+// ─────────────────────────────────────────────
+async function boot() {
+  const output   = document.getElementById('output');
+  const asciiEl  = document.getElementById('asciiArt');
+  const menuEl   = document.getElementById('menu');
+
+  // Boot log lines
+  for (const line of BOOT_LINES) {
+    await addOutputLine(output, line.text, line.cls, line.pre);
+  }
+
+  await sleep(280);
+
+  // Type ASCII art
+  await typeAscii(asciiEl, ASCII_ART, 4);
+
+  await sleep(450);
+
+  // Ready line
+  await addOutputLine(output, '> SYSTEM ONLINE. AWAITING INPUT.', 'out-prompt', 100);
+  await sleep(200);
+
+  // Show menu
+  menuEl.style.display = 'block';
+  menuEl.style.opacity = '0';
+  menuEl.style.transition = 'opacity 0.4s ease';
+  requestAnimationFrame(() => { menuEl.style.opacity = '1'; });
+
+  // Start periodic header glitch
+  scheduleHeaderGlitch();
+}
+
+// ─────────────────────────────────────────────
+// MENU LOGIC
+// ─────────────────────────────────────────────
+function getMenuItems() {
+  return document.querySelectorAll('.menu-item');
+}
+
+function updateMenuUI() {
+  getMenuItems().forEach((el, i) => {
+    el.classList.toggle('selected', i === selectedIdx);
+    const key   = el.dataset.key;
+    const badge = el.querySelector('.item-badge');
+    if (openSections.has(key)) {
+      if (!badge) {
+        const b = document.createElement('span');
+        b.className = 'item-badge';
+        b.textContent = 'OPEN';
+        el.appendChild(b);
+      }
+    } else {
+      if (badge) badge.remove();
+    }
+  });
+}
+
+function openSection(key) {
+  const win = document.getElementById('sec-' + key);
+  if (!win) return;
+  win.classList.add('open');
+  openSections.add(key);
+  updateMenuUI();
+  playMenuOpen(true);
+
+  // Lazy-load giscus on first guestbook open
+  if (key === 'contact' && !guestbookLoaded) {
+    guestbookLoaded = true;
+    const body   = document.getElementById('guestbookBody');
+    const script = document.createElement('script');
+    script.src                        = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo',          'simoliguori/simoliguori');
+    script.setAttribute('data-repo-id',       'R_kgDORkEgmQ');
+    script.setAttribute('data-category-id',   'DIC_kwDORkEgmc4C7ahJ');
+    script.setAttribute('data-mapping',       'pathname');
+    script.setAttribute('data-strict',        '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position','bottom');
+    script.setAttribute('data-theme',         'dark');
+    script.setAttribute('data-lang',          'it');
+    script.setAttribute('crossorigin',        'anonymous');
+    script.async = true;
+    body.appendChild(script);
+  }
+
+  // Scroll into view after transition starts
+  setTimeout(() => win.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+}
+
+function closeSection(key) {
+  const win = document.getElementById('sec-' + key);
+  if (!win) return;
+  win.classList.remove('open');
+  openSections.delete(key);
+  // Exit sub-focus if we were diving into this section
+  if (focusMode === 'section' && focusSectionKey === key) exitSection();
+  updateMenuUI();
+  playMenuOpen(false);
+}
+
+function toggleSection(key) {
+  if (openSections.has(key)) closeSection(key);
+  else openSection(key);
+}
+
+function navigate(delta) {
+  selectedIdx = (selectedIdx + delta + SECTION_KEYS.length) % SECTION_KEYS.length;
+  updateMenuUI();
+  playMenuNav();
+}
+
+// ─────────────────────────────────────────────
+// SUB-SECTION FOCUS (navigate items inside an open window)
+// ─────────────────────────────────────────────
+function getFocusableItems(key) {
+  const win = document.getElementById('sec-' + key);
+  if (!win) return [];
+  return [...win.querySelectorAll('a[href]')];
+}
+
+function updateSubFocusUI() {
+  // Clear previous
+  document.querySelectorAll('.sub-focused').forEach(el => el.classList.remove('sub-focused'));
+  document.querySelectorAll('.menu-item.menu-dimmed').forEach(el => el.classList.remove('menu-dimmed'));
+
+  if (focusMode !== 'section' || !focusSectionKey) return;
+
+  const items = getFocusableItems(focusSectionKey);
+  const target = items[focusItemIdx];
+  if (target) {
+    target.classList.add('sub-focused');
+    target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  // Dim the menu row so it's clear focus moved
+  const menuEl = getMenuItems()[SECTION_KEYS.indexOf(focusSectionKey)];
+  if (menuEl) menuEl.classList.add('menu-dimmed');
+}
+
+function enterSection(key) {
+  const items = getFocusableItems(key);
+  if (items.length === 0) return false;
+  focusMode = 'section';
+  focusSectionKey = key;
+  focusItemIdx = 0;
+  updateSubFocusUI();
+  playMenuOpen(true);
+  return true;
+}
+
+function exitSection() {
+  if (focusMode !== 'section') return;
+  focusMode = 'menu';
+  focusSectionKey = null;
+  focusItemIdx = 0;
+  updateSubFocusUI();
+  playMenuOpen(false);
+}
+
+function subNavigate(delta) {
+  const items = getFocusableItems(focusSectionKey);
+  if (items.length === 0) return;
+  focusItemIdx = (focusItemIdx + delta + items.length) % items.length;
+  updateSubFocusUI();
+  playMenuNav();
+}
+
+function activateSubItem() {
+  const items = getFocusableItems(focusSectionKey);
+  const target = items[focusItemIdx];
+  if (target) target.click();
+}
+
+// ─────────────────────────────────────────────
+// KEYBOARD NAVIGATION
+// ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (document.getElementById('menu').style.display === 'none') return;
+
+  if (focusMode === 'menu') {
+    switch(e.key) {
+      case 'ArrowUp':
+        e.preventDefault(); navigate(-1); break;
+      case 'ArrowDown':
+        e.preventDefault(); navigate(1); break;
+      case 'Enter':
+        e.preventDefault(); toggleSection(SECTION_KEYS[selectedIdx]); break;
+      case 'Escape':
+        e.preventDefault(); closeSection(SECTION_KEYS[selectedIdx]); break;
+      case 'ArrowRight': {
+        e.preventDefault();
+        const key = SECTION_KEYS[selectedIdx];
+        // Auto-open the section if it isn't already open, then dive in
+        if (!openSections.has(key)) openSection(key);
+        // Wait a tick for the DOM to reflect, then enter
+        setTimeout(() => enterSection(key), 60);
+        break;
+      }
+    }
+  } else { // focusMode === 'section'
+    switch(e.key) {
+      case 'ArrowUp':
+        e.preventDefault(); subNavigate(-1); break;
+      case 'ArrowDown':
+        e.preventDefault(); subNavigate(1); break;
+      case 'Enter':
+        e.preventDefault(); activateSubItem(); break;
+      case 'ArrowLeft':
+      case 'Escape':
+        e.preventDefault(); exitSection(); break;
+    }
+  }
+});
+
+// ─────────────────────────────────────────────
+// TOUCH NAVIGATION
+// ─────────────────────────────────────────────
+(function() {
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  document.getElementById('menu').addEventListener('touchstart', e => {
+    touchStartY    = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  document.getElementById('menu').addEventListener('touchend', e => {
+    const dy   = touchStartY - e.changedTouches[0].clientY;
+    const dt   = Date.now() - touchStartTime;
+    const isTap = Math.abs(dy) < 12 && dt < 280;
+
+    if (isTap) return; // taps are handled by click listener
+    if (dy > 20)  navigate(1);
+    if (dy < -20) navigate(-1);
+  }, { passive: true });
+})();
+
+// ─────────────────────────────────────────────
+// CLICK / TAP ON MENU ITEMS
+// ─────────────────────────────────────────────
+document.querySelectorAll('.menu-item').forEach((el, i) => {
+  el.addEventListener('click', () => {
+    // Any menu click returns focus to menu mode
+    if (focusMode === 'section') exitSection();
+    selectedIdx = i;
+    updateMenuUI();
+    toggleSection(SECTION_KEYS[i]);
+  });
+});
+
+// Close buttons on section windows
+document.querySelectorAll('.win-close').forEach(el => {
+  el.addEventListener('click', () => closeSection(el.dataset.close));
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+document.getElementById('initOverlay').addEventListener('click', () => {
+  initAudio();
+  playBootSfx();
+  const overlay = document.getElementById('initOverlay');
+  overlay.classList.add('fade-out');
+  setTimeout(() => { overlay.style.display = 'none'; }, 700);
+  // Small delay before boot so the fade looks clean
+  setTimeout(boot, 500);
+}, { once: true });
+
+// ─────────────────────────────────────────────
+// PORTFOLIO LIGHTBOX — collectible-card viewer
+// ─────────────────────────────────────────────
+(function() {
+  const lb       = document.getElementById('pfLightbox');
+  const lbWrap   = document.getElementById('pfLbWrap');
+  const lbImg    = document.getElementById('pfLbImg');
+  const lbClose  = document.getElementById('pfLbClose');
+  const lbVisit  = document.getElementById('pfLbVisit');
+  const lbCounter= document.getElementById('pfLbCounter');
+  if (!lb) return;
+
+  // Collect every element flagged as lightbox-able, in document order
+  const cards = [...document.querySelectorAll('[data-lightbox="1"]')];
+  const items = cards.map(el => ({
+    el,
+    src:   el.dataset.src || el.querySelector('img')?.src || '',
+    link:  el.getAttribute('href') || '',
+    title: el.dataset.title || el.querySelector('img')?.alt || ''
+  }));
+
+  let currentIdx    = 0;
+  let isOpen        = false;
+  let firstOpenDone = false;
+  let suppressTilt  = false;
+
+  // Tilt state (lerp towards target for inertia, ported from index.html)
+  let tRotX = 0, tRotY = 0;
+  let cRotX = 0, cRotY = 0;
+  const LERP    = 0.09;
+  const MAX_ROT = 4.0;
+  // Light direction (fixed top-left, normalized)
+  const _lx = -0.5, _ly = -0.7, _lz = 0.9;
+  const _ll = Math.sqrt(_lx*_lx + _ly*_ly + _lz*_lz);
+  const LL = { x:_lx/_ll, y:_ly/_ll, z:_lz/_ll };
+
+  function updateCounter() {
+    lbCounter.textContent =
+      String(currentIdx + 1).padStart(2, '0') + ' / ' + String(items.length).padStart(2, '0');
+  }
+
+  function renderItem(idx) {
+    if (items.length === 0) return;
+    currentIdx = (idx + items.length) % items.length;
+    const item = items[currentIdx];
+    lbImg.src = item.src;
+    lbImg.alt = item.title;
+    if (item.link && item.link !== '#') {
+      lbVisit.href = item.link;
+      lbVisit.style.display = '';
+    } else {
+      lbVisit.style.display = 'none';
+    }
+    updateCounter();
+  }
+
+  function playJingle() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      // A-major arpeggio: E5 A5 C#6 E6, triangle waves, short attack, long tail
+      const notes = [659.25, 880.00, 1108.73, 1318.51];
+      notes.forEach((f, i) => {
+        const t0 = now + i * 0.10;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filt = audioCtx.createBiquadFilter();
+        filt.type = 'lowpass';
+        filt.frequency.value = 4200;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, t0);
+        osc.frequency.exponentialRampToValueAtTime(f * 1.006, t0 + 0.4);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(0.22, t0 + 0.010);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+        osc.connect(filt); filt.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.55);
+      });
+      // Shimmer tail — band-passed white noise
+      const tailAt = now + 0.45;
+      const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.5), audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random()*2 - 1) * Math.pow(1 - i/data.length, 2.5);
+      }
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 5800; bp.Q.value = 4;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.05, tailAt);
+      g.gain.exponentialRampToValueAtTime(0.0001, tailAt + 0.45);
+      src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+      src.start(tailAt);
+    } catch(e) {}
+  }
+
+  function openLightbox(idx) {
+    if (items.length === 0) return;
+    renderItem(idx);
+    lb.classList.add('open');
+    lb.setAttribute('aria-hidden', 'false');
+    isOpen = true;
+    document.body.style.overflow = 'hidden';
+
+    if (!firstOpenDone) {
+      firstOpenDone = true;
+      playJingle();
+      suppressTilt = true;
+      lbWrap.classList.remove('spin-in');
+      // force reflow so the animation restarts cleanly
+      void lbWrap.offsetWidth;
+      lbWrap.classList.add('spin-in');
+      setTimeout(() => {
+        suppressTilt = false;
+        lbWrap.classList.remove('spin-in');
+      }, 1000);
+    }
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('open');
+    lb.setAttribute('aria-hidden', 'true');
+    isOpen = false;
+    document.body.style.overflow = '';
+    tRotX = 0; tRotY = 0;
+  }
+
+  function navLb(delta) {
+    renderItem(currentIdx + delta);
+    playMenuNav();
+  }
+
+  function updateTiltFromPoint(x, y) {
+    if (suppressTilt) return;
+    const rect = lbWrap.getBoundingClientRect();
+    const dx = (x - (rect.left + rect.width  / 2)) / (rect.width  / 2);
+    const dy = (y - (rect.top  + rect.height / 2)) / (rect.height / 2);
+    tRotX = -dy * MAX_ROT;
+    tRotY =  dx * MAX_ROT;
+  }
+
+  // Intercept clicks on flagged cards (capture phase, fires before menu click handlers)
+  document.addEventListener('click', e => {
+    const card = e.target.closest('[data-lightbox="1"]');
+    if (!card) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const idx = cards.indexOf(card);
+    if (idx >= 0) openLightbox(idx);
+  }, true);
+
+  // Pointer tilt (desktop)
+  lb.addEventListener('mousemove', e => {
+    if (!isOpen) return;
+    updateTiltFromPoint(e.clientX, e.clientY);
+  });
+  lb.addEventListener('mouseleave', () => { tRotX = 0; tRotY = 0; });
+
+  // Touch tilt + swipe nav
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0, touchMoved = false;
+  lb.addEventListener('touchstart', e => {
+    if (!isOpen) return;
+    const t = e.touches[0];
+    if (!t) return;
+    touchStartX    = t.clientX;
+    touchStartY    = t.clientY;
+    touchStartTime = Date.now();
+    touchMoved     = false;
+  }, { passive: true });
+  lb.addEventListener('touchmove', e => {
+    if (!isOpen) return;
+    const t = e.touches[0];
+    if (!t) return;
+    touchMoved = true;
+    updateTiltFromPoint(t.clientX, t.clientY);
+  }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    if (!isOpen) return;
+    const t = e.changedTouches[0];
+    tRotX = 0; tRotY = 0;
+    if (!t) return;
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+    if (dt < 600 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      navLb(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  // Keyboard (capture so it fires BEFORE the menu-mode keydown handler)
+  document.addEventListener('keydown', e => {
+    if (!isOpen) return;
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault(); e.stopPropagation(); closeLightbox(); break;
+      case 'ArrowLeft':
+        e.preventDefault(); e.stopPropagation(); navLb(-1); break;
+      case 'ArrowRight':
+        e.preventDefault(); e.stopPropagation(); navLb(1); break;
+      case 'Enter':
+        // Swallow so it doesn't re-trigger the underlying focused element
+        e.preventDefault(); e.stopPropagation(); break;
+    }
+  }, true);
+
+  // Close on backdrop click; the visit link and close button stop propagation
+  lb.addEventListener('click', e => {
+    if (e.target === lb) closeLightbox();
+  });
+  lbClose.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+  lbVisit.addEventListener('click', e => e.stopPropagation());
+  // Prevent backdrop-click close when interacting with the card itself
+  lbWrap.addEventListener('click', e => e.stopPropagation());
+
+  // rAF loop: apply lerped tilt, compute specular highlight & holo angle
+  (function loop() {
+    cRotX += (tRotX - cRotX) * LERP;
+    cRotY += (tRotY - cRotY) * LERP;
+
+    if (!suppressTilt) {
+      lbWrap.style.transform = `rotateX(${cRotX.toFixed(3)}deg) rotateY(${cRotY.toFixed(3)}deg)`;
+    }
+
+    // Card normal after rotation
+    const rXr = cRotX * Math.PI / 180;
+    const rYr = cRotY * Math.PI / 180;
+    const nx =  Math.sin(rYr);
+    const ny = -Math.sin(rXr) * Math.cos(rYr);
+    const nz =  Math.cos(rXr) * Math.cos(rYr);
+    const dot  = nx*LL.x + ny*LL.y + nz*LL.z;
+    const spec = Math.pow(Math.max(0, dot), 5);
+    lbWrap.style.setProperty('--flare-opacity', spec.toFixed(3));
+
+    // Flare position opposite to the tilt direction
+    const fx = 50 - (cRotY / MAX_ROT) * 52;
+    const fy = 50 + (cRotX / MAX_ROT) * 52;
+    lbWrap.style.setProperty('--fx', fx.toFixed(2) + '%');
+    lbWrap.style.setProperty('--fy', fy.toFixed(2) + '%');
+    lbWrap.style.setProperty('--gx', (100 - fx).toFixed(2) + '%');
+    lbWrap.style.setProperty('--gy', (100 - fy).toFixed(2) + '%');
+    lbWrap.style.setProperty('--sx', ((fx + 50) / 2).toFixed(2) + '%');
+    lbWrap.style.setProperty('--sy', ((fy + 50) / 2).toFixed(2) + '%');
+
+    // Holo sweep perpendicular to flare
+    const flareAngle = Math.atan2(fy - 50, fx - 50) * 180 / Math.PI;
+    lbWrap.style.setProperty('--holo-angle',   (flareAngle + 90).toFixed(2) + 'deg');
+    lbWrap.style.setProperty('--holo-opacity', (0.2 + spec * 0.5).toFixed(3));
+
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>
