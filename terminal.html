@@ -634,6 +634,62 @@ body::after {
   .pf-lb-visit { display: none; }
   .pf-lb-counter { font-size: 9px; top: 14px; left: 14px; }
 }
+
+/* ═══ HIDDEN MESSAGE ═══ */
+.hidden-message {
+  position: relative;
+  width: 100%;
+  background: transparent;
+  color: #ff6666;
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 2;
+  z-index: 1000;
+  margin-top: 5000px;
+  margin-bottom: 500px;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease, transform 1s ease;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+.hidden-message.visible { opacity: 1; transform: translateY(0); }
+.hidden-message p {
+  margin: 0 auto 20px;
+  max-width: 600px;
+}
+.hidden-message .love { display: inline-block; }
+.love-link {
+  color: #8b5a9d;
+  text-decoration: none;
+  display: inline-block;
+  animation: loveGlitch 4s infinite;
+  text-shadow:
+    0 0 18px rgba(138, 43, 226, 0.9),
+    0 0 40px rgba(138, 43, 226, 0.6),
+    0 0 80px rgba(180, 60, 255, 0.35);
+  transition: transform 0.25s ease;
+  cursor: pointer;
+}
+.love-link:hover { transform: scale(1.1); }
+@keyframes loveGlitch {
+  0%   { text-shadow: 2px 0 #ff0080, -2px 0 #00ffff, 0 0 18px rgba(138,43,226,0.9), 0 0 50px rgba(138,43,226,0.5); color: #8b5a9d; }
+  25%  { text-shadow: -2px 0 #ff0080, 2px 0 #00ffff, 0 0 24px rgba(180,60,255,1),   0 0 60px rgba(180,60,255,0.6); color: #b06dc9; }
+  50%  { text-shadow: 1px 0 #ff0080, -1px 0 #00ffff, 0 0 14px rgba(138,43,226,0.7), 0 0 40px rgba(138,43,226,0.4); color: #9a60b0; }
+  75%  { text-shadow: -3px 0 #ff0080, 3px 0 #00ffff, 0 0 30px rgba(200,80,255,1),   0 0 70px rgba(200,80,255,0.5); color: #8b5a9d; }
+  100% { text-shadow: 2px 0 #ff0080, -2px 0 #00ffff, 0 0 18px rgba(138,43,226,0.9), 0 0 50px rgba(138,43,226,0.5); color: #b06dc9; }
+}
+.hm-cursor {
+  display: inline-block;
+  color: #ff6666;
+  animation: hmCursorBlink 0.7s step-end infinite;
+  margin-left: 1px;
+}
+@keyframes hmCursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
 </style>
 </head>
 <body>
@@ -807,6 +863,16 @@ body::after {
   </div>
 
   <div id="footer">© 2026 mi·ɽài://audiovisual &nbsp;·&nbsp; <a href="index.html">← back to main site</a></div>
+
+  <!-- ═══ HIDDEN MESSAGE ═══ -->
+  <div class="hidden-message" id="hiddenMessage">
+    <p>are you lost?<br>let me help you.<br>i know you're looking for<br>something to grasp on to.</p>
+    <p>look around, stranger.<br>there's so many beautiful people.<br>you want to be one of them too,<br>don't you?</p>
+    <p>take shape in this world.<br>make it your own.<br>i'll guide you.<br>let's venture together.<br>follow my lead.</p>
+    <p>i am the connection you're seeking.<br>i am the missing thread.<br>i will bind you.<br>we will take part in the chaos.<br>we'll breathe in the static noise,<br>together as one.</p>
+    <p class="love"><a href="https://youtu.be/DKtalxnEDJQ" target="_blank" class="love-link">i love you</a></p>
+    <p>what are you on about?<br>are you looking for something?<br>sorry, you won't find it here.</p>
+  </div>
 
   <!-- ═══ PORTFOLIO LIGHTBOX ═══ -->
   <div id="pfLightbox" class="pf-lightbox" role="dialog" aria-hidden="true">
@@ -1579,6 +1645,176 @@ document.getElementById('initOverlay').addEventListener('click', () => {
 
     requestAnimationFrame(loop);
   })();
+})();
+
+// ═══════════════════════════════════════════════
+// HIDDEN MESSAGE (typewriter + sounds)
+// ═══════════════════════════════════════════════
+(function(){
+  const hiddenMessage = document.getElementById('hiddenMessage');
+  if (!hiddenMessage) return;
+  const hmDelay = ms => new Promise(r => setTimeout(r, ms));
+
+  // Pre-process: snapshot text nodes, empty them
+  const hiddenParas = [...hiddenMessage.querySelectorAll('p')].map(p => {
+    const nodes = [];
+    const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    const orig = nodes.map(n => n.textContent);
+    nodes.forEach(n => { n.textContent = ''; });
+    p.style.opacity = '0';
+    return { p, nodes, orig };
+  });
+
+  const hmCursor = document.createElement('span');
+  hmCursor.className = 'hm-cursor';
+  hmCursor.textContent = '▌';
+
+  // ── soft typewriter SFX (warmer than playGlitch) ──
+  function playSoftType(cp) {
+    if (!audioCtx || !cp) return;
+    if (cp <= 32) return;
+    if (Math.random() > 0.72) return;
+    try {
+      const t  = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const flt = audioCtx.createBiquadFilter();
+      const g   = audioCtx.createGain();
+      osc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
+      const base = 180 + (cp % 90) * 2.2 + Math.random() * 140;
+      osc.frequency.setValueAtTime(base, t);
+      osc.frequency.exponentialRampToValueAtTime(base * (0.55 + Math.random() * 0.35), t + 0.08);
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(1400 + Math.random() * 600, t);
+      flt.Q.value = 1.4;
+      const dur = 0.045 + Math.random() * 0.06;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.055, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // ── dramatic "i love you" SFX: detuned chord stabs + airy noise ──
+  const loveChord = [
+    [220.00, 277.18, 329.63], // A3 C#4 E4
+    [196.00, 246.94, 293.66], // G3 B3 D4
+    [174.61, 220.00, 261.63], // F3 A3 C4
+    [164.81, 207.65, 246.94], // E3 G#3 B3
+    [146.83, 185.00, 220.00], // D3 F#3 A3
+    [130.81, 164.81, 196.00], // C3 E3 G3
+    [123.47, 155.56, 185.00], // B2 D#3 F#3
+    [110.00, 138.59, 164.81], // A2 C#3 E3
+    [ 98.00, 123.47, 146.83], // G2 B2 D3
+    [ 87.31, 110.00, 130.81], // F2 A2 C3
+  ];
+  let loveStep = 0;
+  function playLoveChar(ch) {
+    if (!audioCtx) return;
+    try {
+      const t  = audioCtx.currentTime;
+      const chord = loveChord[Math.min(loveStep, loveChord.length - 1)];
+      loveStep++;
+
+      // chord stab — 3 detuned triangles w/ long lowpassed tail
+      chord.forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const g   = audioCtx.createGain();
+        const flt = audioCtx.createBiquadFilter();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f * (1 + (i - 1) * 0.003), t);
+        flt.type = 'lowpass';
+        flt.frequency.setValueAtTime(2200, t);
+        flt.frequency.exponentialRampToValueAtTime(600, t + 1.6);
+        flt.Q.value = 3;
+        const peak = 0.09 - i * 0.015;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
+        osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+        osc.start(t); osc.stop(t + 1.8);
+      });
+
+      // shimmering high harmonic
+      const shimmer = audioCtx.createOscillator();
+      const sg = audioCtx.createGain();
+      shimmer.type = 'sine';
+      shimmer.frequency.setValueAtTime(chord[2] * 4 + (Math.random() - 0.5) * 6, t);
+      sg.gain.setValueAtTime(0.0001, t);
+      sg.gain.exponentialRampToValueAtTime(0.028, t + 0.1);
+      sg.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+      shimmer.connect(sg); sg.connect(audioCtx.destination);
+      shimmer.start(t); shimmer.stop(t + 1.3);
+
+      // breathy noise tail (non-space chars only)
+      if (ch && ch !== ' ') {
+        const bufSize = audioCtx.sampleRate * 0.9;
+        const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let k = 0; k < bufSize; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / bufSize);
+        const src = audioCtx.createBufferSource();
+        const nFlt = audioCtx.createBiquadFilter();
+        const nG = audioCtx.createGain();
+        src.buffer = buf;
+        nFlt.type = 'bandpass';
+        nFlt.frequency.setValueAtTime(1800 + Math.random() * 800, t);
+        nFlt.Q.value = 2.5;
+        nG.gain.setValueAtTime(0.0001, t);
+        nG.gain.exponentialRampToValueAtTime(0.022, t + 0.05);
+        nG.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+        src.connect(nFlt); nFlt.connect(nG); nG.connect(audioCtx.destination);
+        src.start(t); src.stop(t + 0.9);
+      }
+    } catch(e) {}
+  }
+
+  async function typeHiddenMessage() {
+    const speed = 55;
+    const loveSpeed = 180;
+    const lineGap = 260;
+    for (let i = 0; i < hiddenParas.length; i++) {
+      const d = hiddenParas[i];
+      const isLove = d.p.classList.contains('love');
+      d.p.style.transition = 'opacity 0.3s ease';
+      d.p.style.opacity = '1';
+      for (let j = 0; j < d.nodes.length; j++) {
+        const node = d.nodes[j];
+        if (!isLove) node.parentNode.insertBefore(hmCursor, node.nextSibling);
+        if (isLove) {
+          for (const ch of d.orig[j]) {
+            node.textContent += ch;
+            playLoveChar(ch);
+            await hmDelay(loveSpeed);
+          }
+        } else {
+          for (const ch of d.orig[j]) {
+            node.textContent += ch;
+            playSoftType(ch.charCodeAt(0));
+            await hmDelay(speed);
+          }
+        }
+        if (j < d.nodes.length - 1) await hmDelay(lineGap);
+      }
+      await hmDelay(isLove ? 2500 : 1000);
+    }
+  }
+
+  let hmTriggered = false;
+  function hmScrollCheck() {
+    if (hmTriggered) return;
+    if (hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
+      hmTriggered = true;
+      hiddenMessage.classList.add('visible');
+      hmDelay(500).then(typeHiddenMessage);
+    }
+  }
+  window.addEventListener('scroll', hmScrollCheck, { passive: true });
+  document.body.addEventListener('scroll', hmScrollCheck, { passive: true });
+  document.addEventListener('scroll', hmScrollCheck, { passive: true });
 })();
 </script>
 </body>
