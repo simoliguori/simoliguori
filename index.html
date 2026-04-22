@@ -58,7 +58,7 @@ body {
   z-index: 0;
   pointer-events: none;
   background: url('assets/img/bg-serpent.png') center/cover no-repeat;
-  opacity: 0.15;
+  opacity: 0.25;
   transform: translate3d(0,0,0);
   will-change: transform;
   animation: slither 20s ease-in-out infinite;
@@ -553,7 +553,6 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
 }
 /* ==== BOOT: hide UI until loader finishes ==== */
 body.booting .page,
-body.booting .bg-tile,
 body.booting .ecce-robot {
   opacity: 0;
 }
@@ -569,8 +568,6 @@ body.booting .ecce-robot {
 }
 
 body:not(.booting) .page              { animation: fadeIn 0.5s ease-out both; }
-body:not(.booting) .background-layer  { animation: slither 20s ease-in-out infinite; }
-body:not(.booting) .bg-tile           { animation: fadeIn 1.2s 0.2s both; }
 body:not(.booting) .ecce-robot        { animation: fadeIn 1.5s 0.5s both; }
 
 /* Sequential reveal: elements hidden until JS toggles .reveal-on */
@@ -1338,7 +1335,7 @@ window.addEventListener('scroll', () => {
 
 (function glitchLoop() {
   const gc = Math.min(glitchIntensity, 1);
-  bgLayer.style.opacity = 0.15 + gc * 0.65;
+  bgLayer.style.opacity = 0.25 + gc * 0.55;
   requestAnimationFrame(glitchLoop);
 })();
 function animateBgTile() {
