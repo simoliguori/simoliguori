@@ -7,6 +7,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="assets/css/fonts.css" rel="stylesheet">
 <style>
+#siteLoader {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  transition: opacity 0.8s ease;
+}
+#siteLoader.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+#loaderGif {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+}
+#loaderText {
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  color: #ff6666;
+  letter-spacing: 0.12em;
+  min-height: 1.4em;
+}
+#loaderText:not(.no-cursor)::after {
+  content: '\2588';
+  animation: cursorBlink 0.6s step-end infinite;
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 * { box-sizing: border-box; margin:0; padding:0; }
 body {
   font-family: "Roboto Mono", monospace;
@@ -239,7 +275,7 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
 .winamp .bar:nth-child(5){animation-delay:.3s}
 @keyframes eq { from { height: 4px; } to { height: 16px; } }
 .content { display: grid; grid-template-columns: 260px 1fr; gap: 14px; padding: 14px; }
-.sidebar, .main { background: #0e0e0e; border: 2px groove #333; padding: 10px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.5); animation: fadeIn 0.8s ease-out; min-width: 0; }
+.sidebar, .main { background: #0e0e0e; border: 2px groove #333; padding: 10px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.5); min-width: 0; }
 .profile-pic { width: 100%; border: 3px double #444; margin-bottom: 8px; cursor: pointer; transition: transform 0.3s ease; object-fit: cover; height: 260px; }
 .profile-pic:hover { transform: scale(1.05); }
 .profile-box { background: #141414; border: 1px solid #333; padding: 6px; margin-bottom: 8px; font-size: 11px; }
@@ -252,7 +288,7 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.section { margin-bottom:16px; background:#111; border:2px groove #333; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.5); animation: fadeInUp 0.6s ease-out backwards; animation-delay: var(--appear-delay, 0s); overflow: hidden; }
+.section { margin-bottom:16px; background:#111; border:2px groove #333; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.5); overflow: hidden; }
 .section-header { background:linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%); padding:6px 8px; font-size:13px; font-weight:bold; color:#ff6666; border-bottom:1px solid #333; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1); }
 .section-body { padding:10px; font-size:12px; line-height:1.8; }
 .embed { border:2px inset #333; background:#000; padding:6px; margin-bottom:10px; }
@@ -387,8 +423,53 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
   transition: opacity 0.65s ease 0.25s;
 }
 .maeba-lightbox.open img { opacity: 1; }
+.lb-close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  background: rgba(20,20,20,0.9);
+  border: 1px solid #555;
+  color: #eaeaea;
+  font-size: 20px;
+  line-height: 36px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10001;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+.lb-close:hover { background: #ff4444; color: #fff; }
+.lb-hint {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  border: 1px solid #444;
+  color: #aaa;
+  font-size: 11px;
+  padding: 6px 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10001;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.maeba-lightbox.open .lb-hint { opacity: 1; }
+.lb-hint.hide { opacity: 0 !important; }
+@keyframes hintFadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
 @media (max-width: 768px) {
   .maeba-slide { width: 200px; }
+  .maeba-lightbox img {
+    max-width: 88vw;
+    max-height: 70vh;
+  }
 }
 .footer { font-size:10px; text-align:center; color:#666; padding:10px; border-top:2px solid #333; background:#080808; }
 .blinkies {
@@ -470,6 +551,44 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
   80%  { transform: translateX(3px) skewX(-0.3deg); }
   100% { transform: translateX(0) skewX(0deg); }
 }
+/* ==== BOOT: hide UI until loader finishes ==== */
+body.booting .page,
+body.booting .background-layer,
+body.booting .bg-tile,
+body.booting .ecce-robot {
+  opacity: 0;
+}
+
+/* ==== GLITCH REVEAL ==== */
+@keyframes glitchReveal {
+  0%   { opacity: 0; transform: translate(-5px, 3px) skewX(2deg); filter: brightness(2) contrast(0.4) hue-rotate(-30deg); clip-path: inset(48% 0 48% 0); }
+  18%  { opacity: 1; clip-path: inset(0 0 0 0); transform: translate(4px, -1px) skewX(-2deg); filter: brightness(1.5) hue-rotate(15deg); }
+  36%  { transform: translate(-3px, 1px) skewX(1deg); filter: brightness(0.8) hue-rotate(-10deg); }
+  54%  { transform: translate(2px, 0) skewX(-1deg); filter: brightness(1.15); }
+  72%  { transform: translate(-1px, 0); filter: brightness(0.95); }
+  100% { opacity: 1; transform: none; filter: none; clip-path: inset(0); }
+}
+
+body:not(.booting) .page              { animation: fadeIn 0.5s ease-out both; }
+body:not(.booting) .background-layer  { animation: fadeIn 1s 0.2s both, slither 20s ease-in-out 0.2s infinite; }
+body:not(.booting) .bg-tile           { animation: fadeIn 1.2s 0.2s both; }
+body:not(.booting) .ecce-robot        { animation: fadeIn 1.5s 0.5s both; }
+
+/* Sequential reveal: elements hidden until JS toggles .reveal-on */
+.reveal-item { opacity: 0; }
+.reveal-item.reveal-on { animation: glitchReveal 0.5s steps(14) both; }
+
+.typing-cursor::after {
+  content: '▌';
+  color: #ff6666;
+  animation: cursorBlink 0.7s step-end infinite;
+  margin-left: 1px;
+}
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 @media (max-width: 768px) {
   .content { grid-template-columns: 1fr; }
   .header h1 { font-size: 20px; }
@@ -513,7 +632,11 @@ body:has(.header a[href="egg.html"]:hover) .header::after {
   }
 }
 </style>
-<body>
+<body class="booting">
+<div id="siteLoader">
+  <img src="assets/img/profile.gif" id="loaderGif" alt="">
+  <div id="loaderText"></div>
+</div>
 <div class="background-layer"></div>
 <div class="bg-tile" ></div>
 <div class="ecce-robot">
@@ -709,7 +832,7 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
       <div class="section" style="--appear-delay: 1s;">
         <div class="section-header">Guestbook / Comments</div>
         <div class="section-body">
-          <script src="https://giscus.app/client.js" data-repo="simoliguori/simoliguori" data-repo-id="R_kgDOQ_8FcA" data-category="General" data-category-id="DIC_kwDOQ_8FcM4C1Vue" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark" data-lang="it" crossorigin="anonymous" async="">
+          <script src="https://giscus.app/client.js" data-repo="simoliguori/simoliguori" data-repo-id="R_kgDORkEgmQ" data-category-id="DIC_kwDORkEgmc4C7ahJ" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark" data-lang="it" crossorigin="anonymous" async="">
           </script>
         </div>
       </div>
@@ -720,10 +843,12 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
   </div>
 </div>
 <div class="maeba-lightbox" id="maebaLightbox">
+  <div class="lb-close" id="maebaLbClose">&#x2715;</div>
   <div class="lb-wrap" id="maebaLbWrap">
     <img id="maebaLightboxImg" src="" alt="">
     <div class="lb-grid"></div>
   </div>
+  <div class="lb-hint" id="maebaLbHint">&#9654; move your finger over the image to interact</div>
 </div>
 <div class="hidden-message" id="hiddenMessage">
   <p>
@@ -763,6 +888,94 @@ ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT ECCE ROBOT </span>
   </p>
 </div>
 <script>
+// ==== LOADER + SEQUENTIAL REVEAL + TYPING EFFECT ====
+(function() {
+  const loader = document.getElementById('siteLoader');
+  const loaderText = document.getElementById('loaderText');
+
+  // Containers revealed sequentially — each with its glitch-in animation,
+  // then all text nodes inside get typed out in DOM order.
+  const containers = [
+    document.querySelector('.header'),
+    document.querySelector('.sidebar .profile-pic'),
+    ...document.querySelectorAll('.sidebar .profile-box'),
+    document.querySelector('.sidebar .blinkies'),
+    ...document.querySelectorAll('.main .section'),
+    document.querySelector('.footer')
+  ].filter(Boolean);
+
+  // Elements whose text we never type (iframes, scripts, media, embeds).
+  const SKIP_SELECTOR = 'iframe, script, audio, noscript, .maeba-carousel, .maeba-lightbox, .embed, .controls, .eq, .volume-slider-container';
+
+  function collectTextNodes(root) {
+    const out = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        if (!n.textContent.trim()) return NodeFilter.FILTER_REJECT;
+        let p = n.parentElement;
+        while (p && p !== root) {
+          if (p.matches && p.matches(SKIP_SELECTOR)) return NodeFilter.FILTER_REJECT;
+          p = p.parentElement;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    let n;
+    while ((n = walker.nextNode())) out.push(n);
+    return out;
+  }
+
+  // Snapshot original text and empty it so nothing leaks before reveal.
+  const data = containers.map(c => {
+    const nodes = collectTextNodes(c);
+    const orig = nodes.map(n => n.textContent);
+    nodes.forEach(n => { n.textContent = ''; });
+    c.classList.add('reveal-item');
+    return { c, nodes, orig };
+  });
+
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  async function typeNode(node, text, speed) {
+    const parent = node.parentElement;
+    if (parent) parent.classList.add('typing-cursor');
+    for (const ch of text) {
+      node.textContent += ch;
+      await delay(speed);
+    }
+    if (parent) parent.classList.remove('typing-cursor');
+  }
+
+  async function typeLoader(text, speed) {
+    loaderText.textContent = '';
+    for (const ch of text) {
+      loaderText.textContent += ch;
+      await delay(speed);
+    }
+  }
+
+  async function run() {
+    await typeLoader('loading...', 75);
+    await delay(500);
+    loaderText.classList.add('no-cursor');
+    loader.classList.add('fade-out');
+    document.body.classList.remove('booting');
+    await delay(900);
+    loader.style.display = 'none';
+
+    for (const d of data) {
+      d.c.classList.add('reveal-on');
+      await delay(180);
+      for (let i = 0; i < d.nodes.length; i++) {
+        await typeNode(d.nodes[i], d.orig[i], 6);
+      }
+      await delay(60);
+    }
+  }
+
+  run();
+})();
+
 const audio = document.getElementById('audioPlayer');
 const playBtn = document.getElementById('playBtn');
 const pauseBtn = document.getElementById('pauseBtn');
@@ -954,31 +1167,56 @@ document.querySelector('.volume-slider-container').addEventListener('click', (e)
     lightboxImg.src = img.src;
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
+    onLightboxOpen();
   });
 
   const lbWrap = document.getElementById('maebaLbWrap');
+  const lbClose = document.getElementById('maebaLbClose');
+  const lbHint = document.getElementById('maebaLbHint');
 
   // Direzione luce fissa (top-left), normalizzata
   const _lx = -0.5, _ly = -0.7, _lz = 0.9;
   const _ll = Math.sqrt(_lx*_lx + _ly*_ly + _lz*_lz);
   const LL = { x: _lx/_ll, y: _ly/_ll, z: _lz/_ll };
 
-  // Stato lerp: target (aggiornato dal mouse) e current (insegue con lag)
+  // Stato lerp: target (aggiornato dal mouse/touch) e current (insegue con lag)
   let tRotX = 0, tRotY = 0;   // target
   let cRotX = 0, cRotY = 0;   // current (con inerzia)
   const LERP = 0.07;           // 0 = infinito lag, 1 = nessun lag
 
-  // Il mousemove aggiorna solo i target
-  lightbox.addEventListener('mousemove', (e) => {
-    if (!lightbox.classList.contains('open')) return;
+  let hintTimer = null;
+
+  function hideHint() {
+    lbHint.classList.add('hide');
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+  }
+
+  function updateTiltFromPoint(clientX, clientY) {
     const rect = lbWrap.getBoundingClientRect();
-    const dx = (e.clientX - (rect.left + rect.width  / 2)) / (rect.width  / 2);
-    const dy = (e.clientY - (rect.top  + rect.height / 2)) / (rect.height / 2);
+    const dx = (clientX - (rect.left + rect.width  / 2)) / (rect.width  / 2);
+    const dy = (clientY - (rect.top  + rect.height / 2)) / (rect.height / 2);
     tRotX = -dy * 3.5;
     tRotY =  dx * 3.5;
+    hideHint();
+  }
+
+  // Mouse
+  lightbox.addEventListener('mousemove', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    updateTiltFromPoint(e.clientX, e.clientY);
   });
 
   lightbox.addEventListener('mouseleave', () => { tRotX = 0; tRotY = 0; });
+
+  // Touch
+  lightbox.addEventListener('touchmove', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    updateTiltFromPoint(touch.clientX, touch.clientY);
+  }, { passive: false });
+
+  lightbox.addEventListener('touchend', () => { tRotX = 0; tRotY = 0; });
 
   // Loop rAF: lerp + applica tutti gli effetti ai valori correnti (laggati)
   (function lbLoop() {
@@ -1022,10 +1260,25 @@ document.querySelector('.volume-slider-container').addEventListener('click', (e)
     lightbox.classList.remove('open');
     document.body.style.overflow = '';
     tRotX = 0; tRotY = 0;
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+    lbHint.classList.remove('hide');
   }
 
-  // Close lightbox
-  lightbox.addEventListener('click', closeLightbox);
+  // Apri lightbox: mostra hint e nascondilo dopo 3s
+  function onLightboxOpen() {
+    lbHint.classList.remove('hide');
+    if (hintTimer) clearTimeout(hintTimer);
+    hintTimer = setTimeout(hideHint, 3000);
+  }
+
+  // Close: solo clic diretto sul backdrop (non su lb-wrap o lb-close)
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+  lbClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLightbox();
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
   });
@@ -1043,7 +1296,10 @@ window.addEventListener('scroll', () => {
   glitchIntensity = 0.18 + Math.pow(t, 1.4) * 1.6;
 
   bgLayer.style.transform = `translateY(${scrolled * 0.1}px)`;
-  ecceRobot.style.transform = `translateY(${-scrolled * 0.18}px)`;
+  const isMobile = window.innerWidth <= 768;
+  ecceRobot.style.transform = isMobile
+    ? `translateX(-50%) translateY(${-scrolled * 0.18}px)`
+    : `translateY(${-scrolled * 0.18}px)`;
 
   const hiddenMessage = document.getElementById('hiddenMessage');
   if (hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
