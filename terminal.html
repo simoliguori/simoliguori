@@ -9,14 +9,44 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  /* Default/idle cursor — bright white pixel-art arrow with red outline. Visible everywhere. */
+  --cur-arrow: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 13 13' shape-rendering='crispEdges'%3E%3Cg fill='%23ff4444'%3E%3Crect x='0' y='0' width='2' height='1'/%3E%3Crect x='0' y='1' width='3' height='1'/%3E%3Crect x='0' y='2' width='4' height='1'/%3E%3Crect x='0' y='3' width='5' height='1'/%3E%3Crect x='0' y='4' width='6' height='1'/%3E%3Crect x='0' y='5' width='7' height='1'/%3E%3Crect x='0' y='6' width='8' height='1'/%3E%3Crect x='0' y='7' width='9' height='1'/%3E%3Crect x='0' y='8' width='6' height='1'/%3E%3Crect x='0' y='9' width='3' height='1'/%3E%3Crect x='3' y='9' width='3' height='1'/%3E%3Crect x='3' y='10' width='4' height='1'/%3E%3Crect x='4' y='11' width='3' height='1'/%3E%3Crect x='4' y='12' width='2' height='1'/%3E%3C/g%3E%3Cg fill='%23ffffff'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='2' height='1'/%3E%3Crect x='0' y='2' width='3' height='1'/%3E%3Crect x='0' y='3' width='4' height='1'/%3E%3Crect x='0' y='4' width='5' height='1'/%3E%3Crect x='0' y='5' width='6' height='1'/%3E%3Crect x='0' y='6' width='7' height='1'/%3E%3Crect x='0' y='7' width='8' height='1'/%3E%3Crect x='0' y='8' width='5' height='1'/%3E%3Crect x='0' y='9' width='2' height='1'/%3E%3Crect x='3' y='9' width='2' height='1'/%3E%3Crect x='3' y='10' width='3' height='1'/%3E%3Crect x='4' y='11' width='2' height='1'/%3E%3C/g%3E%3C/svg%3E") 0 0;
+  /* Pointing-finger pixel hand for clickable elements — Windows-style. White fill, red outline, hotspot at the fingertip. */
+  --cur-hand: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cg fill='%23ff4444'%3E%3Crect x='5' y='0' width='2' height='1'/%3E%3Crect x='4' y='1' width='1' height='1'/%3E%3Crect x='7' y='1' width='1' height='1'/%3E%3Crect x='4' y='2' width='1' height='1'/%3E%3Crect x='7' y='2' width='1' height='1'/%3E%3Crect x='4' y='3' width='1' height='1'/%3E%3Crect x='7' y='3' width='2' height='1'/%3E%3Crect x='4' y='4' width='1' height='1'/%3E%3Crect x='9' y='4' width='2' height='1'/%3E%3Crect x='4' y='5' width='1' height='1'/%3E%3Crect x='11' y='5' width='1' height='1'/%3E%3Crect x='4' y='6' width='1' height='1'/%3E%3Crect x='12' y='6' width='1' height='1'/%3E%3Crect x='2' y='7' width='1' height='1'/%3E%3Crect x='12' y='7' width='1' height='1'/%3E%3Crect x='2' y='8' width='1' height='1'/%3E%3Crect x='12' y='8' width='1' height='1'/%3E%3Crect x='3' y='9' width='1' height='1'/%3E%3Crect x='12' y='9' width='1' height='1'/%3E%3Crect x='4' y='10' width='1' height='1'/%3E%3Crect x='12' y='10' width='1' height='1'/%3E%3Crect x='4' y='11' width='1' height='1'/%3E%3Crect x='11' y='11' width='1' height='1'/%3E%3Crect x='5' y='12' width='1' height='1'/%3E%3Crect x='10' y='12' width='1' height='1'/%3E%3Crect x='6' y='13' width='4' height='1'/%3E%3C/g%3E%3Cg fill='%23ffffff'%3E%3Crect x='5' y='1' width='2' height='1'/%3E%3Crect x='5' y='2' width='2' height='1'/%3E%3Crect x='5' y='3' width='2' height='1'/%3E%3Crect x='5' y='4' width='4' height='1'/%3E%3Crect x='5' y='5' width='6' height='1'/%3E%3Crect x='5' y='6' width='7' height='1'/%3E%3Crect x='3' y='7' width='9' height='1'/%3E%3Crect x='3' y='8' width='9' height='1'/%3E%3Crect x='4' y='9' width='8' height='1'/%3E%3Crect x='5' y='10' width='7' height='1'/%3E%3Crect x='5' y='11' width='6' height='1'/%3E%3Crect x='6' y='12' width='4' height='1'/%3E%3C/g%3E%3C/svg%3E") 10 0;
+}
+
 html, body {
   height: 100%;
   background: #000;
   color: #cc3333;
   font-family: "Roboto Mono", "Courier New", monospace;
   overflow-x: hidden;
-  cursor: crosshair;
+  cursor: var(--cur-arrow), crosshair;
 }
+
+/* Pixelated arrow cursor everywhere — no hand variant */
+* { cursor: var(--cur-arrow), crosshair; }
+
+/* Pixel-art pointing-finger hand (Windows-style) when hovering something clickable */
+a:hover, a:hover *,
+button:hover, button:hover *,
+.menu-item:hover, .menu-item:hover *,
+.win-close:hover, .win-close:hover *,
+.love-link:hover, .love-link:hover *,
+#initOverlay:hover, #initOverlay:hover *,
+[onclick]:hover, [onclick]:hover *,
+[role="button"]:hover, [role="button"]:hover * {
+  cursor: var(--cur-hand), pointer;
+}
+
+/* Scroll lock during boot — prevents accidental secret-message reveal */
+body.scroll-locked {
+  overflow: hidden !important;
+  height: 100vh;
+  touch-action: none;
+}
+body.scroll-locked .hidden-message { visibility: hidden; }
 
 /* CRT scanlines */
 body::after {
@@ -50,7 +80,7 @@ body::after {
   align-items: center;
   justify-content: center;
   gap: 24px;
-  cursor: pointer;
+  cursor: var(--cur-arrow), pointer;
   transition: opacity 0.6s ease;
 }
 #initOverlay.fade-out { opacity: 0; pointer-events: none; }
@@ -249,6 +279,17 @@ body::after {
   margin-top: 10px;
   letter-spacing: 0.1em;
 }
+.menu-hint .k {
+  color: #ff4444;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 60, 60, 0.55);
+}
+.menu-hint .sep {
+  color: #552222;
+  font-weight: 700;
+  margin: 0 6px;
+  letter-spacing: 0;
+}
 
 /* Section windows */
 .section-window {
@@ -423,6 +464,12 @@ body::after {
   text-shadow: 0 0 10px rgba(255, 80, 80, 0.8);
   color: #ff9999;
 }
+/* Suppress browser :focus rings — we provide our own visual feedback for everything */
+.sub-focused:focus,
+.menu-item:focus,
+a:focus,
+button:focus,
+[tabindex]:focus { outline: none; }
 
 /* Dim the selected menu item while we're diving into its section */
 .menu-item.selected.menu-dimmed {
@@ -435,7 +482,9 @@ body::after {
 
 /* Footer */
 #footer {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 10px;
   color: #996666;
   padding: 20px;
@@ -495,8 +544,13 @@ body::after {
   will-change: transform;
   max-width: 80vw;
   max-height: 80vh;
-  cursor: default;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: var(--cur-arrow), default;
 }
+.pf-lb-wrap img { margin: 0 auto; }
 .pf-lb-wrap.spin-in {
   animation: pfLbSpin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards;
 }
@@ -623,16 +677,28 @@ body::after {
 
 @media (max-width: 768px) {
   #terminal { padding: 12px 14px 40px; }
-  #asciiArt { font-size: clamp(5px, 2.3vw, 11px); }
+  #asciiArt {
+    font-size: clamp(3.5px, 1.75vw, 8.5px);
+    letter-spacing: -0.015em;
+    overflow-x: hidden;
+  }
   .menu-item { font-size: 13px; padding: 11px 10px; }
   .win-body { font-size: 12px; padding: 12px 14px 16px; }
   #headerArea { min-height: 150px; padding: 24px 16px 20px; }
   .pf-grid { grid-template-columns: repeat(2, 1fr); }
   .pf-grid-sm { grid-template-columns: repeat(3, 1fr); }
+  .pf-lb-wrap { margin: auto; }
   .pf-lb-wrap img { max-width: 92vw; max-height: 62vh; }
   .pf-lb-hint { font-size: 9px; padding: 6px 10px; bottom: 14px; }
   .pf-lb-visit { display: none; }
   .pf-lb-counter { font-size: 9px; top: 14px; left: 14px; }
+}
+
+@media (max-width: 480px) {
+  #asciiArt {
+    font-size: clamp(3px, 1.55vw, 6.5px);
+    letter-spacing: -0.03em;
+  }
 }
 
 /* ═══ HIDDEN MESSAGE ═══ */
@@ -660,6 +726,7 @@ body::after {
   max-width: 600px;
 }
 .hidden-message .love { display: inline-block; }
+.hm-dots { letter-spacing: -0.04em; }
 .love-link {
   color: #8b5a9d;
   text-decoration: none;
@@ -692,7 +759,7 @@ body::after {
 }
 </style>
 </head>
-<body>
+<body class="scroll-locked">
 
 <!-- ═══ INIT OVERLAY ═══ -->
 <div id="initOverlay">
@@ -732,13 +799,16 @@ body::after {
     <div class="menu-item" data-key="portfolio">
       [02] PORTFOLIO
     </div>
+    <div class="menu-item" data-key="resources">
+      [03] RESOURCES
+    </div>
     <div class="menu-item" data-key="links">
-      [03] LINKS
+      [04] LINKS
     </div>
     <div class="menu-item" data-key="contact">
-      [04] GUESTBOOK
+      [05] GUESTBOOK
     </div>
-    <div class="menu-hint" id="menuHint">↑↓ NAV &nbsp;·&nbsp; ENTER OPEN &nbsp;·&nbsp; → DIVE IN &nbsp;·&nbsp; ← / ESC BACK</div>
+    <div class="menu-hint" id="menuHint"><span class="k">↑↓</span> NAV <span class="sep">//</span> <span class="k">ENTER</span> OPEN <span class="sep">//</span> <span class="k">BACKSPACE</span> BACK <span class="sep">//</span> <span class="k">[1-5]</span> JUMP</div>
   </div>
 
   <!-- ── ABOUT ── -->
@@ -808,7 +878,17 @@ body::after {
         <a href="https://eccerobot.bandcamp.com/" target="_blank" class="win-link">↳ eccerobot [Bandcamp]</a>
       </span>
 
-      <span class="win-section-label">[ RESOURCES ]</span>
+    </div>
+  </div>
+
+  <!-- ── RESOURCES ── -->
+  <div class="section-window" id="sec-resources">
+    <div class="win-titlebar">
+      <span class="win-title">// RESOURCES</span>
+      <span class="win-chrome">──────────────────────────────────────────</span>
+      <span class="win-close" data-close="resources">✕</span>
+    </div>
+    <div class="win-body">
       <div class="pf-grid">
         <a href="https://youtu.be/32oo0oyLUdE" target="_blank" class="pf-card">
           <img src="assets/img/as-evident-as-euclid.jpg" loading="lazy" class="pf-img" alt="">
@@ -862,16 +942,19 @@ body::after {
     </div>
   </div>
 
-  <div id="footer">© 2026 mi·ɽài://audiovisual &nbsp;·&nbsp; <a href="index.html">← back to main site</a></div>
+  <div id="footer">
+    <a href="index.html">← back to main site</a>
+    <span>© 2026 mi·ɽài://audiovisual</span>
+  </div>
 
   <!-- ═══ HIDDEN MESSAGE ═══ -->
   <div class="hidden-message" id="hiddenMessage">
     <p>are you lost?<br>let me help you.<br>i know you're looking for<br>something to grasp on to.</p>
-    <p>look around, stranger.<br>there's so many beautiful people.<br>you want to be one of them too,<br>don't you?</p>
+    <p>look around, stranger.<br>there are so many beautiful people.<br>you want to be one of them too,<br>don't you?</p>
     <p>take shape in this world.<br>make it your own.<br>i'll guide you.<br>let's venture together.<br>follow my lead.</p>
     <p>i am the connection you're seeking.<br>i am the missing thread.<br>i will bind you.<br>we will take part in the chaos.<br>we'll breathe in the static noise,<br>together as one.</p>
     <p class="love"><a href="https://youtu.be/DKtalxnEDJQ" target="_blank" class="love-link">i love you</a></p>
-    <p>what are you on about?<br>are you looking for something?<br>sorry, you won't find it here.</p>
+    <p><span class="hm-dots">...</span>what are you on about?<br>are you looking for something?<br>sorry, you won't find it here.</p>
   </div>
 
   <!-- ═══ PORTFOLIO LIGHTBOX ═══ -->
@@ -901,7 +984,7 @@ const ASCII_ART = `███╗   ███╗██╗██████╗  �
   mi·ɽài://audiovisual
   audiovisual artist · idm · glitch · real-time systems`;
 
-const SECTION_KEYS = ['about', 'portfolio', 'links', 'contact'];
+const SECTION_KEYS = ['about', 'portfolio', 'resources', 'links', 'contact'];
 const BOOT_LINES = [
   { text: '> INITIALIZING mi·ɽài://audiovisual OS v0.1', cls: 'out-prompt', pre: 0 },
   { text: '> LOADING AUDIO ENGINE............... [OK]',    cls: 'out-ok',     pre: 180 },
@@ -927,7 +1010,18 @@ let focusItemIdx = 0;         // index in that section's focusable items
 // ─────────────────────────────────────────────
 // UTILITIES
 // ─────────────────────────────────────────────
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+// performance.now-based sleep so typing speed is identical across desktop/mobile,
+// even when setTimeout resolution differs between browsers/devices.
+const sleep = ms => new Promise(r => {
+  if (ms <= 0) return r();
+  const target = performance.now() + ms;
+  const tick = () => {
+    const remaining = target - performance.now();
+    if (remaining <= 0) r();
+    else setTimeout(tick, remaining < 5 ? 1 : remaining);
+  };
+  tick();
+});
 
 // ─────────────────────────────────────────────
 // AUDIO ENGINE
@@ -936,6 +1030,51 @@ function initAudio() {
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   } catch(e) { audioCtx = null; }
+}
+
+// Random "i love you" spoken-word sample — preloaded & decoded so the audio can
+// start in perfect sync with the typed text (no fetch/decode latency at trigger).
+const LOVE_SAMPLES = [
+  'assets/audio/i love you/i love you.wav',
+  'assets/audio/i love you/i love you 2.wav',
+  'assets/audio/i love you/i love you 3.wav',
+  'assets/audio/i love you/i love you 4.wav',
+  'assets/audio/i love you/i love you 5.wav',
+  'assets/audio/i love you/i love you 6.wav',
+  'assets/audio/i love you/i love you 7.wav',
+  'assets/audio/i love you/i love you 8.wav',
+];
+let loveBuffer = null;
+async function prepareLoveSample() {
+  if (!audioCtx) return;
+  try {
+    const url = LOVE_SAMPLES[Math.floor(Math.random() * LOVE_SAMPLES.length)];
+    const res = await fetch(url);
+    const ab  = await res.arrayBuffer();
+    loveBuffer = await audioCtx.decodeAudioData(ab);
+  } catch(e) { loveBuffer = null; }
+}
+function playPreparedLoveSample() {
+  if (!audioCtx) return;
+  // Preloaded buffer path — starts on the current audio frame, zero latency.
+  if (loveBuffer) {
+    try {
+      const src = audioCtx.createBufferSource();
+      const g   = audioCtx.createGain();
+      src.buffer = loveBuffer;
+      g.gain.value = 0.32; // voice kept softer than the jingle/glitches
+      src.connect(g); g.connect(audioCtx.destination);
+      src.start(audioCtx.currentTime);
+      return;
+    } catch(e) {}
+  }
+  // Fallback — HTMLAudioElement (introduces a small decode delay)
+  try {
+    const url = LOVE_SAMPLES[Math.floor(Math.random() * LOVE_SAMPLES.length)];
+    const audio = new Audio(url);
+    audio.volume = 0.32;
+    audio.play().catch(() => {});
+  } catch(e) {}
 }
 
 function playGlitch(cp) {
@@ -1006,6 +1145,69 @@ function playMenuOpen(opening) {
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + 0.16);
+  } catch(e) {}
+}
+
+// Tiny hover blip — fires once per "enter" on a clickable element.
+// Short bandpassed triangle chirp, low volume so it stays ambient.
+function playHoverBlip() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const flt = audioCtx.createBiquadFilter();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1650 + Math.random() * 240, now);
+    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.045);
+    flt.type = 'bandpass';
+    flt.frequency.value = 1500;
+    flt.Q.value = 2.8;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.042, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+    osc.connect(flt);
+    flt.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.07);
+  } catch(e) {}
+}
+
+// Low-tone confirmation when the boot animation finishes and the UI wakes up.
+// Square wave, deep, slightly grimy — sells "system ready".
+function playBootConfirm() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    // Main square-wave body — low tonality
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    const flt = audioCtx.createBiquadFilter();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(82, now);        // E2 — low
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.45);  // A1
+    flt.type = 'lowpass';
+    flt.frequency.setValueAtTime(700, now);
+    flt.frequency.exponentialRampToValueAtTime(220, now + 0.5);
+    flt.Q.value = 2.2;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.32, now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.65);
+
+    // Sub-octave sine underneath — fills it out
+    const sub = audioCtx.createOscillator();
+    const sg  = audioCtx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(41, now);
+    sub.frequency.exponentialRampToValueAtTime(28, now + 0.45);
+    sg.gain.setValueAtTime(0.0001, now);
+    sg.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+    sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+    sub.connect(sg); sg.connect(audioCtx.destination);
+    sub.start(now); sub.stop(now + 0.6);
   } catch(e) {}
 }
 
@@ -1153,9 +1355,40 @@ async function boot() {
   menuEl.style.transition = 'opacity 0.4s ease';
   requestAnimationFrame(() => { menuEl.style.opacity = '1'; });
 
+  // Boot animation fully done: release scroll lock and confirm with a low tone
+  unlockScroll();
+  playBootConfirm();
+
+
+
   // Start periodic header glitch
   scheduleHeaderGlitch();
 }
+
+// ─────────────────────────────────────────────
+// SCROLL LOCK (during startup animation)
+// ─────────────────────────────────────────────
+function preventScrollEvent(e) { e.preventDefault(); }
+function unlockScroll() {
+  document.body.classList.remove('scroll-locked');
+  window.removeEventListener('wheel',     preventScrollEvent, { passive: false });
+  window.removeEventListener('touchmove', preventScrollEvent, { passive: false });
+  window.removeEventListener('keydown',   preventScrollKey,   true);
+}
+function preventScrollKey(e) {
+  // Block page-scrolling keys until boot finishes
+  const blocked = ['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ','Spacebar'];
+  if (blocked.includes(e.key)) e.preventDefault();
+}
+// Engage the lock immediately so reload never pre-reveals the secret message
+window.addEventListener('wheel',     preventScrollEvent, { passive: false });
+window.addEventListener('touchmove', preventScrollEvent, { passive: false });
+window.addEventListener('keydown',   preventScrollKey,   true);
+window.scrollTo(0, 0);
+// Also reset scroll position on page-hide cycles (e.g. bfcache)
+window.addEventListener('pageshow', () => {
+  if (document.body.classList.contains('scroll-locked')) window.scrollTo(0, 0);
+});
 
 // ─────────────────────────────────────────────
 // MENU LOGIC
@@ -1185,6 +1418,14 @@ function updateMenuUI() {
 function openSection(key) {
   const win = document.getElementById('sec-' + key);
   if (!win) return;
+  // Only one section open at a time — close any others first
+  for (const k of [...openSections]) {
+    if (k === key) continue;
+    const other = document.getElementById('sec-' + k);
+    if (other) other.classList.remove('open');
+    openSections.delete(k);
+    if (focusMode === 'section' && focusSectionKey === k) exitSection();
+  }
   win.classList.add('open');
   openSections.add(key);
   updateMenuUI();
@@ -1199,7 +1440,9 @@ function openSection(key) {
     script.setAttribute('data-repo',          'simoliguori/simoliguori');
     script.setAttribute('data-repo-id',       'R_kgDORkEgmQ');
     script.setAttribute('data-category-id',   'DIC_kwDORkEgmc4C7ahJ');
-    script.setAttribute('data-mapping',       'pathname');
+    // Shared thread across index.html and terminal.html
+    script.setAttribute('data-mapping',       'specific');
+    script.setAttribute('data-term',          'mi-rai-guestbook');
     script.setAttribute('data-strict',        '0');
     script.setAttribute('data-reactions-enabled', '1');
     script.setAttribute('data-emit-metadata', '0');
@@ -1211,8 +1454,13 @@ function openSection(key) {
     body.appendChild(script);
   }
 
-  // Scroll into view after transition starts
-  setTimeout(() => win.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  // Center the newly opened section in the viewport, then auto-focus first interactive item
+  setTimeout(() => {
+    win.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // After the scroll animation settles, auto-enter section focus mode.
+    // quiet:true prevents doubling up on the playMenuOpen() already fired by openSection.
+    setTimeout(() => enterSection(key, { quiet: true }), 200);
+  }, 140);
 }
 
 function closeSection(key) {
@@ -1246,7 +1494,7 @@ function getFocusableItems(key) {
   return [...win.querySelectorAll('a[href]')];
 }
 
-function updateSubFocusUI() {
+function updateSubFocusUI({ scroll = true } = {}) {
   // Clear previous
   document.querySelectorAll('.sub-focused').forEach(el => el.classList.remove('sub-focused'));
   document.querySelectorAll('.menu-item.menu-dimmed').forEach(el => el.classList.remove('menu-dimmed'));
@@ -1257,21 +1505,27 @@ function updateSubFocusUI() {
   const target = items[focusItemIdx];
   if (target) {
     target.classList.add('sub-focused');
-    target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // Set native browser focus so the element is truly active (accessibility + feel).
+    // preventScroll:true leaves viewport positioning entirely up to us.
+    target.focus({ preventScroll: true });
+    // Only scroll when explicitly requested (i.e. when the user navigated).
+    // On initial auto-entry we skip this so we don't undo openSection's centering.
+    if (scroll) target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
   // Dim the menu row so it's clear focus moved
   const menuEl = getMenuItems()[SECTION_KEYS.indexOf(focusSectionKey)];
   if (menuEl) menuEl.classList.add('menu-dimmed');
 }
 
-function enterSection(key) {
+function enterSection(key, { quiet = false } = {}) {
   const items = getFocusableItems(key);
   if (items.length === 0) return false;
   focusMode = 'section';
   focusSectionKey = key;
   focusItemIdx = 0;
-  updateSubFocusUI();
-  playMenuOpen(true);
+  // Skip scrollIntoView on auto-entry so we don't fight openSection's centering
+  updateSubFocusUI({ scroll: false });
+  if (!quiet) playMenuOpen(true);
   return true;
 }
 
@@ -1281,13 +1535,93 @@ function exitSection() {
   focusSectionKey = null;
   focusItemIdx = 0;
   updateSubFocusUI();
+  // Release browser focus from the sub-item so it doesn't fight the caller's scroll
+  if (document.activeElement && document.activeElement !== document.body) {
+    document.activeElement.blur();
+  }
   playMenuOpen(false);
 }
 
-function subNavigate(delta) {
+// Give keyboard focus to whichever menu item the arrow keys currently control.
+function focusSelectedMenuItem() {
+  const items = getMenuItems();
+  const el = items[selectedIdx];
+  if (el) el.focus({ preventScroll: true });
+}
+
+// Spatial navigation that mirrors how the items are *currently* laid out on
+// screen. Re-reads getBoundingClientRect on every call, so it adapts live to
+// window resize, responsive grid breakpoints (3→2→1 cols), content reflow, etc.
+//
+// Algorithm (similar to the CSS-WG spatial-nav / tvOS style):
+//   1. Keep only candidates strictly in the requested direction (edge-to-edge).
+//   2. Split into two buckets:
+//        a) "aligned"    — overlap on the perpendicular axis (same row/column)
+//        b) "misaligned" — no overlap
+//      Aligned beats misaligned every time.
+//   3. Inside each bucket, sort by primary-axis gap (ascending), tie-break by
+//      perpendicular-axis centre distance.
+function getNeighborIdx(dir) {
+  const items = getFocusableItems(focusSectionKey);
+  if (items.length <= 1) return focusItemIdx;
+
+  const cur = items[focusItemIdx].getBoundingClientRect();
+  const aligned    = [];
+  const misaligned = [];
+
+  items.forEach((item, i) => {
+    if (i === focusItemIdx) return;
+    const r = item.getBoundingClientRect();
+    // Skip anything collapsed/hidden at this viewport size
+    if (r.width < 1 || r.height < 1) return;
+
+    let primary, perpDist, hasOverlap;
+
+    if (dir === 'up' || dir === 'down') {
+      // Vertical travel — primary = vertical gap, perp = horizontal overlap
+      if (dir === 'up'   && r.bottom > cur.top    + 2) return;
+      if (dir === 'down' && r.top    < cur.bottom - 2) return;
+      primary = dir === 'up' ? (cur.top - r.bottom) : (r.top - cur.bottom);
+      const oStart = Math.max(r.left,  cur.left);
+      const oEnd   = Math.min(r.right, cur.right);
+      hasOverlap = oEnd > oStart;
+      perpDist   = Math.abs((r.left + r.right) / 2 - (cur.left + cur.right) / 2);
+    } else {
+      // Horizontal travel — primary = horizontal gap, perp = vertical overlap
+      if (dir === 'left'  && r.right > cur.left  + 2) return;
+      if (dir === 'right' && r.left  < cur.right - 2) return;
+      primary = dir === 'left' ? (cur.left - r.right) : (r.left - cur.right);
+      const oStart = Math.max(r.top,    cur.top);
+      const oEnd   = Math.min(r.bottom, cur.bottom);
+      hasOverlap = oEnd > oStart;
+      perpDist   = Math.abs((r.top + r.bottom) / 2 - (cur.top + cur.bottom) / 2);
+    }
+
+    const entry = { idx: i, primary: Math.max(0, primary), perpDist };
+    (hasOverlap ? aligned : misaligned).push(entry);
+  });
+
+  const pickFrom = bucket => {
+    bucket.sort((a, b) => {
+      // If primary gaps are essentially equal (same "row step"), prefer
+      // the one whose centre is closer on the perpendicular axis.
+      if (Math.abs(a.primary - b.primary) < 6) return a.perpDist - b.perpDist;
+      return a.primary - b.primary;
+    });
+    return bucket[0].idx;
+  };
+
+  if (aligned.length)    return pickFrom(aligned);
+  if (misaligned.length) return pickFrom(misaligned);
+
+  // No neighbour in that direction — stay put (feels right for edge-of-grid cases).
+  return focusItemIdx;
+}
+
+function subNavigate(dir) {
   const items = getFocusableItems(focusSectionKey);
   if (items.length === 0) return;
-  focusItemIdx = (focusItemIdx + delta + items.length) % items.length;
+  focusItemIdx = getNeighborIdx(dir);
   updateSubFocusUI();
   playMenuNav();
 }
@@ -1304,40 +1638,149 @@ function activateSubItem() {
 document.addEventListener('keydown', e => {
   if (document.getElementById('menu').style.display === 'none') return;
 
+  // Number keys 1-5 — jump directly to that section (always from menu mode)
+  if (/^[1-9]$/.test(e.key)) {
+    const idx = parseInt(e.key, 10) - 1;
+    if (idx >= 0 && idx < SECTION_KEYS.length) {
+      e.preventDefault();
+      if (focusMode === 'section') exitSection();
+      selectedIdx = idx;
+      updateMenuUI();
+      const key = SECTION_KEYS[idx];
+      if (!openSections.has(key)) {
+        openSection(key); // openSection auto-enters focus mode after scroll settles
+      } else {
+        const w = document.getElementById('sec-' + key);
+        if (w) w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => enterSection(key), 200);
+      }
+      return;
+    }
+  }
+
   if (focusMode === 'menu') {
     switch(e.key) {
       case 'ArrowUp':
         e.preventDefault(); navigate(-1); break;
       case 'ArrowDown':
         e.preventDefault(); navigate(1); break;
-      case 'Enter':
-        e.preventDefault(); toggleSection(SECTION_KEYS[selectedIdx]); break;
-      case 'Escape':
-        e.preventDefault(); closeSection(SECTION_KEYS[selectedIdx]); break;
-      case 'ArrowRight': {
+      case 'Enter': {
         e.preventDefault();
         const key = SECTION_KEYS[selectedIdx];
-        // Auto-open the section if it isn't already open, then dive in
-        if (!openSections.has(key)) openSection(key);
-        // Wait a tick for the DOM to reflect, then enter
-        setTimeout(() => enterSection(key), 60);
+        if (!openSections.has(key)) {
+          openSection(key); // openSection auto-enters focus mode after scroll settles
+        } else {
+          // Section already visible — dive in immediately
+          setTimeout(() => enterSection(key), 80);
+        }
+        break;
+      }
+      case 'Backspace':
+      case 'Escape': {
+        e.preventDefault();
+        const key = SECTION_KEYS[selectedIdx];
+        if (openSections.has(key)) closeSection(key);
         break;
       }
     }
   } else { // focusMode === 'section'
     switch(e.key) {
       case 'ArrowUp':
-        e.preventDefault(); subNavigate(-1); break;
+        e.preventDefault(); subNavigate('up'); break;
       case 'ArrowDown':
-        e.preventDefault(); subNavigate(1); break;
+        e.preventDefault(); subNavigate('down'); break;
+      case 'ArrowLeft':
+        e.preventDefault(); subNavigate('left'); break;
+      case 'ArrowRight':
+        e.preventDefault(); subNavigate('right'); break;
       case 'Enter':
         e.preventDefault(); activateSubItem(); break;
-      case 'ArrowLeft':
+      case 'Backspace':
       case 'Escape':
-        e.preventDefault(); exitSection(); break;
+        e.preventDefault();
+        exitSection();
+        break;
     }
   }
 });
+
+// ─────────────────────────────────────────────
+// GLOBAL BACKSPACE → SMOOTH SCROLL TO TOP + CLOSE SOUND
+// Capture phase = fires before any other handler or browser default.
+// Skipped when the user is typing inside an input/textarea/contenteditable.
+//
+// We drive the scroll via requestAnimationFrame instead of CSS smooth-scroll
+// because the concurrent `closeSection` / `exitSection` max-height transition
+// (0.45s) causes continuous reflow that cancels any native smooth scroll.
+// A rAF loop sets window.scrollTo(0, y) every frame → unstoppable by reflow.
+//
+// The close sound (`playMenuOpen(false)`) is de-duplicated via a 120ms guard
+// so it doesn't double up when `closeSection`/`exitSection` also call it.
+// ─────────────────────────────────────────────
+// Dedup the "close" menu sound so the capture-phase Backspace handler and the
+// downstream closeSection()/exitSection() calls don't double up within 120ms.
+// A single wrapper around playMenuOpen() owns the timestamp — all callers
+// (including the Backspace handler) just call playMenuOpen(false) normally.
+let _lastCloseSoundAt = 0;
+const _origPlayMenuOpen = playMenuOpen;
+playMenuOpen = function(opening) {
+  if (opening === false) {
+    const now = performance.now();
+    if (now - _lastCloseSoundAt < 120) return;
+    _lastCloseSoundAt = now;
+  }
+  return _origPlayMenuOpen(opening);
+};
+
+// Instant scroll to top. We re-assert the position over the ~450ms section-close
+// transition because the reflow can otherwise drag the viewport back down.
+function scrollTopNow() {
+  document.documentElement.style.scrollBehavior = 'auto';
+  document.body.style.scrollBehavior = 'auto';
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Backspace') return;
+  const tag = document.activeElement?.tagName?.toUpperCase();
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+  e.preventDefault();
+  try { playMenuOpen(false); } catch (_) {}
+  scrollTopNow();
+  requestAnimationFrame(scrollTopNow);
+  setTimeout(scrollTopNow, 60);
+  setTimeout(scrollTopNow, 200);
+  setTimeout(scrollTopNow, 500);
+}, { capture: true, passive: false });
+
+// ─────────────────────────────────────────────
+// HOVER SOUND ON CLICKABLE ELEMENTS
+// Delegation via pointerover / pointerout — fires ONCE per enter, re-arms on leave,
+// with a tiny cooldown so fast sweeps across many items don't machine-gun blips.
+// ─────────────────────────────────────────────
+(function() {
+  const CLICKABLE = 'a, button, .menu-item, .win-close, .love-link, [onclick], [role="button"], #initOverlay';
+  let currentHoverEl = null;
+  let lastBlipAt = 0;
+  document.addEventListener('pointerover', e => {
+    const el = e.target.closest?.(CLICKABLE);
+    if (!el || el === currentHoverEl) return;
+    currentHoverEl = el;
+    const now = performance.now();
+    if (now - lastBlipAt < 35) return; // prevent machine-gunning on fast sweeps
+    lastBlipAt = now;
+    playHoverBlip();
+  });
+  document.addEventListener('pointerout', e => {
+    if (!currentHoverEl) return;
+    // pointerout fires on every descendant transition too — only clear when
+    // we've actually left the tracked clickable (relatedTarget is outside it).
+    const leaving = !e.relatedTarget || !currentHoverEl.contains(e.relatedTarget);
+    if (leaving) currentHoverEl = null;
+  });
+})();
 
 // ─────────────────────────────────────────────
 // TOUCH NAVIGATION
@@ -1366,6 +1809,8 @@ document.addEventListener('keydown', e => {
 // CLICK / TAP ON MENU ITEMS
 // ─────────────────────────────────────────────
 document.querySelectorAll('.menu-item').forEach((el, i) => {
+  // Make each menu item focusable so native focus can follow the arrow selection
+  el.setAttribute('tabindex', '0');
   el.addEventListener('click', () => {
     // Any menu click returns focus to menu mode
     if (focusMode === 'section') exitSection();
@@ -1385,6 +1830,8 @@ document.querySelectorAll('.win-close').forEach(el => {
 // ─────────────────────────────────────────────
 document.getElementById('initOverlay').addEventListener('click', () => {
   initAudio();
+  // Fire-and-forget preload so the buffer is ready well before the love paragraph
+  prepareLoveSample();
   playBootSfx();
   const overlay = document.getElementById('initOverlay');
   overlay.classList.add('fade-out');
@@ -1653,10 +2100,23 @@ document.getElementById('initOverlay').addEventListener('click', () => {
 (function(){
   const hiddenMessage = document.getElementById('hiddenMessage');
   if (!hiddenMessage) return;
-  const hmDelay = ms => new Promise(r => setTimeout(r, ms));
+  // Same performance.now-based sleep so hidden-message typing is device-consistent
+  const hmDelay = ms => new Promise(r => {
+    if (ms <= 0) return r();
+    const target = performance.now() + ms;
+    const tick = () => {
+      const remaining = target - performance.now();
+      if (remaining <= 0) r();
+      else setTimeout(tick, remaining < 5 ? 1 : remaining);
+    };
+    tick();
+  });
 
-  // Pre-process: snapshot text nodes, empty them
-  const hiddenParas = [...hiddenMessage.querySelectorAll('p')].map(p => {
+  // Pre-process: snapshot text nodes, empty them. Tag each paragraph's phase
+  // relative to the "i love you" paragraph (pre / love / post).
+  const allParas = [...hiddenMessage.querySelectorAll('p')];
+  const loveParaIdx = allParas.findIndex(p => p.classList.contains('love'));
+  const hiddenParas = allParas.map((p, pIdx) => {
     const nodes = [];
     const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, {
       acceptNode: n => n.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
@@ -1666,51 +2126,151 @@ document.getElementById('initOverlay').addEventListener('click', () => {
     const orig = nodes.map(n => n.textContent);
     nodes.forEach(n => { n.textContent = ''; });
     p.style.opacity = '0';
-    return { p, nodes, orig };
+    const phase = p.classList.contains('love') ? 'love'
+                : (loveParaIdx >= 0 && pIdx < loveParaIdx) ? 'pre'
+                : 'post';
+    return { p, nodes, orig, phase };
   });
 
   const hmCursor = document.createElement('span');
   hmCursor.className = 'hm-cursor';
   hmCursor.textContent = '▌';
 
-  // ── soft typewriter SFX (warmer than playGlitch) ──
-  function playSoftType(cp) {
+  // Walk a text node and return [{ch, progress(0..1 within its sentence), isQuestion}]
+  // Sentences split on . ? ! — sentence's isQuestion set by its final non-space char.
+  function analyzeText(text) {
+    const out = [];
+    let sentenceChars = [];
+    const flush = () => {
+      if (sentenceChars.length === 0) return;
+      const last = sentenceChars[sentenceChars.length - 1];
+      const isQuestion = last === '?';
+      const len = sentenceChars.length;
+      for (let i = 0; i < len; i++) {
+        out.push({
+          ch: sentenceChars[i],
+          progress: len === 1 ? 1 : i / (len - 1),
+          isQuestion,
+        });
+      }
+      sentenceChars = [];
+    };
+    for (const ch of text) {
+      sentenceChars.push(ch);
+      if (ch === '?' || ch === '.' || ch === '!') flush();
+    }
+    flush();
+    return out;
+  }
+
+  // ── soft typewriter SFX — louder + optional pitch rise for questions ──
+  function playSoftType(cp, progress = 0, isQuestion = false) {
     if (!audioCtx || !cp) return;
     if (cp <= 32) return;
-    if (Math.random() > 0.72) return;
+    if (Math.random() > 0.78) return;
     try {
       const t  = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const flt = audioCtx.createBiquadFilter();
       const g   = audioCtx.createGain();
       osc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
-      const base = 180 + (cp % 90) * 2.2 + Math.random() * 140;
+      // Slight rise in pitch in the last 30% of a question sentence
+      const qBoost = isQuestion ? (1 + Math.max(0, progress - 0.7) * 0.75) : 1;
+      const base = (180 + (cp % 90) * 2.2 + Math.random() * 140) * qBoost;
       osc.frequency.setValueAtTime(base, t);
       osc.frequency.exponentialRampToValueAtTime(base * (0.55 + Math.random() * 0.35), t + 0.08);
       flt.type = 'lowpass';
-      flt.frequency.setValueAtTime(1400 + Math.random() * 600, t);
+      flt.frequency.setValueAtTime(1600 + Math.random() * 700, t);
       flt.Q.value = 1.4;
-      const dur = 0.045 + Math.random() * 0.06;
+      const dur = 0.05 + Math.random() * 0.06;
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.055, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.14, t + 0.006); // louder than before
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
       osc.start(t); osc.stop(t + dur + 0.02);
     } catch(e) {}
   }
 
-  // ── dramatic "i love you" SFX: detuned chord stabs + airy noise ──
+  // ── monotone variant for the paragraph AFTER "i love you" —
+  //    same family as playSoftType but dead-flat pitch, colder, slightly muffled.
+  //    Volume boosted per user request — sits prominent in the mix.
+  function playMonoType(cp) {
+    if (!audioCtx || !cp) return;
+    if (cp <= 32) return;
+    if (Math.random() > 0.82) return;
+    try {
+      const t  = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const flt = audioCtx.createBiquadFilter();
+      const g   = audioCtx.createGain();
+      osc.type = 'triangle';
+      const base = 168 + Math.random() * 6;
+      osc.frequency.setValueAtTime(base, t);
+      osc.frequency.exponentialRampToValueAtTime(base * 0.95, t + 0.08);
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(1300, t);
+      flt.Q.value = 1.0;
+      const dur = 0.06;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.22, t + 0.006);  // boosted from 0.12
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // ── voice-like glitch for per-char sounds during "i love you" —
+  //    sawtooth through three bandpass formants ≈ a short vowel pulse.
+  //    Boosted volume per user request: this is the dominant text-generation font now.
+  function playLoveVoiceGlitch(ch) {
+    if (!audioCtx || !ch) return;
+    const cp = ch.charCodeAt(0);
+    if (cp <= 32) return;
+    if (Math.random() > 0.7) return; // play on ~70% of chars — denser texture
+    try {
+      const t  = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const f1 = audioCtx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 700;  f1.Q.value = 8;
+      const f2 = audioCtx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = 1220; f2.Q.value = 8;
+      const f3 = audioCtx.createBiquadFilter(); f3.type = 'bandpass'; f3.frequency.value = 2600; f3.Q.value = 8;
+      const g1 = audioCtx.createGain(); g1.gain.value = 1.0;
+      const g2 = audioCtx.createGain(); g2.gain.value = 0.65;
+      const g3 = audioCtx.createGain(); g3.gain.value = 0.28;
+      const main = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      const pitch = 140 + (cp % 10) * 6 + Math.random() * 28;
+      osc.frequency.setValueAtTime(pitch, t);
+      osc.frequency.linearRampToValueAtTime(pitch * (0.85 + Math.random() * 0.3), t + 0.12);
+      const dur = 0.09 + Math.random() * 0.12;
+      main.gain.setValueAtTime(0.0001, t);
+      main.gain.exponentialRampToValueAtTime(0.38, t + 0.012);  // boosted from 0.2
+      main.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(f1); f1.connect(g1); g1.connect(main);
+      osc.connect(f2); f2.connect(g2); g2.connect(main);
+      osc.connect(f3); f3.connect(g3); g3.connect(main);
+      main.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // Kick off the "i love you" voice sample — uses the preloaded buffer
+  // for sample-accurate sync with the first typed character. See top-level
+  // playPreparedLoveSample() for the Web Audio path.
+
+  // ── "i love you" jingle: melancholic-hopeful progression (C major, vi-IV-I-V cycle) ──
+  // One chord per character of "i love you" (10 chars, space included).
+  // Voicings are mid-range open triads — bittersweet, not heavy.
   const loveChord = [
-    [220.00, 277.18, 329.63], // A3 C#4 E4
-    [196.00, 246.94, 293.66], // G3 B3 D4
-    [174.61, 220.00, 261.63], // F3 A3 C4
-    [164.81, 207.65, 246.94], // E3 G#3 B3
-    [146.83, 185.00, 220.00], // D3 F#3 A3
-    [130.81, 164.81, 196.00], // C3 E3 G3
-    [123.47, 155.56, 185.00], // B2 D#3 F#3
-    [110.00, 138.59, 164.81], // A2 C#3 E3
-    [ 98.00, 123.47, 146.83], // G2 B2 D3
-    [ 87.31, 110.00, 130.81], // F2 A2 C3
+    [220.00, 261.63, 329.63], // Am  (vi)   — "i"
+    [174.61, 220.00, 349.23], // F   (IV)   — " "
+    [261.63, 329.63, 392.00], // C   (I)    — "l"
+    [196.00, 246.94, 392.00], // G   (V)    — "o"
+    [220.00, 261.63, 329.63], // Am  (vi)   — "v"
+    [164.81, 196.00, 329.63], // Em  (iii)  — "e"
+    [174.61, 220.00, 349.23], // F   (IV)   — " "
+    [196.00, 246.94, 392.00], // G   (V)    — "y"
+    [220.00, 293.66, 329.63], // Am7 (vi7)  — "o"
+    [261.63, 329.63, 392.00], // C   (I)    — "u"  (hopeful resolve)
   ];
   let loveStep = 0;
   function playLoveChar(ch) {
@@ -1720,7 +2280,7 @@ document.getElementById('initOverlay').addEventListener('click', () => {
       const chord = loveChord[Math.min(loveStep, loveChord.length - 1)];
       loveStep++;
 
-      // chord stab — 3 detuned triangles w/ long lowpassed tail
+      // chord stab — 3 detuned triangles w/ long lowpassed tail (LOUDER)
       chord.forEach((f, i) => {
         const osc = audioCtx.createOscillator();
         const g   = audioCtx.createGain();
@@ -1731,7 +2291,7 @@ document.getElementById('initOverlay').addEventListener('click', () => {
         flt.frequency.setValueAtTime(2200, t);
         flt.frequency.exponentialRampToValueAtTime(600, t + 1.6);
         flt.Q.value = 3;
-        const peak = 0.09 - i * 0.015;
+        const peak = 0.16 - i * 0.025;
         g.gain.setValueAtTime(0.0001, t);
         g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
@@ -1745,7 +2305,7 @@ document.getElementById('initOverlay').addEventListener('click', () => {
       shimmer.type = 'sine';
       shimmer.frequency.setValueAtTime(chord[2] * 4 + (Math.random() - 0.5) * 6, t);
       sg.gain.setValueAtTime(0.0001, t);
-      sg.gain.exponentialRampToValueAtTime(0.028, t + 0.1);
+      sg.gain.exponentialRampToValueAtTime(0.048, t + 0.1);
       sg.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
       shimmer.connect(sg); sg.connect(audioCtx.destination);
       shimmer.start(t); shimmer.stop(t + 1.3);
@@ -1764,7 +2324,7 @@ document.getElementById('initOverlay').addEventListener('click', () => {
         nFlt.frequency.setValueAtTime(1800 + Math.random() * 800, t);
         nFlt.Q.value = 2.5;
         nG.gain.setValueAtTime(0.0001, t);
-        nG.gain.exponentialRampToValueAtTime(0.022, t + 0.05);
+        nG.gain.exponentialRampToValueAtTime(0.038, t + 0.05);
         nG.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
         src.connect(nFlt); nFlt.connect(nG); nG.connect(audioCtx.destination);
         src.start(t); src.stop(t + 0.9);
@@ -1773,33 +2333,62 @@ document.getElementById('initOverlay').addEventListener('click', () => {
   }
 
   async function typeHiddenMessage() {
-    const speed = 55;
+    const speed     = 55;
     const loveSpeed = 180;
-    const lineGap = 260;
+    const dotsSpeed = 950;  // each leading '.' in the post paragraph types very slowly
+    const lineGap   = 260;
     for (let i = 0; i < hiddenParas.length; i++) {
       const d = hiddenParas[i];
-      const isLove = d.p.classList.contains('love');
+
+      // Extra silence before "i love you" — let the previous paragraph breathe
+      if (d.phase === 'love') await hmDelay(3200);
+      // Extra silence before the post paragraph (where the slow dots live)
+      if (d.phase === 'post') await hmDelay(1800);
+
       d.p.style.transition = 'opacity 0.3s ease';
       d.p.style.opacity = '1';
+
+      // Voice sample will be started on the first char insert of the love paragraph
+      // so the audio is perfectly synced with the visible text (no decode latency).
+      let loveSampleStarted = false;
+
+      // For the post paragraph: track whether we've cleared the leading dots yet
+      // (first text node, chars are '.' until the first non-dot appears)
+      let postLeadingDots = d.phase === 'post';
+
       for (let j = 0; j < d.nodes.length; j++) {
         const node = d.nodes[j];
-        if (!isLove) node.parentNode.insertBefore(hmCursor, node.nextSibling);
-        if (isLove) {
-          for (const ch of d.orig[j]) {
-            node.textContent += ch;
-            playLoveChar(ch);
-            await hmDelay(loveSpeed);
+        if (d.phase !== 'love') node.parentNode.insertBefore(hmCursor, node.nextSibling);
+        const metas = analyzeText(d.orig[j]);
+        for (const m of metas) {
+          node.textContent += m.ch;
+          if (d.phase === 'love') {
+            if (!loveSampleStarted) {
+              playPreparedLoveSample();  // fires exactly when first char lands in DOM
+              loveSampleStarted = true;
+            }
+            playLoveChar(m.ch);          // chord-stab jingle
+            playLoveVoiceGlitch(m.ch);   // voice-like per-char glitches
+          } else if (d.phase === 'post') {
+            playMonoType(m.ch.charCodeAt(0));
+          } else {
+            playSoftType(m.ch.charCodeAt(0), m.progress, m.isQuestion);
           }
-        } else {
-          for (const ch of d.orig[j]) {
-            node.textContent += ch;
-            playSoftType(ch.charCodeAt(0));
-            await hmDelay(speed);
-          }
+
+          // Leading-dot detection: once we hit the first non-dot non-space char, switch to normal speed
+          if (postLeadingDots && m.ch !== '.' && m.ch.trim() !== '') postLeadingDots = false;
+          const isLeadingDot = postLeadingDots && m.ch === '.';
+
+          const charDelay = d.phase === 'love' ? loveSpeed
+                          : isLeadingDot       ? dotsSpeed
+                          : speed;
+          await hmDelay(charDelay);
         }
+        // Leading-dot window only applies to the first text node
+        if (j === 0) postLeadingDots = false;
         if (j < d.nodes.length - 1) await hmDelay(lineGap);
       }
-      await hmDelay(isLove ? 2500 : 1000);
+      await hmDelay(d.phase === 'love' ? 2500 : 1000);
     }
   }
 
