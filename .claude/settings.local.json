@@ -7,7 +7,11 @@
       "Bash(curl -L \"https://img.itch.zone/aW1nLzIyMDgwNTM5LmpwZw==/original/qS48ft.jpg\" -o \"C:/Users/simol/Documents/GitHub/simoliguori/assets/img/bg-tile.jpg\")",
       "WebFetch(domain:year0001.com)",
       "WebFetch(domain:nesso.xyz)",
-      "mcp__Windows-MCP__Scrape"
+      "mcp__Windows-MCP__Scrape",
+      "Bash(gh api *)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Users/simol/AppData/Local/**)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
