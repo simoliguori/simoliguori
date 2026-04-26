@@ -544,6 +544,9 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   transform: scale(1.03);
 }
 .pf-thumb:hover img { filter: none; }
+/* Bias the 16:9 crop towards the top for portrait-oriented photos so faces /
+   subjects in the upper third aren't cut off. */
+.pf-grid-sm.thumbs-up .pf-thumb img { object-position: center 28%; }
 
 .pf-placeholder {
   width: 100%;
@@ -556,6 +559,51 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   font-size: 11px;
   letter-spacing: 0.15em;
   border: 1px dashed #330000;
+}
+
+/* "read full" expander — minimalist <details> styled as a terminal button.
+   No JS, native HTML expand/collapse. */
+.pf-readmore {
+  display: block;
+  margin: 12px 0 4px;
+}
+.pf-readmore > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #aa4444;
+  border: 1px solid #441111;
+  padding: 4px 10px;
+  user-select: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, text-shadow 0.15s;
+}
+.pf-readmore > summary::-webkit-details-marker { display: none; }
+.pf-readmore > summary:hover {
+  color: #ff6666;
+  border-color: #ff3333;
+  background: rgba(255, 50, 50, 0.06);
+  text-shadow: 0 0 6px rgba(255, 70, 70, 0.4);
+}
+.pf-readmore > summary .opened { display: none; }
+.pf-readmore[open] > summary .closed { display: none; }
+.pf-readmore[open] > summary .opened { display: inline; }
+.pf-readmore[open] > summary {
+  color: #ff6666;
+  border-color: #aa3333;
+}
+.pf-readmore-body {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-left: 2px solid #441414;
+  background: rgba(20, 5, 5, 0.45);
+  animation: pfReadmoreFade 0.3s ease both;
+}
+@keyframes pfReadmoreFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* Highlighted pull-quote inside a section body (terminal "echo" feel) */
@@ -605,25 +653,105 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   .pf-project-title { font-size: 14px; letter-spacing: 0.18em; }
 }
 
-/* Featured-work layout — video card on the left, descriptive text on the right */
+/* Featured-work layout — video card floats left so the descriptive text wraps
+   *around* it (fills the space to the right AND continues below once the
+   text length exceeds the card's height), instead of sitting in a separate
+   rigid right-hand column. */
 .pf-feature {
-  display: flex;
-  gap: 16px;
   margin: 8px 0 6px;
-  align-items: flex-start;
+}
+.pf-feature::after {
+  content: '';
+  display: table;
+  clear: both;
 }
 .pf-feature > .pf-card {
+  float: left;
   width: 320px;
   max-width: 44%;
-  flex-shrink: 0;
+  margin: 0 18px 10px 0;
 }
 .pf-feature .pf-feature-text {
-  flex: 1;
-  min-width: 0;
+  /* Slightly tighter type so the intro paragraph + pull-quote fit alongside
+     the floated video card height — the rest of the text wraps below cleanly. */
+  font-size: 0.93em;
+  line-height: 1.7;
 }
 @media (max-width: 600px) {
-  .pf-feature { flex-direction: column; }
-  .pf-feature > .pf-card { width: 100%; max-width: 100%; }
+  .pf-feature > .pf-card {
+    float: none;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 12px 0;
+  }
+}
+
+/* Two-column layout for compact paired blocks (e.g. PROGRAM next to ENSEMBLE
+   roster) — preserves horizontal real estate instead of stacking vertically. */
+.pf-twocol {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin: 14px 0 6px;
+}
+.pf-col { flex: 1; min-width: 0; }
+.pf-col-program {
+  flex: 0 0 52%;
+  font-size: 0.86em;
+  line-height: 1.65;
+  opacity: 0.92;
+}
+.pf-col-program .win-line { line-height: 1.6; }
+.pf-col-program em {
+  color: #774444;
+  font-style: italic;
+  font-size: 0.92em;
+}
+@media (max-width: 700px) {
+  .pf-twocol { flex-direction: column; gap: 10px; }
+  .pf-col-program { flex: 1; font-size: 1em; }
+}
+
+/* Event-info layout — text block on the left, poster centered on the right */
+.pf-event {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin: 8px 0 6px;
+}
+.pf-event-info { flex: 1; min-width: 0; }
+.pf-event-poster {
+  display: block;
+  flex-shrink: 0;
+  width: 170px;
+  max-width: 28%;
+  max-height: 240px;
+  align-self: center;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 3px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.pf-event-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 232px;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(0.2) contrast(1.05) brightness(0.95);
+  transition: filter 0.25s;
+}
+.pf-event-poster:hover {
+  border-color: #ff3333;
+  box-shadow: 0 0 18px rgba(255, 60, 60, 0.18);
+  transform: translateY(-2px);
+}
+.pf-event-poster:hover img { filter: none; }
+@media (max-width: 600px) {
+  .pf-event { flex-direction: column; }
+  .pf-event-poster { width: 100%; max-width: 280px; align-self: center; }
 }
 
 /* Event poster block — sits beside the press text, scales nicely on mobile */
@@ -1209,6 +1337,17 @@ button:focus,
           <span class="win-line">A concert-project conceived by NEMA Ensemble exploring timbre as a generative force of musical form. Drawing from French spectral thought (Grisey, Murail, Dufourt) and its roots in Debussy and Messiaen, it unfolds as a continuous perceptual journey — listening guided by evolving sonic qualities rather than themes or narratives.</span>
           <span class="win-line pf-quote">“What happens when musical form is allowed to emerge from the internal transformation of sound itself?”</span>
           <span class="win-line">The program moves from electronic thresholds to ritual gestures, from microscopic attention to sound to expansive harmonic spaces, finally returning to Debussy's Nuages — a timeless figure of suspended time and floating resonance.</span>
+          <details class="pf-readmore">
+            <summary><span class="closed">▶ read full</span><span class="opened">▼ collapse</span></summary>
+            <div class="pf-readmore-body">
+              <span class="win-line">Resonant Bends is a concert-project conceived by NEMA Ensemble as an exploration of timbre as a generative force of musical form. Rather than presenting a strict "spectral program", the project traces a broader constellation of ideas, linking spectral music to its precursors and consequences across different repertoires, media, and listening modes.</span>
+              <span class="win-line">At the core of the project lies a simple yet radical question:</span>
+              <span class="win-line pf-quote">“What happens when musical form is allowed to emerge from the internal transformation of sound itself?”</span>
+              <span class="win-line">Drawing inspiration from French spectral thought (Grisey, Murail, Dufourt) and its deep roots in Debussy and Messiaen, Resonant Bends unfolds as a continuous perceptual journey. Electronics, acoustic instruments, original compositions, commissions, and transcriptions coexist within a single dramaturgical arc, where listening is guided not by themes or narratives, but by evolving sonic qualities.</span>
+              <span class="win-line">The program moves from electronic thresholds to ritual gestures, from microscopic attention to sound to expansive harmonic spaces, finally returning to Debussy's <em>Nuages</em> — a timeless figure of suspended time and floating resonance.</span>
+              <span class="win-line">This playlist documents the full live performance at Spazio Arena (Avellino), capturing Resonant Bends as a unified listening experience rather than a sequence of isolated works.</span>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -1226,49 +1365,54 @@ button:focus,
         </a>
       </div>
 
-      <span class="win-section-label">[ EVENT INFO ]</span>
-      <span class="win-line">date     : 5 ottobre 2025</span>
-      <span class="win-line">venue    : Spazio Arena · Via Santissima Trinità 93 · Avellino, IT</span>
-      <span class="win-line">series   : Contemporary Speech</span>
-      <span class="win-line">producer : Progetto Sonora · impresa sociale srl</span>
-      <span class="win-line">support  : Ministero della Cultura</span>
-      <span class="win-line">
-        <a href="mailto:info@progettosonora.it" class="win-link">↳ info@progettosonora.it</a>
-      </span>
-      <span class="win-line">
-        <a href="https://progettosonora.it" target="_blank" class="win-link">↳ progettosonora.it</a>
-      </span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/nemaensemble/" target="_blank" class="win-link">↳ @nemaensemble — Instagram</a>
-      </span>
+      <div class="pf-event">
+        <div class="pf-event-info">
+          <span class="win-section-label">[ EVENT INFO ]</span>
+          <span class="win-line">date     : october 5, 2025</span>
+          <span class="win-line">venue    : Spazio Arena · Via Santissima Trinità 93 · Avellino, IT</span>
+          <span class="win-line">series   : Contemporary Speech</span>
+          <span class="win-line">funds    : Progetto Sonora  ·  Ministero della Cultura</span>
+          <span class="win-line">
+            <a href="https://progettosonora.it" target="_blank" class="win-link">↳ progettosonora.it</a>
+          </span>
+        </div>
+        <a class="pf-event-poster" href="assets/img/nema/locandina.jpg" target="_blank" data-lightbox="2" data-src="assets/img/nema/locandina.jpg" title="event poster — click to enlarge">
+          <img src="assets/img/nema/locandina.jpg" loading="lazy" alt="Resonant Bends — locandina">
+        </a>
+      </div>
 
-      <span class="win-section-label">[ PROGRAM ]</span>
-      <span class="win-line">F. De Simone — Shifting Matter (electronics)</span>
-      <span class="win-line">C. Debussy — Syrinx (flute solo)</span>
-      <span class="win-line">T. Murail — Treize Couleurs du Soleil Couchant (ensemble &amp; electronics)</span>
-      <span class="win-line">C. Debussy — Les sons et les parfums tournent dans l'air du soir (piano solo)</span>
-      <span class="win-line">NEMA Ensemble — Resonant Bends (ensemble &amp; electronics)</span>
-      <span class="win-line">Y. Maresz — Circumambulation (flute solo)</span>
-      <span class="win-line">R. Rafie — Suedama (ensemble)</span>
-      <span class="win-line">O. Messiaen — L'abîme des oiseaux (clarinet &amp; electronics, reworking)</span>
-      <span class="win-line">C. Debussy — Nuages, from Nocturnes (ensemble transcription)</span>
-
-      <span class="win-section-label">[ NEMA ENSEMBLE ]</span>
-      <span class="win-line">Vincenzo Gaudino — flute</span>
-      <span class="win-line">Francesco Filisdeo — clarinet</span>
-      <span class="win-line">Leonardo Ricci — violin</span>
-      <span class="win-line">Davide Maria Viola — cello</span>
-      <span class="win-line">Andrea Riccio — piano</span>
-      <span class="win-line">Francesco De Simone — electronics</span>
-      <span class="win-line">Cosimo Abbate — conductor</span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/nemaensemble/" target="_blank" class="win-link">↳ @nemaensemble — Instagram</a>
-      </span>
+      <div class="pf-twocol">
+        <div class="pf-col pf-col-roster">
+          <span class="win-section-label">[ NEMA ENSEMBLE ]</span>
+          <span class="win-line">Vincenzo Gaudino — flute</span>
+          <span class="win-line">Francesco Filisdeo — clarinet</span>
+          <span class="win-line">Leonardo Ricci — violin</span>
+          <span class="win-line">Davide Maria Viola — cello</span>
+          <span class="win-line">Andrea Riccio — piano</span>
+          <span class="win-line">Francesco De Simone — electronics</span>
+          <span class="win-line">Cosimo Abbate — conductor</span>
+          <span class="win-line">
+            <a href="https://www.instagram.com/nemaensemble/" target="_blank" class="win-link">↳ @nemaensemble — Instagram</a>
+          </span>
+        </div>
+        <div class="pf-col pf-col-program">
+          <span class="win-section-label">[ PROGRAM ]</span>
+          <span class="win-line">F. De Simone — Shifting Matter <em>(electronics)</em></span>
+          <span class="win-line">C. Debussy — Syrinx <em>(flute solo)</em></span>
+          <span class="win-line">T. Murail — Treize Couleurs du Soleil Couchant <em>(ensemble &amp; electronics)</em></span>
+          <span class="win-line">C. Debussy — Les sons et les parfums tournent dans l'air du soir <em>(piano solo)</em></span>
+          <span class="win-line">NEMA Ensemble — Resonant Bends <em>(ensemble &amp; electronics)</em></span>
+          <span class="win-line">Y. Maresz — Circumambulation <em>(flute solo)</em></span>
+          <span class="win-line">R. Rafie — Suedama <em>(ensemble)</em></span>
+          <span class="win-line">O. Messiaen — L'abîme des oiseaux <em>(clarinet &amp; electronics, reworking)</em></span>
+          <span class="win-line">C. Debussy — Nuages, from Nocturnes <em>(ensemble transcription)</em></span>
+        </div>
+      </div>
       </div><!-- /.pf-project (RESONANT BENDS) -->
 
       <!-- ─── AUDIO ──────────────────────────────────── -->
       <div class="pf-project">
-      <span class="pf-project-title">▌ AUDIO</span>
+      <span class="pf-project-title">▌ DEMOS</span>
       <span class="pf-project-subtitle">unmixed and unmastered sound experimentation in chronological order</span>
       <div class="pf-embed">
         <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" loading="lazy" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1800874083&color=%23ff3333&auto_play=false&hide_related=true&show_comments=true&show_user=true&show_reposts=false&show_teaser=false&visual=true"></iframe>
@@ -1282,6 +1426,74 @@ button:focus,
         <a href="https://eccerobot.bandcamp.com/" target="_blank" class="win-link">↳ eccerobot [Bandcamp]</a>
       </span>
       </div><!-- /.pf-project (AUDIO) -->
+
+      <!-- ─── LAST RESORT ────────────────────────────── -->
+      <div class="pf-project">
+      <span class="pf-project-title">▌ LAST RESORT · DEMONCANDY × DEMONI CARAMELLA</span>
+      <span class="pf-project-subtitle">session guitarist · live show 2022</span>
+
+      <span class="win-line">Live set as session guitarist for <strong>Demoncandy</strong> at the inaugural opening night of <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">Last Resort Studio</a> — a recording studio launched in Naples in november 2022.</span>
+      <span class="win-line">My work alongside the rest of the band was to re-shape the original beats produced by <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey</a> (Demoncandy's regular producer) into a rock / analog live arrangement — guitars, bass and drums replacing the studio tracks for the night.</span>
+
+      <div class="pf-event">
+        <div class="pf-event-info">
+          <span class="win-section-label">[ EVENT INFO ]</span>
+          <span class="win-line">date     : november 26, 2022</span>
+          <span class="win-line">venue    : Last Resort Studio · Via Carlo De Marco 30 · Napoli</span>
+          <span class="win-line">occasion : studio opening night</span>
+          <span class="win-line">lineup   : Rageless · Saint Abel · Demoncandy · Nxfeit · Suspense</span>
+          <span class="win-line">
+            <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">↳ @lastresortstudio — Instagram</a>
+          </span>
+        </div>
+        <a class="pf-event-poster" href="assets/img/last%20resort/last%20resort%20locandina.jpg" target="_blank" data-lightbox="3" data-src="assets/img/last%20resort/last%20resort%20locandina.jpg" title="last resort — locandina">
+          <img src="assets/img/last%20resort/last%20resort%20locandina.jpg" loading="lazy" alt="Last Resort — locandina">
+        </a>
+      </div>
+
+      <span class="win-section-label">[ DEMONCANDY · LIVE SETUP ]</span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/demoncandyy/" target="_blank" class="win-link">Demoncandy — vocals  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/dauriadafofr/" target="_blank" class="win-link">Francesco D'Auria — guitar  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/pinkisnt.dead/" target="_blank" class="win-link">Simone Liguori — guitar  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/astrobitta/" target="_blank" class="win-link">Daniele Nappi — bass  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/nowaydafly/" target="_blank" class="win-link">Nowaydafly — drums  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey — original productions  ·  ↳ Instagram</a>
+      </span>
+
+      <span class="win-section-label">[ LIVE PHOTOS ]</span>
+      <span class="win-line">Shots from the night — backstage, stage, and the band in motion.</span>
+      <div class="pf-grid-sm thumbs-up" style="grid-template-columns: repeat(3, 1fr);">
+        <a href="assets/img/last%20resort/IMG_0733.jpg" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0733.jpg">
+          <img src="assets/img/last%20resort/IMG_0733.jpg" loading="lazy" alt="last resort — live 01">
+        </a>
+        <a href="assets/img/last%20resort/IMG_0884.jpg" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0884.jpg">
+          <img src="assets/img/last%20resort/IMG_0884.jpg" loading="lazy" alt="last resort — live 02">
+        </a>
+        <a href="assets/img/last%20resort/IMG_0825.jpg" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0825.jpg">
+          <img src="assets/img/last%20resort/IMG_0825.jpg" loading="lazy" alt="last resort — live 03">
+        </a>
+        <a href="assets/img/last%20resort/IMG_0735.jpg" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0735.jpg">
+          <img src="assets/img/last%20resort/IMG_0735.jpg" loading="lazy" alt="last resort — live 04">
+        </a>
+        <a href="assets/img/last%20resort/IMG_1024.jpg" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_1024.jpg">
+          <img src="assets/img/last%20resort/IMG_1024.jpg" loading="lazy" alt="last resort — live 05">
+        </a>
+        <a href="assets/img/last%20resort/DSC_0074.JPG" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/DSC_0074.JPG">
+          <img src="assets/img/last%20resort/DSC_0074.JPG" loading="lazy" alt="last resort — live 06">
+        </a>
+      </div>
+      </div><!-- /.pf-project (LAST RESORT) -->
 
     </div>
   </div>
