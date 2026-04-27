@@ -78,7 +78,7 @@ html, body {
   90%, 92%      { opacity: 0.25; }
   91%           { opacity: 0.6; }
 }
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
   .ecce-robot { font-size: 11px; letter-spacing: 0.3em; line-height: 1.7; opacity: 0.4; height: 240px; }
 }
 
@@ -167,6 +167,54 @@ body::after {
   letter-spacing: 0.2em;
   animation: pulse 2.5s ease-in-out infinite;
 }
+/* Landscape advisory on init overlay — hidden by default, only shown when the
+   visitor is on a small screen in portrait orientation. Includes a tiny SVG
+   loop of a phone tilting to landscape with a curved arrow trailing it. */
+#initLandscapeHint {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 8px 14px;
+  border: 1px solid #441111;
+  font-size: 9px;
+  color: #aa4444;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(40, 5, 5, 0.4);
+  text-align: left;
+  max-width: 92%;
+  animation: pulse 3s ease-in-out infinite;
+}
+#initLandscapeHint .rotate-icon { flex-shrink: 0; }
+#initLandscapeHint .rotate-phone {
+  transform-origin: 20px 17px;
+  animation: phoneTilt 2.4s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+#initLandscapeHint .rotate-arrow,
+#initLandscapeHint .rotate-arrow-head {
+  opacity: 0;
+  animation: arrowSweep 2.4s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+@keyframes phoneTilt {
+  0%, 18%   { transform: rotate(0deg); }
+  55%, 78%  { transform: rotate(-90deg); }
+  100%      { transform: rotate(0deg); }
+}
+@keyframes arrowSweep {
+  0%, 12%   { opacity: 0; transform: rotate(0deg); }
+  20%       { opacity: 0.9; }
+  55%, 78%  { opacity: 0.9; transform: rotate(-90deg); }
+  88%       { opacity: 0; transform: rotate(-90deg); }
+  100%      { opacity: 0; transform: rotate(0deg); }
+}
+#initLandscapeHint .rotate-arrow,
+#initLandscapeHint .rotate-arrow-head {
+  transform-origin: 20px 20px;
+}
+@media (max-width: 768px) and (orientation: portrait) {
+  #initLandscapeHint { display: inline-flex; }
+}
 
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 @keyframes pulse { 0%,100%{color:#333} 50%{color:#882222} }
@@ -248,10 +296,17 @@ body::after {
   z-index: 1;
   display: inline-block;
   text-align: left;
-  /* System monospace first: Roboto Mono webfont's served subsets don't include
-     box-drawing chars (U+2500-257F), causing mixed-font metric drift on Firefox
-     Android. ui-monospace/monospace gives consistent widths for every glyph. */
-  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  /* Force the GENERIC `monospace` family ONLY — no specific font names — so
+     every glyph (letters AND box-drawing chars U+2500-257F) is served by a
+     single system font with consistent metrics. The Roboto Mono webfont we
+     load doesn't include the box-drawing range in its subsets, which on
+     Firefox Android causes a mixed-font fallback per character → garbled
+     alignment. Pinning to plain `monospace` resolves that.
+     `font-variant-ligatures: none` prevents any opportunistic shaping. */
+  font-family: monospace;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: geometricPrecision;
   font-size: clamp(6px, 1.15vw, 14px);
   line-height: 1.18;
   color: #ff3333;
@@ -546,7 +601,7 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
 .pf-thumb:hover img { filter: none; }
 /* Bias the 16:9 crop towards the top for portrait-oriented photos so faces /
    subjects in the upper third aren't cut off. */
-.pf-grid-sm.thumbs-up .pf-thumb img { object-position: center 28%; }
+.pf-grid-sm.thumbs-up .pf-thumb img { object-position: center 42%; }
 
 .pf-placeholder {
   width: 100%;
@@ -628,6 +683,7 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.4);
 }
 .pf-project + .pf-project { margin-top: 28px; }
+.pf-project::after { content: ''; display: table; clear: both; }
 
 .pf-project-title {
   display: block;
@@ -641,6 +697,16 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   padding: 2px 0 12px;
   margin: 0 0 14px;
 }
+/* Brand mark — keeps the stylized lowercase "mi·ɽài" intact even when sitting
+   inside an uppercase-transformed parent (project titles, etc.). */
+.pf-project-title .brand {
+  text-transform: none;
+  letter-spacing: 0.05em;
+  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  color: #ff5555;
+  text-shadow: 0 0 10px rgba(255, 80, 80, 0.5);
+}
 .pf-project-subtitle {
   display: block;
   color: #aa5555;
@@ -648,7 +714,7 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   letter-spacing: 0.1em;
   margin: -8px 0 12px;
 }
-@media (max-width: 600px) {
+@media (max-width: 600px) and (orientation: portrait) {
   .pf-project { padding: 12px 12px 14px; margin: 14px 0 20px; }
   .pf-project-title { font-size: 14px; letter-spacing: 0.18em; }
 }
@@ -677,7 +743,7 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   font-size: 0.93em;
   line-height: 1.7;
 }
-@media (max-width: 600px) {
+@media (max-width: 600px) and (orientation: portrait) {
   .pf-feature > .pf-card {
     float: none;
     width: 100%;
@@ -707,39 +773,40 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   font-style: italic;
   font-size: 0.92em;
 }
-@media (max-width: 700px) {
-  .pf-twocol { flex-direction: column; gap: 10px; }
-  .pf-col-program { flex: 1; font-size: 1em; }
+@media (max-width: 700px) and (orientation: portrait) {
+  /* Block layout (not flex) so children naturally wrap around the floated
+     poster carrying down from the EVENT INFO block above. */
+  .pf-twocol { display: block; gap: 0; }
+  .pf-col-program { flex: 1; font-size: 1em; margin-top: 14px; }
+  /* Allow the locandina float to continue past EVENT INFO into NEMA ENSEMBLE. */
+  .pf-event::after { content: none; clear: none; }
 }
 
-/* Event-info layout — text block on the left, poster centered on the right */
+/* Event-info layout — poster floats right so EVENT INFO text wraps around it
+   on every viewport (no vertical stack on mobile), and the image is shown
+   uncropped at its natural aspect. */
 .pf-event {
-  display: flex;
-  gap: 22px;
-  align-items: center;
   margin: 8px 0 6px;
 }
-.pf-event-info { flex: 1; min-width: 0; }
+/* No clearfix — the floated poster is allowed to extend past EVENT INFO, so
+   the next blocks (NEMA ENSEMBLE / PROGRAM) wrap around its remaining height
+   instead of leaving empty space beside it. The .pf-project clearfix below
+   contains the float at the project boundary. */
+.pf-event-info { min-width: 0; }
 .pf-event-poster {
-  display: block;
-  flex-shrink: 0;
-  width: 170px;
-  max-width: 28%;
-  max-height: 240px;
-  align-self: center;
+  float: right;
+  width: 190px;
+  max-width: 38%;
+  margin: 4px 0 12px 20px;
   border: 1px solid #2a0808;
   background: #080303;
   padding: 3px;
-  overflow: hidden;
   transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 .pf-event-poster img {
   display: block;
   width: 100%;
-  height: 100%;
-  max-height: 232px;
-  object-fit: cover;
-  object-position: center top;
+  height: auto;
   filter: grayscale(0.2) contrast(1.05) brightness(0.95);
   transition: filter 0.25s;
 }
@@ -749,9 +816,16 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   transform: translateY(-2px);
 }
 .pf-event-poster:hover img { filter: none; }
-@media (max-width: 600px) {
-  .pf-event { flex-direction: column; }
-  .pf-event-poster { width: 100%; max-width: 280px; align-self: center; }
+@media (max-width: 600px) and (orientation: portrait) {
+  .pf-event-poster {
+    width: 115px;
+    max-width: 36%;
+    margin: 4px 0 10px 10px;
+  }
+  /* Tighter type so EVENT INFO lines don't wrap on every word in the
+     reduced text column beside the floated poster. */
+  .pf-event-info { font-size: 0.86em; line-height: 1.65; }
+  .pf-event-info .win-section-label { font-size: 9px; }
 }
 
 /* Event poster block — sits beside the press text, scales nicely on mobile */
@@ -780,7 +854,7 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   flex: 1;
   min-width: 0;
 }
-@media (max-width: 600px) {
+@media (max-width: 600px) and (orientation: portrait) {
   .pf-poster { flex-direction: column; }
   .pf-poster img { width: 100%; max-width: 100%; }
 }
@@ -1057,7 +1131,7 @@ button:focus,
 }
 .pf-lb-visit:hover { background: #ff4444; color: #fff; }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
   #terminal { padding: 12px 14px 40px; }
   #asciiArt {
     /* JS-driven sizing via fitAsciiArt() — fallback only */
@@ -1095,7 +1169,7 @@ button:focus,
   .pf-lb-counter { font-size: 9px; top: 14px; left: 14px; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 480px) and (orientation: portrait) {
   #asciiArt {
     /* JS-driven sizing — fallback only */
     font-size: clamp(7px, 2.7vw, 11px);
@@ -1173,6 +1247,26 @@ button:focus,
 ╚═╝     ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝</pre>
   <div id="initText">&gt; SYSTEM READY</div>
   <div id="initHint">[ CLICK ANYWHERE TO INITIALIZE ]</div>
+  <div id="initLandscapeHint">
+    <svg class="rotate-icon" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <!-- phone outline (animated rotation 0° → 90°) -->
+      <g class="rotate-phone">
+        <rect x="14" y="6" width="12" height="22" rx="2" fill="none" stroke="#aa4444" stroke-width="1.4"/>
+        <rect x="17" y="9" width="6" height="14" fill="rgba(170,68,68,0.15)"/>
+        <circle cx="20" cy="26" r="0.7" fill="#aa4444"/>
+      </g>
+      <!-- curved arrow that traces the actual rotation arc of the phone's
+           top-right corner around the rotation center (20,17). It starts
+           just above the upright phone's top-right corner and ends at the
+           point where that corner lands once rotated -90° (counter-
+           clockwise) — i.e. the upper-left of the rotated phone. -->
+      <path class="rotate-arrow"
+            d="M 28 5 A 13 13 0 0 0 7.5 11.5"
+            fill="none" stroke="#cc5555" stroke-width="1.4" stroke-linecap="round"/>
+      <polygon class="rotate-arrow-head" points="5,9 7,14.5 11,11" fill="#cc5555"/>
+    </svg>
+    <span>for the best formatting, rotate your device to landscape</span>
+  </div>
 </div>
 
 <!-- ═══ MAIN TERMINAL ═══ -->
@@ -1302,7 +1396,7 @@ button:focus,
       </div>
 
       <span class="win-section-label">[ M/V STILLS ]</span>
-      <span class="win-line">Prints from the music video, exhibited and sold during the 2025 edition of <a href="https://www.instagram.com/santafeira_fest/" target="_blank" class="win-link">Santa Feira festival</a>.</span>
+      <span class="win-line">Prints from the music video, exhibited and sold during the 2025 edition of Santa Feira festival.</span>
       <div class="pf-grid-sm">
         <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba1.png">
           <img src="assets/img/maeba/maeba1.png" loading="lazy" alt="maeba 01">
@@ -1320,11 +1414,14 @@ button:focus,
           <img src="assets/img/maeba/maeba5.png" loading="lazy" alt="maeba 05">
         </a>
       </div>
+      <span class="win-line">
+        <a href="https://www.instagram.com/santafeira_fest/" target="_blank" class="win-link">↳ @santafeira_fest — Instagram</a>
+      </span>
       </div><!-- /.pf-project (A GA MAEBA) -->
 
       <!-- ─── RESONANT BENDS ─────────────────────────── -->
       <div class="pf-project">
-      <span class="pf-project-title">▌ RESONANT BENDS · NEMA ENSEMBLE × mi·ɽài</span>
+      <span class="pf-project-title">▌ RESONANT BENDS · NEMA ENSEMBLE × <span class="brand">mi·ɽài</span></span>
       <span class="pf-project-subtitle">realtime audio-responsive visuals improvised with touchdesigner · live show 2025</span>
 
       <!-- Featured: full-performance playlist card + press text (mirrors AGA MAEBA) -->
@@ -1366,6 +1463,9 @@ button:focus,
       </div>
 
       <div class="pf-event">
+        <a class="pf-event-poster" href="assets/img/nema/locandina.jpg" target="_blank" data-lightbox="2" data-src="assets/img/nema/locandina.jpg" title="event poster — click to enlarge">
+          <img src="assets/img/nema/locandina.jpg" loading="lazy" alt="Resonant Bends — locandina">
+        </a>
         <div class="pf-event-info">
           <span class="win-section-label">[ EVENT INFO ]</span>
           <span class="win-line">date     : october 5, 2025</span>
@@ -1376,9 +1476,6 @@ button:focus,
             <a href="https://progettosonora.it" target="_blank" class="win-link">↳ progettosonora.it</a>
           </span>
         </div>
-        <a class="pf-event-poster" href="assets/img/nema/locandina.jpg" target="_blank" data-lightbox="2" data-src="assets/img/nema/locandina.jpg" title="event poster — click to enlarge">
-          <img src="assets/img/nema/locandina.jpg" loading="lazy" alt="Resonant Bends — locandina">
-        </a>
       </div>
 
       <div class="pf-twocol">
@@ -1432,44 +1529,10 @@ button:focus,
       <span class="pf-project-title">▌ LAST RESORT · DEMONCANDY × DEMONI CARAMELLA</span>
       <span class="pf-project-subtitle">session guitarist · live show 2022</span>
 
-      <span class="win-line">Live set as session guitarist for <strong>Demoncandy</strong> at the inaugural opening night of <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">Last Resort Studio</a> — a recording studio launched in Naples in november 2022.</span>
-      <span class="win-line">My work alongside the rest of the band was to re-shape the original beats produced by <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey</a> (Demoncandy's regular producer) into a rock / analog live arrangement — guitars, bass and drums replacing the studio tracks for the night.</span>
-
-      <div class="pf-event">
-        <div class="pf-event-info">
-          <span class="win-section-label">[ EVENT INFO ]</span>
-          <span class="win-line">date     : november 26, 2022</span>
-          <span class="win-line">venue    : Last Resort Studio · Via Carlo De Marco 30 · Napoli</span>
-          <span class="win-line">occasion : studio opening night</span>
-          <span class="win-line">lineup   : Rageless · Saint Abel · Demoncandy · Nxfeit · Suspense</span>
-          <span class="win-line">
-            <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">↳ @lastresortstudio — Instagram</a>
-          </span>
-        </div>
-        <a class="pf-event-poster" href="assets/img/last%20resort/last%20resort%20locandina.jpg" target="_blank" data-lightbox="3" data-src="assets/img/last%20resort/last%20resort%20locandina.jpg" title="last resort — locandina">
-          <img src="assets/img/last%20resort/last%20resort%20locandina.jpg" loading="lazy" alt="Last Resort — locandina">
-        </a>
+      <div class="pf-feature-text pf-feature-standalone">
+        <span class="win-line">Live set as session guitarist for <strong>Demoncandy</strong> at the inaugural opening night of <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">Last Resort Studio</a> — a recording studio launched in Naples in november 2022.</span>
+        <span class="win-line">My work alongside the rest of the band was to re-shape the original beats produced by <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey</a> (Demoncandy's regular producer) into a rock / analog live arrangement — guitars, bass and drums replacing the studio tracks for the night.</span>
       </div>
-
-      <span class="win-section-label">[ DEMONCANDY · LIVE SETUP ]</span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/demoncandyy/" target="_blank" class="win-link">Demoncandy — vocals  ·  ↳ Instagram</a>
-      </span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/dauriadafofr/" target="_blank" class="win-link">Francesco D'Auria — guitar  ·  ↳ Instagram</a>
-      </span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/pinkisnt.dead/" target="_blank" class="win-link">Simone Liguori — guitar  ·  ↳ Instagram</a>
-      </span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/astrobitta/" target="_blank" class="win-link">Daniele Nappi — bass  ·  ↳ Instagram</a>
-      </span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/nowaydafly/" target="_blank" class="win-link">Nowaydafly — drums  ·  ↳ Instagram</a>
-      </span>
-      <span class="win-line">
-        <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey — original productions  ·  ↳ Instagram</a>
-      </span>
 
       <span class="win-section-label">[ LIVE PHOTOS ]</span>
       <span class="win-line">Shots from the night — backstage, stage, and the band in motion.</span>
@@ -1493,6 +1556,42 @@ button:focus,
           <img src="assets/img/last%20resort/DSC_0074.JPG" loading="lazy" alt="last resort — live 06">
         </a>
       </div>
+
+      <div class="pf-event">
+        <a class="pf-event-poster" href="assets/img/last%20resort/last%20resort%20locandina.jpg" target="_blank" data-lightbox="3" data-src="assets/img/last%20resort/last%20resort%20locandina.jpg" title="last resort — locandina">
+          <img src="assets/img/last%20resort/last%20resort%20locandina.jpg" loading="lazy" alt="Last Resort — locandina">
+        </a>
+        <div class="pf-event-info">
+          <span class="win-section-label">[ EVENT INFO ]</span>
+          <span class="win-line">date     : november 26, 2022</span>
+          <span class="win-line">venue    : Last Resort Studio · Via Carlo De Marco 30 · Napoli</span>
+          <span class="win-line">occasion : studio opening night</span>
+          <span class="win-line">lineup   : Rageless · Saint Abel · Demoncandy · Nxfeit · Suspense</span>
+          <span class="win-line">
+            <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">↳ @lastresortstudio — Instagram</a>
+          </span>
+        </div>
+      </div>
+
+      <span class="win-section-label">[ DEMONCANDY · LIVE SETUP ]</span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/demoncandyy/" target="_blank" class="win-link">Demoncandy — vocals  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/dauriadafofr/" target="_blank" class="win-link">Francesco D'Auria — guitar  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/pinkisnt.dead/" target="_blank" class="win-link">Simone Liguori — guitar  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/astrobitta/" target="_blank" class="win-link">Daniele Nappi — bass  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/nowaydafly/" target="_blank" class="win-link">Nowaydafly — drums  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey — original productions  ·  ↳ Instagram</a>
+      </span>
       </div><!-- /.pf-project (LAST RESORT) -->
 
     </div>
@@ -1976,7 +2075,7 @@ function fitAsciiArt() {
   const measure = document.createElement('pre');
   measure.style.cssText =
     'position:absolute;visibility:hidden;left:-9999px;top:-9999px;' +
-    'font-family:ui-monospace,"Roboto Mono","Courier New",monospace;' +
+    'font-family:monospace;font-variant-ligatures:none;' +
     'white-space:pre;font-size:16px;letter-spacing:0;line-height:1.18;margin:0;padding:0;';
   measure.textContent = ASCII_ART;
   document.body.appendChild(measure);
@@ -2179,13 +2278,29 @@ function openSection(key) {
     body.appendChild(script);
   }
 
-  // Center the newly opened section in the viewport, then auto-focus first interactive item
+  // Scroll the newly opened section into view. PORTFOLIO is special-cased to
+  // center on the first .pf-project (A GA MAEBA) — we wait for the section's
+  // max-height transition (~450ms) to finish first so layout measurements are
+  // accurate; everything else aligns its top to the viewport.
+  const isPortfolio = key === 'portfolio';
+  const scrollDelay = isPortfolio ? 480 : 140;
   setTimeout(() => {
-    win.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (isPortfolio) {
+      const firstProject = win.querySelector('.pf-project');
+      if (firstProject) {
+        firstProject.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        win.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      const rect = win.getBoundingClientRect();
+      const targetY = window.scrollY + rect.top - 24; // 24px gap above section
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+    }
     // After the scroll animation settles, auto-enter section focus mode.
     // quiet:true prevents doubling up on the playMenuOpen() already fired by openSection.
     setTimeout(() => enterSection(key, { quiet: true }), 200);
-  }, 140);
+  }, scrollDelay);
 }
 
 function closeSection(key) {
