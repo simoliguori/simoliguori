@@ -150,6 +150,13 @@ body::after {
 #initOverlay.fade-out { opacity: 0; pointer-events: none; }
 
 #initLogo {
+  /* Same font stack as #asciiArt — JetBrains Mono with subsetted box-drawing
+     glyphs guarantees consistent monospace metrics on Firefox Android, where
+     the Roboto Mono fallback's box-drawing chars have inconsistent widths. */
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: geometricPrecision;
   font-size: clamp(8px, 1.1vw, 13px);
   line-height: 1.15;
   color: rgba(200, 30, 30, 0.22);
@@ -445,10 +452,9 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   .hint-desktop { display: none; }
 }
 
-/* Skip hint — sits centered inside #footer between "back to old site" and the
-   copyright span, visible only while the boot sequence is running. Fades out
-   smoothly when boot completes or is skipped. */
+/* Skip hint — center flex item inside the footer bar, visible only while boot runs. */
 .boot-skip-hint {
+  text-align: center;
   font-size: 8px;
   color: #663333;
   letter-spacing: 0.1em;
@@ -457,7 +463,6 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   transition: opacity 0.45s ease, transform 0.45s ease;
   user-select: none;
   pointer-events: none;
-  text-align: center;
 }
 .boot-skip-hint .k {
   color: #aa4444;
@@ -947,9 +952,15 @@ button:focus,
   border-top: 1px solid #331111;
   margin-top: 40px;
   letter-spacing: 0.15em;
+  white-space: nowrap;
 }
 #footer a { color: #bb7777; text-decoration: none; transition: color 0.15s, text-shadow 0.15s; }
 #footer a:hover { color: #ff7777; text-shadow: 0 0 8px rgba(255,100,100,0.6); }
+/* Shrink footer text on narrow / portrait viewports so "← back to old site"
+   and "© 2026 mi·ɽài://audiovisual" stay on a single line each. */
+@media (max-width: 768px) and (orientation: portrait) {
+  #footer { font-size: 8px; padding: 14px 12px; letter-spacing: 0.1em; gap: 8px; }
+}
 
 /* Glitch flash on header */
 @keyframes headerGlitch {
@@ -1502,6 +1513,68 @@ button:focus,
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
 }
+
+/* ═══ SECRET SNES SOUNDBOARD — easter egg in the secret area ═══ */
+#soundboard {
+  position: relative;
+  text-align: center;
+  padding: 80px 24px 160px;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(40px);
+  pointer-events: none;
+  transition: opacity 1.4s ease, transform 1.4s ease;
+}
+#soundboard.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.snes-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: min(589px, 100%);
+  user-select: none;
+  -webkit-user-select: none;
+  transform: perspective(1000px);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.55));
+}
+.snes-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+.snes-btn {
+  position: absolute;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: var(--cur-hand), pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 3px;
+  touch-action: manipulation;
+}
+.snes-btn.pressed {
+  background: rgba(255, 60, 60, 0.28);
+  box-shadow: 0 0 10px 2px rgba(255, 60, 60, 0.55);
+}
+/* Konami completion flash — full-screen white pulse just before redirect */
+#konamiFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: radial-gradient(circle at 50% 50%, #fff, #ffeebb 30%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#konamiFlash.on { opacity: 1; }
 </style>
 </head>
 <body class="scroll-locked">
@@ -1618,7 +1691,7 @@ button:focus,
       [05] GUESTBOOK
     </div>
     <div class="menu-hint hint-desktop" id="menuHint"><span class="k">↑↓</span> NAV <span class="sep">●</span> <span class="k">ENTER</span> OPEN <span class="sep">●</span> <span class="k">BACKSPACE</span> BACK <span class="sep">●</span> <span class="k">[1-5]</span> JUMP</div>
-    <div class="menu-hint hint-mobile"><span class="k">TAP</span> A SECTION TO OPEN <span class="sep">●</span> <span class="k">TAP ✕</span> TO CLOSE</div>
+    <div class="menu-hint hint-mobile"><span class="k">TAP</span> TO OPEN <span class="sep">●</span> <span class="k">✕</span> TO CLOSE</div>
   </div>
 
   <!-- ── ABOUT ── -->
@@ -1934,7 +2007,8 @@ button:focus,
   <div id="footer">
     <a href="old.html">← back to old site</a>
     <span id="bootSkipHint" class="boot-skip-hint">
-      <span class="k">[</span> click anywhere or press <span class="k">ENTER</span> to skip boot <span class="k">]</span>
+      <span class="hint-desktop"><span class="k">[</span> click anywhere or press <span class="k">ENTER</span> to skip boot <span class="k">]</span></span>
+      <span class="hint-mobile">tap to skip boot</span>
     </span>
     <span>© 2026 mi·ɽài://audiovisual</span>
   </div>
@@ -1949,37 +2023,29 @@ button:focus,
     <p><span class="hm-dots">...</span>what are you on about?<br>are you looking for something?<br>sorry, you won't find it here.</p>
   </div>
 
-  <!-- ═══ KONAMI CONTROLLER (revealed after the hidden-message finishes typing) ═══ -->
-  <div class="konami-controller" id="konamiController" aria-hidden="true">
-    <div class="konami-pad" id="konamiPad">
-      <span class="kc-shoulder kc-shoulder-l" aria-hidden="true"></span>
-      <span class="kc-shoulder kc-shoulder-r" aria-hidden="true"></span>
-
-      <div class="konami-dpad">
-        <button class="kc-btn kc-up"    data-key="up"    aria-label="up">▲</button>
-        <button class="kc-btn kc-left"  data-key="left"  aria-label="left">◀</button>
-        <div    class="kc-dpad-hub"></div>
-        <button class="kc-btn kc-right" data-key="right" aria-label="right">▶</button>
-        <button class="kc-btn kc-down"  data-key="down"  aria-label="down">▼</button>
-      </div>
-
-      <div class="konami-center">
-        <div class="konami-pills">
-          <button class="kc-pill" data-key="select" aria-label="select">SELECT</button>
-          <button class="kc-pill" data-key="start"  aria-label="start">START</button>
-        </div>
-        <div class="konami-dots" id="konamiProgress" aria-hidden="true"></div>
-      </div>
-
-      <div class="konami-face">
-        <button class="kc-face kc-y" data-key="y" aria-label="Y">Y</button>
-        <button class="kc-face kc-x" data-key="x" aria-label="X">X</button>
-        <button class="kc-face kc-b" data-key="b" aria-label="B">B</button>
-        <button class="kc-face kc-a" data-key="a" aria-label="A">A</button>
-      </div>
+  <!-- ═══ SECRET SOUNDBOARD — easter egg, revealed only after the hidden message finishes typing ═══ -->
+  <div id="soundboard" aria-hidden="true">
+    <div class="snes-wrap">
+      <img src="assets/img/Snes-PNG-Photo.png" alt="" draggable="false">
+      <!-- Coordinates calibrated via pixel-scan of the 589×258 source PNG. -->
+      <!-- D-pad cross — perfectly symmetric + around center (201, 153) = (34%, 60%). -->
+      <!-- Each hitbox is a 30×30 px square placed 35 px from the cross center; 5 px gap between neighbours, no overlap. -->
+      <button class="snes-btn" data-snd="up"     aria-label="Up"     style="left:31.5%;top:40%;width:5%;height:11.6%"></button>
+      <button class="snes-btn" data-snd="down"   aria-label="Down"   style="left:31.5%;top:67%;width:5%;height:11.6%"></button>
+      <button class="snes-btn" data-snd="left"   aria-label="Left"   style="left:26%;top:53.5%;width:5%;height:11.6%"></button>
+      <button class="snes-btn" data-snd="right"  aria-label="Right"  style="left:37.5%;top:53.5%;width:5%;height:11.6%"></button>
+      <!-- Select / Start — slanted oval pills, x=282-321 / x=335-374 in source -->
+      <button class="snes-btn" data-snd="select" aria-label="Select" style="left:47%;top:61%;width:7%;height:11%"></button>
+      <button class="snes-btn" data-snd="start"  aria-label="Start"  style="left:57%;top:61%;width:7%;height:11%"></button>
+      <!-- Face buttons: X=top(blue), Y=left(green), A=right(red), B=bottom(yellow) -->
+      <button class="snes-btn" data-snd="x"      aria-label="X"      style="left:80%;top:41%;width:6%;height:13%;border-radius:50%"></button>
+      <button class="snes-btn" data-snd="y"      aria-label="Y"      style="left:72%;top:54%;width:6%;height:14%;border-radius:50%"></button>
+      <button class="snes-btn" data-snd="a"      aria-label="A"      style="left:87%;top:55%;width:6%;height:13%;border-radius:50%"></button>
+      <button class="snes-btn" data-snd="b"      aria-label="B"      style="left:80%;top:69%;width:6%;height:13%;border-radius:50%"></button>
     </div>
   </div>
 
+  <div id="konamiFlash" aria-hidden="true"></div>
   <!-- ═══ PORTFOLIO LIGHTBOX ═══ -->
   <div id="pfLightbox" class="pf-lightbox" role="dialog" aria-hidden="true">
     <div class="pf-lb-counter" id="pfLbCounter">01 / 07</div>
@@ -3016,6 +3082,8 @@ document.getElementById('initOverlay').addEventListener('click', () => {
   initAudio();
   // Fire-and-forget preload so the buffer is ready well before the love paragraph
   prepareLoveSample();
+  // Pre-decode all soundboard samples for zero-latency button presses
+  initSoundboard();
   playBootSfx();
   const overlay = document.getElementById('initOverlay');
   overlay.classList.add('fade-out');
@@ -3023,6 +3091,177 @@ document.getElementById('initOverlay').addEventListener('click', () => {
   // Small delay before boot so the fade looks clean
   setTimeout(boot, 500);
 }, { once: true });
+
+// ─────────────────────────────────────────────
+// SNES SOUNDBOARD
+// Pre-decodes every sample into an AudioBuffer so playback fires on the
+// exact audio frame of the click — no fetch/decode latency at press time.
+// ─────────────────────────────────────────────
+const SOUNDBOARD_MAP = {
+  up:     'assets/audio/konami code/up.wav',
+  down:   'assets/audio/konami code/down.wav',
+  left:   'assets/audio/konami code/left.wav',
+  right:  'assets/audio/konami code/right.wav',
+  select: 'assets/audio/konami code/select.wav',
+  start:  'assets/audio/konami code/start.wav',
+  y:      'assets/audio/konami code/y.wav',
+  b:      'assets/audio/konami code/b.wav',
+  a:      'assets/audio/konami code/a.wav',
+  x:      'assets/audio/konami code/x.wav',
+};
+
+const sbBuffers = {};
+const sbSources = {};
+
+async function sbLoad(key) {
+  if (sbBuffers[key] || !audioCtx) return;
+  try {
+    const res = await fetch(SOUNDBOARD_MAP[key]);
+    const ab  = await res.arrayBuffer();
+    sbBuffers[key] = await audioCtx.decodeAudioData(ab);
+  } catch(e) {}
+}
+
+function sbPlay(key) {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try { sbSources[key]?.stop(); } catch(e) {}
+  const buf = sbBuffers[key];
+  if (!buf) {
+    // Buffer not decoded yet — fall back to HTMLAudio and kick off decode
+    try { new Audio(SOUNDBOARD_MAP[key]).play().catch(() => {}); } catch(e) {}
+    sbLoad(key);
+    return;
+  }
+  try {
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start(audioCtx.currentTime);
+    sbSources[key] = src;
+  } catch(e) {}
+}
+
+// 3D tilt — controller rocks toward the pressed button as if being squeezed
+const TILT_MAP = {
+  up:     'rotateX(14deg) translateY(-4px)',
+  down:   'rotateX(-14deg) translateY(4px)',
+  left:   'rotateY(-14deg) translateX(-4px)',
+  right:  'rotateY(14deg) translateX(4px)',
+  l:      'rotate(-3deg) rotateX(10deg) translateY(-4px)',
+  r:      'rotate(3deg)  rotateX(10deg) translateY(-4px)',
+  y:      'rotateY(-10deg) rotateX(-2deg)',
+  a:      'rotateY(10deg)  rotateX(-2deg)',
+  x:      'rotateX(10deg)  rotateY(4deg)',
+  b:      'rotateX(-10deg) rotateY(4deg)',
+  select: 'translateY(3px) scale(0.985)',
+  start:  'translateY(3px) scale(0.985)',
+};
+let tiltTimer = null;
+function tiltSnes(key) {
+  const wrap = document.querySelector('.snes-wrap');
+  if (!wrap) return;
+  wrap.style.transform = `perspective(1000px) ${TILT_MAP[key] || ''}`;
+  clearTimeout(tiltTimer);
+  tiltTimer = setTimeout(() => { wrap.style.transform = ''; }, 240);
+}
+
+// Konami code — up up down down left right left right b a start
+const KONAMI = ['up','up','down','down','left','right','left','right','b','a','start'];
+let konamiIdx = 0;
+let konamiFired = false;
+function konamiCheck(key) {
+  if (konamiFired) return;
+  if (key === KONAMI[konamiIdx]) {
+    konamiIdx++;
+    if (konamiIdx >= KONAMI.length) {
+      konamiFired = true;
+      konamiTrigger();
+    }
+  } else {
+    konamiIdx = (key === KONAMI[0]) ? 1 : 0;
+  }
+}
+
+function playKonamiJingle() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const t0 = audioCtx.currentTime;
+  // Ascending arpeggio — G4, C5, E5, G5, C6 — then a sustained C major chord
+  const arp = [392.00, 523.25, 659.25, 783.99, 1046.50];
+  arp.forEach((freq, i) => {
+    const t = t0 + i * 0.11;
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 0.2);
+  });
+  const tChord = t0 + arp.length * 0.11 + 0.05;
+  [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    osc.type = i === 0 ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(freq, tChord);
+    g.gain.setValueAtTime(0.0001, tChord);
+    g.gain.exponentialRampToValueAtTime(0.18 - i * 0.02, tChord + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, tChord + 1.6);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(tChord); osc.stop(tChord + 1.7);
+  });
+  // Shimmer — high noise burst
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.6, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / d.length);
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const gN  = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'highpass'; flt.frequency.value = 4000;
+  gN.gain.setValueAtTime(0.0001, tChord);
+  gN.gain.exponentialRampToValueAtTime(0.12, tChord + 0.03);
+  gN.gain.exponentialRampToValueAtTime(0.0001, tChord + 0.55);
+  src.connect(flt); flt.connect(gN); gN.connect(audioCtx.destination);
+  src.start(tChord); src.stop(tChord + 0.6);
+}
+
+function konamiTrigger() {
+  // Stop any sample currently playing on the soundboard
+  for (const k of Object.keys(sbSources)) {
+    try { sbSources[k]?.stop(); } catch(e) {}
+  }
+  playKonamiJingle();
+  const flash = document.getElementById('konamiFlash');
+  // Spin the controller as the jingle peaks
+  const wrap = document.querySelector('.snes-wrap');
+  if (wrap) {
+    wrap.style.transition = 'transform 1.6s cubic-bezier(0.6, 0, 0.3, 1)';
+    wrap.style.transform = 'perspective(1000px) rotateY(720deg) scale(1.15)';
+  }
+  setTimeout(() => flash?.classList.add('on'), 1500);
+  setTimeout(() => { window.location.href = 'egg.html'; }, 2200);
+}
+
+function initSoundboard() {
+  for (const key of Object.keys(SOUNDBOARD_MAP)) sbLoad(key);
+  document.querySelectorAll('.snes-btn').forEach(btn => {
+    const key = btn.dataset.snd;
+    function onPress(e) {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      sbPlay(key);
+      tiltSnes(key);
+      konamiCheck(key);
+      setTimeout(() => btn.classList.remove('pressed'), 180);
+    }
+    btn.addEventListener('mousedown', onPress);
+    btn.addEventListener('touchstart', onPress, { passive: false });
+  });
+}
 
 // ─────────────────────────────────────────────
 // PORTFOLIO LIGHTBOX — collectible-card viewer
@@ -3600,11 +3839,13 @@ document.getElementById('initOverlay').addEventListener('click', () => {
     if (hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
       hmTriggered = true;
       hiddenMessage.classList.add('visible');
-      hmDelay(500).then(typeHiddenMessage).then(() => {
-        // Reveal the konami controller once the typewriter sequence completes.
-        const kc = document.getElementById('konamiController');
-        if (kc) kc.classList.add('visible');
-      });
+      hmDelay(500)
+        .then(typeHiddenMessage)
+        .then(() => hmDelay(1200))
+        .then(() => {
+          const sb = document.getElementById('soundboard');
+          if (sb) sb.classList.add('revealed');
+        });
     }
   }
   window.addEventListener('scroll', hmScrollCheck, { passive: true });
