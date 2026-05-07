@@ -1294,14 +1294,17 @@ button:focus,
   padding: 80px 24px 160px;
   z-index: 1000;
   opacity: 0;
+  visibility: hidden;
   transform: translateY(40px);
   pointer-events: none;
-  transition: opacity 1.4s ease, transform 1.4s ease;
+  transition: opacity 1.4s ease, transform 1.4s ease, visibility 0s linear 1.4s;
 }
 #soundboard.revealed {
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+  transition: opacity 1.4s ease, transform 1.4s ease, visibility 0s linear 0s;
 }
 .snes-wrap {
   position: relative;
@@ -3708,24 +3711,45 @@ function initSoundboard() {
     }
   }
 
-  let hmTriggered = false;
-  function hmScrollCheck() {
-    if (hmTriggered) return;
-    if (hiddenMessage.getBoundingClientRect().top < window.innerHeight / 1.3) {
-      hmTriggered = true;
-      hiddenMessage.classList.add('visible');
-      hmDelay(500)
-        .then(typeHiddenMessage)
-        .then(() => hmDelay(1200))
-        .then(() => {
-          const sb = document.getElementById('soundboard');
-          if (sb) sb.classList.add('revealed');
-        });
-    }
+  function startHiddenMessage() {
+    hiddenMessage.classList.add('visible');
+    hmDelay(500)
+      .then(typeHiddenMessage)
+      .then(() => hmDelay(1200))
+      .then(() => {
+        const sb = document.getElementById('soundboard');
+        if (sb) {
+          sb.classList.add('revealed');
+          sb.removeAttribute('aria-hidden');
+        }
+      });
   }
-  window.addEventListener('scroll', hmScrollCheck, { passive: true });
-  document.body.addEventListener('scroll', hmScrollCheck, { passive: true });
-  document.addEventListener('scroll', hmScrollCheck, { passive: true });
+
+  // Use IntersectionObserver (reliable on all browsers/scroll containers).
+  // Falls back to scroll polling only if IO isn't available.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, observer) => {
+      if (entries[0].isIntersecting) {
+        observer.disconnect();
+        startHiddenMessage();
+      }
+    }, { threshold: 0.1 });
+    io.observe(hiddenMessage);
+  } else {
+    // Fallback: scroll polling
+    let hmTriggered = false;
+    function hmScrollCheck() {
+      if (hmTriggered) return;
+      const scroller = document.scrollingElement || document.body;
+      const top = hiddenMessage.getBoundingClientRect().top;
+      if (top < window.innerHeight * 0.9) {
+        hmTriggered = true;
+        startHiddenMessage();
+      }
+    }
+    window.addEventListener('scroll', hmScrollCheck, { passive: true });
+    document.body.addEventListener('scroll', hmScrollCheck, { passive: true });
+  }
 })();
 
 </script>
