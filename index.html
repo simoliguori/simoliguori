@@ -1053,10 +1053,6 @@ button:focus,
   object-fit: contain;
   border: 1px solid #551111;
   box-shadow: 0 0 50px rgba(255, 68, 68, 0.35), 0 0 120px rgba(255, 30, 30, 0.2);
-  transition: filter 0.35s ease;
-}
-.pf-lb-wrap img.lb-preview {
-  filter: blur(6px) saturate(0.8);
 }
 /* holo laminate (ported from index.html maeba lightbox) */
 .pf-lb-wrap::before {
@@ -3208,16 +3204,14 @@ function initSoundboard() {
     if (_fullResLoader) { _fullResLoader.onload = null; _fullResLoader = null; }
 
     if (item.preview && item.preview !== item.src) {
-      // Show the lightweight preview immediately (blurred).
       lbImg.src = item.preview;
-      lbImg.classList.add('lb-preview');
       // Load the full-res in the background; swap when ready.
       const loader = new Image();
       _fullResLoader = loader;
       loader.onload = () => {
         if (_fullResLoader !== loader) return; // navigated away
         lbImg.src = item.src;
-        lbImg.classList.remove('lb-preview');
+
         _fullResLoader = null;
       };
       loader.src = item.src;
