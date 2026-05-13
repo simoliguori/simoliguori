@@ -1031,13 +1031,12 @@ button:focus,
   will-change: transform;
   max-width: 80vw;
   max-height: 80vh;
-  width: fit-content;
-  height: fit-content;
   margin: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: var(--cur-arrow), default;
+  line-height: 0;
 }
 .pf-lb-wrap img { margin: 0 auto; }
 .pf-lb-wrap.spin-in {
@@ -1211,7 +1210,7 @@ button:focus,
   .win-close:active { background: #ff3333; color: #000; }
   .pf-grid { grid-template-columns: repeat(2, 1fr); }
   .pf-grid-sm { grid-template-columns: repeat(3, 1fr); }
-  .pf-lb-wrap { margin: auto; }
+  .pf-lb-wrap { margin: auto; max-width: 92vw; max-height: 62vh; }
   .pf-lb-wrap img { max-width: 92vw; max-height: 62vh; }
   .pf-lb-hint { font-size: 9px; padding: 6px 10px; bottom: 14px; }
   .pf-lb-visit { display: none; }
