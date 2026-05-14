@@ -1208,6 +1208,18 @@ button:focus,
   transition: background 0.2s, color 0.2s;
 }
 .pf-lb-fullres:hover { background: #ff4444; color: #fff; }
+.pf-lb-fullres.is-loaded {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+  color: #886666;
+  border-color: #331111;
+  background: rgba(0,0,0,0.45);
+}
+.pf-lb-fullres.is-loaded:hover {
+  background: rgba(0,0,0,0.45);
+  color: #886666;
+}
 /* Transparent wrapper on desktop — children keep individual fixed positions */
 .pf-lb-actions { display: contents; }
 .pf-lb-loading {
@@ -3314,6 +3326,7 @@ function initSoundboard() {
   let isOpen        = false;
   let firstOpenDone = false;
   let suppressTilt  = false;
+  let centerLock    = false;
 
   // Expose lightbox state + close to the global keyboard handler so Backspace
   // can prioritise dismissing the lightbox over any other navigation action.
@@ -3348,7 +3361,9 @@ function initSoundboard() {
     lbImg.classList.remove('pf-lb-img-glitch-in');
     lbLoading.style.display = 'none';
     lbFullres.style.display = 'none';
+    lbFullres.classList.remove('is-loaded');
     lbRevealLine.getAnimations().forEach(a => a.cancel());
+    centerLock = false;
 
     // Size placeholder from thumbnail natural dimensions
     const thumbImg = item.el.querySelector('img');
@@ -3470,7 +3485,7 @@ function initSoundboard() {
   }
 
   function updateTiltFromPoint(x, y) {
-    if (suppressTilt) return;
+    if (suppressTilt || centerLock) return;
     const rect = lbWrap.getBoundingClientRect();
     const dx = (x - (rect.left + rect.width  / 2)) / (rect.width  / 2);
     const dy = (y - (rect.top  + rect.height / 2)) / (rect.height / 2);
@@ -3567,10 +3582,12 @@ function initSoundboard() {
   }
   lbFullres.addEventListener('click', e => {
     e.stopPropagation();
+    if (lbFullres.classList.contains('is-loaded')) return;
     const item = items[currentIdx];
     const expectedGen = renderGen;
     if (!item?.src) return;
-    lbFullres.style.display = 'none';
+    lbFullres.classList.add('is-loaded');
+    centerLock = true;
     fitOverlayToImage(lbLoading);
     lbLoading.style.display = 'block';
     let imageReady = false;
@@ -3603,13 +3620,21 @@ function initSoundboard() {
             { top: topEnd,   opacity: 0.5, filter: 'brightness(1.6)',                    offset: 0.92 },
             { top: topEnd,   opacity: 0,   filter: 'none' }
           ], { duration: 1200, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)', fill: 'forwards' });
-          lbImg.addEventListener('animationend', () => lbImg.classList.remove('pf-lb-img-glitch-in'), { once: true });
+          lbImg.addEventListener('animationend', () => {
+            lbImg.classList.remove('pf-lb-img-glitch-in');
+            centerLock = false;
+          }, { once: true });
         });
     };
     setTimeout(() => { if (renderGen === expectedGen) { minTimeReady = true; doReveal(); } }, 2000);
     const full = new Image();
     full.onload = () => { if (renderGen === expectedGen) { imageReady = true; doReveal(); } };
-    full.onerror = () => { if (renderGen === expectedGen) lbLoading.style.display = 'none'; };
+    full.onerror = () => {
+      if (renderGen !== expectedGen) return;
+      lbLoading.style.display = 'none';
+      lbFullres.classList.remove('is-loaded');
+      centerLock = false;
+    };
     full.src = item.src;
   });
   // Prevent backdrop-click close when interacting with the card itself
@@ -3617,6 +3642,7 @@ function initSoundboard() {
 
   // rAF loop: apply lerped tilt, compute specular highlight & holo angle
   (function loop() {
+    if (centerLock) { tRotX = 0; tRotY = 0; }
     cRotX += (tRotX - cRotX) * LERP;
     cRotY += (tRotY - cRotY) * LERP;
 
