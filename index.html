@@ -1054,8 +1054,11 @@ button:focus,
   100% { transform: rotateY(360deg) scale(1);   opacity: 1; }
 }
 @keyframes pfLbRespin {
-  0%   { transform: rotateY(0deg); }
-  100% { transform: rotateY(360deg); }
+  /* Spin around Y axis while bouncing back in Z, then return. The card
+     reads as throwing itself away from the camera mid-flip. */
+  0%   { transform: rotateY(0deg)   translateZ(0); }
+  50%  { transform: rotateY(180deg) translateZ(-420px); }
+  100% { transform: rotateY(360deg) translateZ(0); }
 }
 .pf-lb-wrap img {
   display: block;
@@ -3734,6 +3737,17 @@ function initSoundboard() {
   const CLICK_BLIPS = [659.25, 880.00, 1174.66]; // E5 A5 D6
   lbWrap.addEventListener('click', e => {
     e.stopPropagation();
+    // Small bounce on the image for tactile click feedback. Lives on lbImg
+    // (not lbWrap) so it composes with the wrap's tilt/holo without fighting
+    // the rAF transform writer.
+    lbImg.getAnimations().filter(a => a.id === 'pf-click-bounce').forEach(a => a.cancel());
+    const bounce = lbImg.animate([
+      { transform: 'scale(1)',     offset: 0 },
+      { transform: 'scale(0.93)',  offset: 0.35 },
+      { transform: 'scale(1.025)', offset: 0.7 },
+      { transform: 'scale(1)',     offset: 1 }
+    ], { duration: 260, easing: 'ease-out' });
+    bounce.id = 'pf-click-bounce';
     const idx = Math.min(clickCount, 2);
     playClickBlip(CLICK_BLIPS[idx]);
     clickCount++;
