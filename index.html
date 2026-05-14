@@ -1054,11 +1054,12 @@ button:focus,
   100% { transform: rotateY(360deg) scale(1);   opacity: 1; }
 }
 @keyframes pfLbRespin {
-  /* Spin around Y axis while bouncing back in Z, then return. The card
-     reads as throwing itself away from the camera mid-flip. */
-  0%   { transform: rotateY(0deg)   translateZ(0); }
-  50%  { transform: rotateY(180deg) translateZ(-420px); }
-  100% { transform: rotateY(360deg) translateZ(0); }
+  /* Same shape as the first-open spin (rotateY 0→360 + a mid-spin shrink),
+     but no fade-in and an elastic ease-out on the way back to scale 1 so
+     the card briefly overshoots before settling. */
+  0%   { transform: rotateY(0deg)   scale(1); }
+  50%  { transform: rotateY(180deg) scale(0.7); animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+  100% { transform: rotateY(360deg) scale(1); }
 }
 .pf-lb-wrap img {
   display: block;
