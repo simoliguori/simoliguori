@@ -1044,12 +1044,11 @@ button:focus,
   animation: pfLbSpin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards;
 }
 .pf-lb-wrap.respin {
-  /* 3-click variant: rotate the already-rendered card at full size, no
-     scale/opacity fade-in. Two parallel tracks so the rotation reads as a
-     continuous flip (no mid-animation pause from per-segment easing) while
-     a separate filter track lights the card up at the very end, mirroring
-     the bright flash that closes the full-res reveal. */
-  animation: pfLbRespin 1s cubic-bezier(0.3, 0.7, 0.4, 1) forwards,
+  /* 3-click variant: same shape and timing as pfLbSpin, but the 0% keyframe
+     starts from the card's current visible state (scale 1, opacity 1)
+     instead of fading in from scale 0.35 / opacity 0. A parallel flash
+     track lights the card up at the end, like the full-res reveal close. */
+  animation: pfLbRespin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards,
              pfLbRespinFlash 1s linear forwards;
 }
 @keyframes pfLbSpin {
@@ -1058,11 +1057,12 @@ button:focus,
   100% { transform: rotateY(360deg) scale(1);   opacity: 1; }
 }
 @keyframes pfLbRespin {
-  /* Continuous flip: single easing curve across the whole motion so the
-     card doesn't appear to hover mid-spin. Subtle scale dip keeps a hint
-     of depth without reading as a pause. */
+  /* Mirrors pfLbSpin (rotateY + scale shape, same intermediate at 18%) —
+     only the 0% keyframe is rewritten to the post-open visible state so
+     the card "snaps in" from where it is rather than re-entering from
+     nothing. */
   0%   { transform: rotateY(0deg)   scale(1); }
-  50%  { transform: rotateY(180deg) scale(0.92); }
+  18%  { transform: rotateY(60deg)  scale(0.55); }
   100% { transform: rotateY(360deg) scale(1); }
 }
 @keyframes pfLbRespinFlash {
