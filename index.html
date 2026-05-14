@@ -1295,17 +1295,8 @@ button:focus,
     0 0 110px 14px rgba(255, 30, 30, 0.25);
   border-radius: 2px;
 }
-.pf-lb-reveal-line.active {
-  animation: pfLbRevealLine 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
-}
-@keyframes pfLbRevealLine {
-  0%   { top: -10px; opacity: 0;   filter: hue-rotate(-30deg) brightness(1.4); }
-  4%   { opacity: 1; }
-  76%  { top: 100%;  opacity: 1;   filter: hue-rotate(0deg) brightness(1.2); }
-  84%  { top: 100%;  opacity: 1;   filter: hue-rotate(40deg) brightness(2.2); }
-  92%  { top: 100%;  opacity: 0.5; filter: brightness(1.6); }
-  100% { top: 100%;  opacity: 0;   filter: none; }
-}
+/* Reveal line animation is driven via Web Animations API so the scan range
+   matches the actual <img> bounds rather than the (often larger) wrap. */
 
 @media (max-width: 768px) and (orientation: portrait) {
   #terminal { padding: 12px 14px 40px; }
@@ -3357,6 +3348,7 @@ function initSoundboard() {
     lbImg.classList.remove('pf-lb-img-glitch-in');
     lbLoading.style.display = 'none';
     lbFullres.style.display = 'none';
+    lbRevealLine.getAnimations().forEach(a => a.cancel());
 
     // Size placeholder from thumbnail natural dimensions
     const thumbImg = item.el.querySelector('img');
@@ -3560,12 +3552,26 @@ function initSoundboard() {
   });
   lbClose.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
   lbVisit.addEventListener('click', e => e.stopPropagation());
+  function fitOverlayToImage(el) {
+    const l = lbImg.offsetLeft;
+    const t = lbImg.offsetTop;
+    const w = lbImg.offsetWidth;
+    const h = lbImg.offsetHeight;
+    el.style.left   = l + 'px';
+    el.style.top    = t + 'px';
+    el.style.right  = 'auto';
+    el.style.bottom = 'auto';
+    el.style.width  = w + 'px';
+    el.style.height = h + 'px';
+    return { l, t, w, h };
+  }
   lbFullres.addEventListener('click', e => {
     e.stopPropagation();
     const item = items[currentIdx];
     const expectedGen = renderGen;
     if (!item?.src) return;
     lbFullres.style.display = 'none';
+    fitOverlayToImage(lbLoading);
     lbLoading.style.display = 'block';
     let imageReady = false;
     let minTimeReady = false;
@@ -3578,16 +3584,26 @@ function initSoundboard() {
         .catch(() => {})
         .then(() => {
           if (renderGen !== expectedGen) return;
+          const b = { l: lbImg.offsetLeft, t: lbImg.offsetTop, w: lbImg.offsetWidth, h: lbImg.offsetHeight };
           lbImg.classList.remove('pf-lb-img-glitch-in');
-          lbRevealLine.classList.remove('active');
           void lbImg.offsetWidth;
           lbImg.classList.add('pf-lb-img-glitch-in');
-          lbRevealLine.classList.add('active');
-          const cleanup = () => {
-            lbImg.classList.remove('pf-lb-img-glitch-in');
-            lbRevealLine.classList.remove('active');
-          };
-          lbImg.addEventListener('animationend', cleanup, { once: true });
+          // Size & animate the CRT scan line over the image bounds
+          lbRevealLine.style.left   = b.l + 'px';
+          lbRevealLine.style.right  = 'auto';
+          lbRevealLine.style.width  = b.w + 'px';
+          lbRevealLine.getAnimations().forEach(a => a.cancel());
+          const topStart = (b.t - 10) + 'px';
+          const topEnd   = (b.t + b.h) + 'px';
+          lbRevealLine.animate([
+            { top: topStart, opacity: 0,   filter: 'hue-rotate(-30deg) brightness(1.4)' },
+            { top: topStart, opacity: 1,                                                  offset: 0.04 },
+            { top: topEnd,   opacity: 1,   filter: 'hue-rotate(0deg) brightness(1.2)',   offset: 0.76 },
+            { top: topEnd,   opacity: 1,   filter: 'hue-rotate(40deg) brightness(2.2)',  offset: 0.84 },
+            { top: topEnd,   opacity: 0.5, filter: 'brightness(1.6)',                    offset: 0.92 },
+            { top: topEnd,   opacity: 0,   filter: 'none' }
+          ], { duration: 1200, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)', fill: 'forwards' });
+          lbImg.addEventListener('animationend', () => lbImg.classList.remove('pf-lb-img-glitch-in'), { once: true });
         });
     };
     setTimeout(() => { if (renderGen === expectedGen) { minTimeReady = true; doReveal(); } }, 2000);
