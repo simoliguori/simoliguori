@@ -1091,6 +1091,17 @@ button:focus,
   mix-blend-mode: screen;
   z-index: 3;
 }
+.pf-lb-placeholder {
+  display: none;
+  border: 1px solid #551111;
+  box-shadow: 0 0 50px rgba(255, 68, 68, 0.35), 0 0 120px rgba(255, 30, 30, 0.2);
+  background: #e4dcdc;
+  animation: lbPlaceholderPulse 1.4s ease-in-out infinite;
+}
+@keyframes lbPlaceholderPulse {
+  0%, 100% { background: #e4dcdc; }
+  50%       { background: #f5efef; }
+}
 .pf-lb-grid {
   position: absolute;
   inset: 0;
@@ -1179,6 +1190,68 @@ button:focus,
   transition: background 0.2s, color 0.2s;
 }
 .pf-lb-visit:hover { background: #ff4444; color: #fff; }
+.pf-lb-fullres {
+  display: none;
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #551111;
+  color: #ffaaaa;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 7px 14px;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 10001;
+  transition: background 0.2s, color 0.2s;
+}
+.pf-lb-fullres:hover { background: #ff4444; color: #fff; }
+/* Transparent wrapper on desktop — children keep individual fixed positions */
+.pf-lb-actions { display: contents; }
+.pf-lb-loading {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+.pf-lb-loading::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px, transparent 3px,
+    rgba(255, 40, 40, 0.07) 3px, rgba(255, 40, 40, 0.07) 4px
+  );
+  animation: lbScanMove 0.5s linear infinite;
+}
+@keyframes lbScanMove {
+  from { transform: translateY(0); }
+  to   { transform: translateY(4px); }
+}
+.pf-lb-img-glitch-in {
+  animation: pfFullResReveal 0.7s ease-out forwards;
+}
+@keyframes pfFullResReveal {
+  0%   { clip-path: polygon(0 0, 100% 0, 100%  0%,  0  0%);  filter: brightness(1.9) saturate(0.2); }
+  7%   { clip-path: polygon(0 0, 100% 0, 100% 13%,  0 10%);  filter: brightness(1.6); }
+  11%  { clip-path: polygon(0 0, 100% 0, 100%  8%,  0 15%);  filter: brightness(1.5); }
+  20%  { clip-path: polygon(0 0, 100% 0, 100% 31%,  0 28%);  filter: brightness(1.35); }
+  24%  { clip-path: polygon(0 0, 100% 0, 100% 25%,  0 33%);  filter: brightness(1.25); }
+  37%  { clip-path: polygon(0 0, 100% 0, 100% 53%,  0 50%);  filter: brightness(1.15); }
+  41%  { clip-path: polygon(0 0, 100% 0, 100% 47%,  0 55%);  filter: brightness(1.1); }
+  56%  { clip-path: polygon(0 0, 100% 0, 100% 74%,  0 71%);  filter: brightness(1.07); }
+  62%  { clip-path: polygon(0 0, 100% 0, 100% 68%,  0 76%);  filter: brightness(1.05); }
+  74%  { clip-path: polygon(0 0, 100% 0, 100% 91%,  0 89%);  filter: brightness(1.03); }
+  82%  { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); filter: brightness(1.5) hue-rotate(18deg); }
+  88%  { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); filter: brightness(2.1) hue-rotate(-25deg) saturate(1.8); }
+  93%  { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); filter: brightness(1.15); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); filter: none; }
+}
 
 @media (max-width: 768px) and (orientation: portrait) {
   #terminal { padding: 12px 14px 40px; }
@@ -1214,8 +1287,21 @@ button:focus,
   .pf-lb-wrap { margin: auto; }
   .pf-lb-wrap img { max-width: 92vw; max-height: 62vh; }
   .pf-lb-hint { font-size: 9px; padding: 6px 10px; bottom: 14px; }
-  .pf-lb-visit { display: none; }
   .pf-lb-counter { font-size: 9px; top: 14px; left: 14px; }
+  /* Group source + fullres into a centered row above the hint */
+  .pf-lb-actions {
+    display: flex;
+    gap: 8px;
+    position: fixed;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+  }
+  .pf-lb-actions .pf-lb-visit,
+  .pf-lb-actions .pf-lb-fullres {
+    position: static;
+  }
 }
 
 @media (max-width: 480px) and (orientation: portrait) {
@@ -1865,10 +1951,15 @@ button:focus,
     <div class="pf-lb-counter" id="pfLbCounter">01 / 07</div>
     <div class="pf-lb-close" id="pfLbClose">✕</div>
     <div class="pf-lb-wrap" id="pfLbWrap">
+      <div class="pf-lb-placeholder" id="pfLbPlaceholder"></div>
       <img id="pfLbImg" src="" alt="">
+      <div class="pf-lb-loading" id="pfLbLoading"></div>
       <div class="pf-lb-grid"></div>
     </div>
-    <a id="pfLbVisit" class="pf-lb-visit" href="#" target="_blank" rel="noopener">↳ source</a>
+    <div class="pf-lb-actions">
+      <a id="pfLbVisit" class="pf-lb-visit" href="#" target="_blank" rel="noopener">↳ source</a>
+      <button id="pfLbFullres" class="pf-lb-fullres">↑ FULL RES</button>
+    </div>
     <div class="pf-lb-hint hint-desktop"><span class="k">← →</span> ARROWS <span class="sep">·</span> <span class="k">ESC / BACKSPACE</span> CLOSE <span class="sep">·</span> <span class="k">MOVE</span> TO TILT</div>
     <div class="pf-lb-hint hint-mobile"><span class="k">SWIPE ← →</span> <span class="sep">·</span> <span class="k">TAP ✕</span> CLOSE</div>
   </div>
@@ -3143,12 +3234,15 @@ function initSoundboard() {
 // PORTFOLIO LIGHTBOX — collectible-card viewer
 // ─────────────────────────────────────────────
 (function() {
-  const lb       = document.getElementById('pfLightbox');
-  const lbWrap   = document.getElementById('pfLbWrap');
-  const lbImg    = document.getElementById('pfLbImg');
-  const lbClose  = document.getElementById('pfLbClose');
-  const lbVisit  = document.getElementById('pfLbVisit');
-  const lbCounter= document.getElementById('pfLbCounter');
+  const lb            = document.getElementById('pfLightbox');
+  const lbWrap        = document.getElementById('pfLbWrap');
+  const lbImg         = document.getElementById('pfLbImg');
+  const lbPlaceholder = document.getElementById('pfLbPlaceholder');
+  const lbLoading     = document.getElementById('pfLbLoading');
+  const lbFullres     = document.getElementById('pfLbFullres');
+  const lbClose       = document.getElementById('pfLbClose');
+  const lbVisit       = document.getElementById('pfLbVisit');
+  const lbCounter     = document.getElementById('pfLbCounter');
   if (!lb) return;
 
   // Lightbox supports multiple independent groups via data-lightbox="<n>".
@@ -3169,6 +3263,7 @@ function initSoundboard() {
   }
 
   let currentIdx    = 0;
+  let renderGen     = 0;
   let isOpen        = false;
   let firstOpenDone = false;
   let suppressTilt  = false;
@@ -3199,8 +3294,46 @@ function initSoundboard() {
     if (items.length === 0) return;
     currentIdx = (idx + items.length) % items.length;
     const item = items[currentIdx];
-    lbImg.src = item.src;
+    const gen = ++renderGen;
     lbImg.alt = item.title;
+
+    // Reset leftover state from previous image
+    lbImg.classList.remove('pf-lb-img-glitch-in');
+    lbLoading.style.display = 'none';
+    lbFullres.style.display = 'none';
+
+    // Size placeholder from thumbnail natural dimensions
+    const thumbImg = item.el.querySelector('img');
+    const nw    = thumbImg?.naturalWidth  || 800;
+    const nh    = thumbImg?.naturalHeight || 600;
+    const maxW  = window.innerWidth  * 0.8;
+    const maxH  = window.innerHeight * 0.8;
+    const scale = Math.min(maxW / nw, maxH / nh, 1);
+    lbPlaceholder.style.width  = Math.round(nw * scale) + 'px';
+    lbPlaceholder.style.height = Math.round(nh * scale) + 'px';
+    lbPlaceholder.style.display = '';
+    lbImg.style.display = 'none';
+    lbImg.style.transition = 'none';
+    lbImg.style.opacity = '0';
+
+    function showPreview() {
+      if (gen !== renderGen) return;
+      lbImg.style.display = '';
+      lbPlaceholder.style.display = 'none';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (gen !== renderGen) return;
+        lbImg.style.transition = 'opacity 0.2s';
+        lbImg.style.opacity = '1';
+      }));
+      if (item.preview && item.src && item.src !== item.preview) {
+        lbFullres.style.display = 'block';
+      }
+    }
+
+    lbImg.onload  = () => { if (gen === renderGen) showPreview(); };
+    lbImg.onerror = () => { if (gen === renderGen) showPreview(); };
+    lbImg.src = item.preview || item.src;
+
     if (item.link && item.link !== '#') {
       lbVisit.href = item.link;
       lbVisit.style.display = '';
@@ -3371,6 +3504,26 @@ function initSoundboard() {
   });
   lbClose.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
   lbVisit.addEventListener('click', e => e.stopPropagation());
+  lbFullres.addEventListener('click', e => {
+    e.stopPropagation();
+    const item = items[currentIdx];
+    const expectedGen = renderGen;
+    if (!item?.src) return;
+    lbFullres.style.display = 'none';
+    lbLoading.style.display = '';
+    const full = new Image();
+    full.onload = () => {
+      if (renderGen !== expectedGen) return;
+      lbLoading.style.display = 'none';
+      lbImg.src = item.src;
+      lbImg.classList.remove('pf-lb-img-glitch-in');
+      void lbImg.offsetWidth;
+      lbImg.classList.add('pf-lb-img-glitch-in');
+      lbImg.addEventListener('animationend', () => lbImg.classList.remove('pf-lb-img-glitch-in'), { once: true });
+    };
+    full.onerror = () => { if (renderGen === expectedGen) lbLoading.style.display = 'none'; };
+    full.src = item.src;
+  });
   // Prevent backdrop-click close when interacting with the card itself
   lbWrap.addEventListener('click', e => e.stopPropagation());
 
