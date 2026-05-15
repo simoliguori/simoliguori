@@ -1044,11 +1044,12 @@ button:focus,
   animation: pfLbSpin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards;
 }
 .pf-lb-wrap.respin {
-  /* 3-click variant: same shape and timing as pfLbSpin, but the 0% keyframe
-     starts from the card's current visible state (scale 1, opacity 1)
-     instead of fading in from scale 0.35 / opacity 0. A parallel flash
-     track lights the card up at the end, like the full-res reveal close. */
-  animation: pfLbRespin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards,
+  /* 3-click variant: same shape as pfLbSpin (stessi keyframe 18% e 100%)
+     ma parte dalla posizione visibile corrente — niente fade-in dal nulla.
+     Easing lineare a livello animazione: ogni segmento gestisce il proprio
+     easing internamente per evitare la discontinuità di velocità a 18%.
+     Flash parallelo che illumina dalla metà in poi. */
+  animation: pfLbRespin 1s linear forwards,
              pfLbRespinFlash 1s linear forwards;
 }
 @keyframes pfLbSpin {
@@ -1057,22 +1058,26 @@ button:focus,
   100% { transform: rotateY(360deg) scale(1);   opacity: 1; }
 }
 @keyframes pfLbRespin {
-  /* Mirrors pfLbSpin (rotateY + scale shape, same intermediate at 18%) —
-     only the 0% keyframe is rewritten to the post-open visible state so
-     the card "snaps in" from where it is rather than re-entering from
-     nothing. */
-  0%   { transform: rotateY(0deg)   scale(1); }
-  18%  { transform: rotateY(60deg)  scale(0.55); }
-  100% { transform: rotateY(360deg) scale(1); }
+  /* Stessa forma di pfLbSpin (18% → 100% identici), parte dalla posizione
+     visibile corrente. Per-keyframe easing: ease-in su 0% (accelera verso 18%)
+     ed ease-out su 18% (decelerata verso 100%) — velocità alta→alta al confine,
+     nessuna pausa percepita. */
+  0%   { transform: rotateY(0deg)   scale(1);    opacity: 1; animation-timing-function: ease-in; }
+  18%  { transform: rotateY(60deg)  scale(0.55); opacity: 1; animation-timing-function: ease-out; }
+  100% { transform: rotateY(360deg) scale(1);    opacity: 1; }
 }
 @keyframes pfLbRespinFlash {
-  /* Filter held at none for most of the spin, then bright glitch flashes
-     in the final ~30% — same brightness/hue/saturate steps used at the
-     close of pfFullResReveal so the card lights up identically. */
-  0%, 65%  { filter: none; }
-  72%      { filter: brightness(1.55) hue-rotate(28deg) saturate(2); }
-  82%      { filter: brightness(2.4) hue-rotate(-38deg) saturate(2.2) contrast(1.3); }
-  92%      { filter: brightness(1.4) hue-rotate(15deg); }
+  /* Ramps up to peak at 50%, then fades out gradually across the entire
+     second half of the animation. Many intermediate steps make the
+     decay smooth and slow; lands on filter:none at 100% so the class
+     removal at the end is seamless (no brightness pop). */
+  0%, 32%  { filter: none; }
+  42%      { filter: brightness(1.55) hue-rotate(28deg) saturate(2); }
+  50%      { filter: brightness(2.4) hue-rotate(-38deg) saturate(2.2) contrast(1.3); }
+  60%      { filter: brightness(2.05) hue-rotate(-15deg) saturate(2.05) contrast(1.15); }
+  70%      { filter: brightness(1.75) hue-rotate(5deg) saturate(1.85); }
+  80%      { filter: brightness(1.5) saturate(1.65); }
+  90%      { filter: brightness(1.25) saturate(1.4); }
   100%     { filter: none; }
 }
 .pf-lb-wrap img {
@@ -3505,10 +3510,11 @@ function initSoundboard() {
     lbWrap.classList.remove('spin-in', 'respin');
     void lbWrap.offsetWidth;
     lbWrap.classList.add(cls);
+    const spinDuration = 1050;
     setTimeout(() => {
       suppressTilt = false;
       lbWrap.classList.remove('spin-in', 'respin');
-    }, 1000);
+    }, spinDuration);
   }
   // 3-click respin: same triangle timbre and gain as the first jingle, but
   // descending and one octave lower so it reads as a relative — less acute,
