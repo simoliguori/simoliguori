@@ -39,8 +39,14 @@ html, body {
 .ecce-robot {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
+  /* Full-bleed band: break out of #terminal's centered, max-width:1100px
+     content box so the scrolling "ecce robot" text spans the entire viewport
+     width and runs horizontally PAST the header's outline on both sides.
+     left:50% + margin-left:-50vw centers a 100vw strip without using transform
+     (which the spawn/glitch animations on .ecce-robot already drive). */
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
   height: 360px;
   pointer-events: none;
   z-index: 0;
@@ -1572,6 +1578,335 @@ button:focus,
   from { top: -2px; }
   to   { top: 100%; }
 }
+
+/* ═══ NEW RELEASE FLOATING PLAYER ═══ */
+#nr-player {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(calc(100% + 40px));
+  z-index: 8000;
+  /* Column: a header row of two little boxes (NEW RELEASE + ✕) sitting flush
+     ON TOP of the main player box — gap:0 so they're attached, not floating. */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 460px;
+  width: calc(100vw - 40px);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease;
+  opacity: 0;
+  font-family: "Roboto Mono", "Courier New", monospace;
+}
+.nr-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px 6px 6px;
+  background: rgba(6, 1, 1, 0.97);
+  border: 1px solid #ff3333;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 30, 30, 0.15),
+    0 0 32px rgba(255, 40, 40, 0.22),
+    0 6px 28px rgba(0, 0, 0, 0.75);
+}
+/* Header — a transparent row holding two self-contained little boxes: the
+   NEW RELEASE badge (left) and the ✕ close (right), joined by a rule. The
+   boxes are flush with the main box edges and merge into its top border
+   (border-bottom: none) so they read as tabs attached to the player. */
+.nr-header {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+/* Rule gets its own box tab — border-top only (badge/dismiss provide the
+   side borders) so it reads as a continuous top border between them. */
+.nr-rule {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-top: 1px solid #ff3333;
+}
+.nr-rule::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right,
+    rgba(255, 51, 51, 0.12), rgba(255, 51, 51, 0.5), rgba(255, 51, 51, 0.12));
+}
+#nr-player.nr-visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+#nr-player.nr-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 40px));
+  opacity: 0;
+  pointer-events: none;
+}
+/* Glitch reveal — the bar materializes in place with a clip-path + position
+   jitter (steps, like the konami/egg loading flash) running in parallel with a
+   brightness/hue-rotate/contrast filter sweep (same shape as the full-res image
+   reveal, pfFullResReveal). A light scan line sweeps down via ::after. The
+   class is added on boot-completion and removed on animationend. */
+#nr-player.nr-glitch-in {
+  animation: nrGlitchPos 0.85s steps(2, end) both,
+             nrGlitchFilter 0.85s linear both;
+}
+@keyframes nrGlitchPos {
+  0%   { opacity: 0;   transform: translateX(-50%) translateY(0) skewX(7deg);  clip-path: inset(46% 0 46% 0); }
+  10%  { opacity: 1;   transform: translateX(calc(-50% - 9px)) translateY(0) skewX(-5deg); clip-path: inset(0 0 62% 0); }
+  22%  { opacity: 0.35; transform: translateX(calc(-50% + 7px)) translateY(0); clip-path: inset(34% 0 0 0); }
+  35%  { opacity: 1;   transform: translateX(calc(-50% - 4px)) translateY(0) skewX(2.5deg); clip-path: inset(0 0 0 0); }
+  50%  { opacity: 0.7; transform: translateX(calc(-50% + 3px)) translateY(0); clip-path: inset(0 0 28% 0); }
+  68%  { opacity: 1;   transform: translateX(calc(-50% - 2px)) translateY(0); clip-path: inset(0); }
+  100% { opacity: 1;   transform: translateX(-50%) translateY(0);            clip-path: inset(0); }
+}
+@keyframes nrGlitchFilter {
+  0%   { filter: brightness(2.4) saturate(0.2) hue-rotate(-30deg) contrast(1.4); }
+  5%   { filter: brightness(1.95) saturate(0.5) hue-rotate(-18deg) contrast(1.3); }
+  42%  { filter: brightness(1.3) hue-rotate(22deg) saturate(1.7); }
+  62%  { filter: brightness(1.65) hue-rotate(-32deg) saturate(2.1) contrast(1.3); }
+  82%  { filter: brightness(1.32) hue-rotate(13deg); }
+  100% { filter: none; }
+}
+#nr-player::after {
+  content: '';
+  position: absolute;
+  left: -3%;
+  right: -3%;
+  height: 3px;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 6;
+  background: linear-gradient(to right,
+    transparent 0%,
+    rgba(255, 240, 240, 0.5) 12%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 240, 240, 0.5) 88%,
+    transparent 100%);
+  box-shadow:
+    0 0 10px 2px rgba(255, 255, 255, 0.9),
+    0 0 26px 5px rgba(255, 80, 80, 0.5),
+    0 0 50px 8px rgba(255, 30, 30, 0.3);
+}
+#nr-player.nr-glitch-in::after {
+  animation: nrScan 0.85s ease-out both;
+}
+@keyframes nrScan {
+  0%   { opacity: 0;   top: 0; }
+  12%  { opacity: 1;   top: 8%; }
+  85%  { opacity: 0.85; top: 100%; }
+  100% { opacity: 0;   top: 100%; }
+}
+/* Cover gets its own dedicated square box at an adequate size; the artwork
+   fills the box edge-to-edge (object-fit: cover). */
+.nr-cover-box {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border: 1px solid #2a0808;
+  background: linear-gradient(135deg, #1a0505 0%, #050000 100%);
+  overflow: hidden;
+  position: relative;
+}
+.nr-cover-box .nr-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.nr-cover-box .nr-cover-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #331111;
+  font-size: 16px;
+}
+.nr-info {
+  /* Shrink to its own content so the visualizer fills the middle empty space. */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.nr-badge {
+  /* Own little box, flush-left with the main box and merged into its top
+     border so it reads as an attached tab. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 7px;
+  letter-spacing: 0.28em;
+  color: #ff3333;
+  background: rgba(6, 1, 1, 0.97);
+  border: 1px solid #ff3333;
+  border-bottom: none;
+  padding: 6px 11px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255, 40, 40, 0.5);
+  animation: nrBadgePulse 2.5s ease-in-out infinite;
+}
+@keyframes nrBadgePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+.nr-title {
+  /* Same stylized brand font as "mi·ɽài" (.pf-project-title .brand), lowercase. */
+  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  font-size: 13px;
+  color: #ff5555;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 8px rgba(255, 60, 60, 0.35);
+  line-height: 1.2;
+}
+.nr-artist {
+  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  font-size: 10px;
+  color: #cc6666;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  margin-top: 1px;
+  text-shadow: 0 0 6px rgba(255, 80, 80, 0.25);
+  text-decoration: none;
+  display: block;
+}
+.nr-artist:hover { color: #ff8888; text-shadow: 0 0 8px rgba(255, 100, 100, 0.5); }
+/* Track link wraps cover + title — no underline, inherits layout. */
+.nr-track-link {
+  display: contents;   /* transparent wrapper: children flow as if link weren't there */
+  text-decoration: none;
+}
+.nr-cover-link {
+  display: block;
+  flex-shrink: 0;
+  line-height: 0;
+  text-decoration: none;
+}
+.nr-cover-link:hover .nr-cover-box {
+  border-color: #ff5555;
+  box-shadow: 0 0 14px rgba(255, 60, 60, 0.4);
+}
+/* Zoom the artwork on hover — same technique as .pf-thumb:hover img */
+.nr-cover-box .nr-cover {
+  transition: transform 0.25s ease, filter 0.25s;
+}
+.nr-cover-link:hover .nr-cover {
+  transform: scale(1.08);
+  filter: brightness(1.08) saturate(1.1);
+}
+.nr-title-link {
+  display: block;
+  text-decoration: none;
+}
+/* Title hover — glow shift like .win-link:hover */
+.nr-title-link:hover .nr-title {
+  color: #ff8888;
+  text-shadow: 0 0 10px rgba(255, 80, 80, 0.8);
+}
+/* SC link repositioned under artist in the info column — more visible. */
+.nr-sc-link {
+  display: inline-block;
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: #cc6666;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  margin-top: 6px;
+  border: 1px solid #441111;
+  padding: 2px 6px;
+  transition: color 0.15s, text-shadow 0.15s, border-color 0.15s, background 0.15s;
+  cursor: var(--cur-hand), pointer;
+}
+.nr-sc-link:hover {
+  color: #ff6666;
+  border-color: #ff3333;
+  background: rgba(255, 40, 40, 0.07);
+  text-shadow: 0 0 8px rgba(255, 80, 80, 0.55);
+}
+/* Real-waveform visualizer — fills the empty middle space. The canvas renders
+   the track's actual amplitude envelope (fetched from SoundCloud's waveform
+   data); the played portion lights up red as the real playback advances. */
+.nr-viz {
+  flex: 1 1 auto;
+  min-width: 48px;
+  align-self: center;
+  height: 36px;
+  display: block;
+  opacity: 0.9;
+  cursor: var(--cur-hand), pointer;
+  transition: opacity 0.15s;
+}
+.nr-viz:hover { opacity: 1; }
+.nr-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nr-play-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ff3333;
+  background: rgba(255, 30, 30, 0.07);
+  color: #ff4444;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: var(--cur-hand), pointer;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+}
+.nr-play-btn:hover { background: #ff3333; color: #000; }
+/* Controls: solo play button — SC link è spostato nell'info column. */
+.nr-dismiss {
+  /* Own little box, flush-right with the main box and merged into its top
+     border; glyph centered via flex. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  background: rgba(6, 1, 1, 0.97);
+  border: 1px solid #ff3333;
+  border-bottom: none;
+  color: #cc6666;
+  font-size: 14px;
+  line-height: 1;
+  cursor: var(--cur-hand), pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.nr-dismiss:hover { color: #ff4444; background: #1a0000; }
+@media (max-width: 768px) and (orientation: portrait) {
+  #nr-player { bottom: 16px; max-width: calc(100vw - 24px); gap: 4px; }
+  .nr-main { padding: 5px 10px 5px 5px; gap: 8px; }
+  .nr-cover-box { width: 46px; height: 46px; }
+  .nr-title { font-size: 11px; }
+  .nr-play-btn { width: 30px; height: 30px; }
+  .nr-viz { height: 30px; min-width: 36px; }
+}
+@media (max-width: 420px) and (orientation: portrait) {
+  /* Too cramped for both text and a meaningful waveform — drop the viz. */
+  .nr-viz { display: none; }
+}
 </style>
 </head>
 <body class="scroll-locked">
@@ -2313,6 +2648,52 @@ function playBootConfirm() {
   } catch(e) {}
 }
 
+// NEW RELEASE notification — a short, bright rising 3-note arpeggio (A4-E5-A5)
+// with a glitchy square body under a sine shimmer, plus a quick high sparkle.
+// Tuned to read as a positive "incoming" alert while staying in the site's
+// CRT/synth palette.
+function playNewReleaseChime() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const notes = [440, 659.25, 880];   // A4 · E5 · A5
+    notes.forEach((f, i) => {
+      const t   = now + i * 0.085;
+      const osc = audioCtx.createOscillator();
+      const sin = audioCtx.createOscillator();
+      const g   = audioCtx.createGain();
+      const flt = audioCtx.createBiquadFilter();
+      osc.type = 'square';
+      sin.type = 'sine';
+      osc.frequency.setValueAtTime(f, t);
+      sin.frequency.setValueAtTime(f, t);
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(2600, t);
+      flt.frequency.exponentialRampToValueAtTime(1200, t + 0.16);
+      flt.Q.value = 1.4;
+      const peak = 0.07 - i * 0.008;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(flt); sin.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + 0.24);
+      sin.start(t); sin.stop(t + 0.24);
+    });
+    // High sparkle tail on the final note
+    const spk = audioCtx.createOscillator();
+    const sg2 = audioCtx.createGain();
+    const st  = now + notes.length * 0.085;
+    spk.type = 'triangle';
+    spk.frequency.setValueAtTime(1760, st);          // A6
+    spk.frequency.exponentialRampToValueAtTime(2640, st + 0.12);
+    sg2.gain.setValueAtTime(0.0001, st);
+    sg2.gain.exponentialRampToValueAtTime(0.045, st + 0.01);
+    sg2.gain.exponentialRampToValueAtTime(0.0001, st + 0.3);
+    spk.connect(sg2); sg2.connect(audioCtx.destination);
+    spk.start(st); spk.stop(st + 0.32);
+  } catch(e) {}
+}
+
 // CRT power-on: sub thump + ascending sweep + static crackle + chime
 function playBootSfx() {
   if (!audioCtx) return;
@@ -2561,6 +2942,13 @@ async function boot() {
 
   // Start periodic header glitch
   scheduleHeaderGlitch();
+
+  // Whole startup sequence is finished. After a ~1s beat, fire the NEW RELEASE
+  // chime in sync with the bar's glitch-in reveal.
+  setTimeout(() => {
+    playNewReleaseChime();
+    window.dispatchEvent(new Event('nr:boot-done'));
+  }, 1000);
 }
 
 // ─────────────────────────────────────────────
@@ -4158,6 +4546,314 @@ function initSoundboard() {
     window.addEventListener('scroll', hmScrollCheck, { passive: true });
     document.body.addEventListener('scroll', hmScrollCheck, { passive: true });
   }
+})();
+
+// ═══ NEW RELEASE FLOATING PLAYER ═══
+(function () {
+  const TRACK_URL = 'https://soundcloud.com/eccerobot/ghera-mp3';
+  const SC_WIDGET_URL =
+    'https://w.soundcloud.com/player/?url=' +
+    encodeURIComponent(TRACK_URL) +
+    '&color=%23ff4444&auto_play=false&hide_related=true' +
+    '&show_comments=false&show_user=false&show_reposts=false' +
+    '&show_teaser=false&visual=false';
+
+  // ── Build DOM ──────────────────────────────────────────────────────────────
+  const bar = document.createElement('div');
+  bar.id = 'nr-player';
+  bar.setAttribute('role', 'region');
+  bar.setAttribute('aria-label', 'New Release Player');
+  bar.innerHTML = `
+    <div class="nr-header">
+      <span class="nr-badge">NEW RELEASE</span>
+      <span class="nr-rule"></span>
+      <span class="nr-dismiss" id="nr-dismiss" title="Dismiss">×</span>
+    </div>
+    <div class="nr-main">
+      <a class="nr-cover-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+        <div class="nr-cover-box" id="nr-cover-box">
+          <span class="nr-cover-ph" id="nr-cover-ph">♪</span>
+        </div>
+      </a>
+      <div class="nr-info">
+        <a class="nr-title-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer">
+          <div class="nr-title" id="nr-title">ghera</div>
+        </a>
+        <a class="nr-artist" id="nr-artist" href="https://soundcloud.com/eccerobot" target="_blank" rel="noopener noreferrer">mi·ɽài</a>
+        <a class="nr-sc-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer">soundcloud ↗</a>
+      </div>
+      <canvas class="nr-viz" id="nr-viz" aria-hidden="true"></canvas>
+      <div class="nr-controls">
+        <button class="nr-play-btn" id="nr-play-btn" aria-label="Play / Pause">▶</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bar);
+
+  // Hidden SC iframe — injected lazily on first play click
+  let iframe = null;
+  let widget = null;
+  let pendingPlay = false;
+  let isPlaying = false;
+
+  const playBtn   = document.getElementById('nr-play-btn');
+  const dismissBtn = document.getElementById('nr-dismiss');
+  const coverBox   = document.getElementById('nr-cover-box');
+  const coverPh    = document.getElementById('nr-cover-ph');
+  const titleEl    = document.getElementById('nr-title');
+  const artistEl   = document.getElementById('nr-artist');
+  const vizCanvas  = document.getElementById('nr-viz');
+  const vizCtx     = vizCanvas.getContext('2d');
+
+  // ── Fetch cover + metadata via oEmbed ──────────────────────────────────────
+  fetch('https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(TRACK_URL))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.thumbnail_url) {
+        const img = document.createElement('img');
+        img.className = 'nr-cover';
+        img.alt = 'Track cover';
+        img.src = d.thumbnail_url;
+        // Drop the placeholder glyph and let the artwork fill the cover box.
+        if (coverPh) coverPh.remove();
+        coverBox.appendChild(img);
+      }
+      if (d.title) {
+        // oEmbed often appends " by Artist" — strip it. Keep natural case;
+        // the bar lowercases title + artist via CSS (text-transform).
+        let t = d.title;
+        const byIdx = t.search(/ by /i);
+        if (byIdx > 0) t = t.slice(0, byIdx);
+        titleEl.textContent = t;
+      }
+      if (d.author_name) artistEl.textContent = d.author_name;
+    })
+    .catch(function () { /* keep fallback values */ });
+
+  // ── Reveal: glitch the bar in once the whole startup sequence has finished ──
+  let revealed = false;
+  function revealBar() {
+    if (revealed) return;
+    revealed = true;
+    bar.classList.add('nr-visible', 'nr-glitch-in');
+    bar.addEventListener('animationend', function onEnd(e) {
+      if (e.animationName === 'nrGlitchPos') {
+        bar.classList.remove('nr-glitch-in');
+        bar.removeEventListener('animationend', onEnd);
+      }
+    });
+    // Load the (hidden) SC widget now so the real waveform can be drawn even
+    // before the user hits play.
+    prepareAudio();
+    drawViz();
+  }
+  // Primary trigger: boot() dispatches this ~1s after the startup sequence
+  // completes (in sync with the chime). This is the normal path.
+  window.addEventListener('nr:boot-done', revealBar, { once: true });
+  // Safety net: only if the boot script never dispatches (e.g. a JS error mid
+  // boot). Long timeout so it never races the intended ~1s delay above.
+  setTimeout(revealBar, 20000);
+
+  // ── Visualizer state ───────────────────────────────────────────────────────
+  let waveSamples = null;     // normalized 0..1 amplitude envelope of the track
+  let progress    = 0;        // played fraction 0..1 (from real playback)
+  let lastProgAt  = 0;        // performance.now() of last PLAY_PROGRESS
+  let durationMs  = 0;        // track length, for smooth playhead interpolation
+  let rafId       = null;
+
+  // Stable pseudo-waveform used only if the real one can't be fetched, so the
+  // bar always shows *something* shaped like a track rather than a flat line.
+  function fallbackSamples(n) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      const env = Math.sin(t * Math.PI);                       // fade in/out
+      const detail = 0.55 + 0.45 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23));
+      out.push(Math.max(0.08, env * detail));
+    }
+    return out;
+  }
+
+  // Pull the real waveform JSON SoundCloud exposes for the track.
+  function loadWaveform(waveformUrl) {
+    if (!waveformUrl) { waveSamples = fallbackSamples(140); drawViz(); return; }
+    // The API gives a PNG url; the JSON sibling has the raw sample array.
+    const jsonUrl = waveformUrl.replace(/\.png(\?.*)?$/, '.json');
+    fetch(jsonUrl)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        const s = d && d.samples;
+        if (!s || !s.length) throw new Error('no samples');
+        const max = Math.max.apply(null, s) || 1;
+        waveSamples = s.map(function (v) { return v / max; });
+        drawViz();
+      })
+      .catch(function () { waveSamples = fallbackSamples(140); drawViz(); });
+  }
+
+  function sampleAt(frac) {
+    if (!waveSamples) return 0.5;
+    const idx = Math.min(waveSamples.length - 1, Math.floor(frac * waveSamples.length));
+    return waveSamples[idx];
+  }
+
+  function smoothstep(e0, e1, x) {
+    const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  }
+
+  function drawViz(playFrac) {
+    const p = (playFrac == null) ? progress : playFrac;
+    const w = vizCanvas.clientWidth, h = vizCanvas.clientHeight;
+    if (!w || !h) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (vizCanvas.width !== w * dpr || vizCanvas.height !== h * dpr) {
+      vizCanvas.width = w * dpr; vizCanvas.height = h * dpr;
+    }
+    vizCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    vizCtx.clearRect(0, 0, w, h);
+
+    const barW = 2, gap = 1, step = barW + gap;
+    const n = Math.max(1, Math.floor(w / step));
+    const mid = h / 2;
+    for (let i = 0; i < n; i++) {
+      const center = (i + 0.5) / n;
+      const v = sampleAt(i / n);
+      const bh = Math.max(2, v * (h - 2));
+      const x = i * step;
+      // Pure gradual coloring: smoothstep fade over ~2 bars wide at the
+      // boundary — no separate playhead bar, just red→dim transition.
+      const d = (p - center) * n;         // signed distance in bar-units from playhead
+      const t = smoothstep(-1, 1, d);     // 1 = fully played, 0 = upcoming
+      const alpha = 0.2 + 0.8 * t;       // dim: 0.2  →  full: 1.0
+      vizCtx.fillStyle = 'rgba(255,68,68,' + alpha.toFixed(3) + ')';
+      vizCtx.fillRect(x, mid - bh / 2, barW, bh);
+    }
+  }
+
+  function vizLoop() {
+    if (!isPlaying) { rafId = null; return; }
+    // Smoothly interpolate the playhead between PLAY_PROGRESS events.
+    let est = progress;
+    if (durationMs > 0) {
+      est = Math.min(1, progress + (performance.now() - lastProgAt) / durationMs);
+    }
+    drawViz(est);
+    rafId = requestAnimationFrame(vizLoop);
+  }
+
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(function () { drawViz(); }).observe(vizCanvas);
+  } else {
+    window.addEventListener('resize', function () { drawViz(); });
+  }
+
+  // ── Widget helpers ─────────────────────────────────────────────────────────
+  function initWidget() {
+    widget = SC.Widget(iframe);
+    widget.bind(SC.Widget.Events.READY, function () {
+      widget.getDuration(function (d) {
+        durationMs = d || 0;
+        // If user clicked waveform before widget was ready, seek now.
+        if (pendingSeekFrac !== null && durationMs > 0) {
+          widget.seekTo(Math.round(pendingSeekFrac * durationMs));
+          pendingSeekFrac = null;
+        }
+      });
+      widget.getCurrentSound(function (sound) {
+        loadWaveform(sound && sound.waveform_url);
+      });
+      if (pendingPlay) { pendingPlay = false; widget.play(); }
+    });
+    widget.bind(SC.Widget.Events.PLAY, function () {
+      isPlaying = true;
+      playBtn.textContent = '⏸';
+      if (!rafId) rafId = requestAnimationFrame(vizLoop);
+    });
+    widget.bind(SC.Widget.Events.PAUSE, function () {
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      drawViz();
+    });
+    widget.bind(SC.Widget.Events.FINISH, function () {
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      progress = 0;
+      drawViz();
+    });
+    widget.bind(SC.Widget.Events.PLAY_PROGRESS, function (e) {
+      progress = e.relativePosition;
+      lastProgAt = performance.now();
+      if (!isPlaying) drawViz();
+    });
+  }
+
+  function loadScApi(cb) {
+    if (typeof SC !== 'undefined') { cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://w.soundcloud.com/player/api.js';
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  // Inject the hidden SC iframe + API and wire the widget. Idempotent.
+  let audioInit = false;
+  function prepareAudio() {
+    if (audioInit) return;
+    audioInit = true;
+    iframe = document.createElement('iframe');
+    iframe.src = SC_WIDGET_URL;
+    iframe.allow = 'autoplay';
+    iframe.setAttribute('aria-hidden', 'true');
+    Object.assign(iframe.style, {
+      position: 'absolute', left: '-9999px', width: '1px', height: '1px'
+    });
+    document.body.appendChild(iframe);
+    loadScApi(initWidget);
+  }
+
+  // ── Play / Pause ───────────────────────────────────────────────────────────
+  playBtn.addEventListener('click', function () {
+    if (widget) {
+      isPlaying ? widget.pause() : widget.play();
+    } else {
+      pendingPlay = true;     // widget still loading — play as soon as READY
+      prepareAudio();
+    }
+  });
+
+  // ── Waveform scrub — click seeks to the corresponding position ────────────
+  vizCanvas.addEventListener('click', function (e) {
+    const rect = vizCanvas.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    // Optimistic UI: move the playhead immediately regardless of widget state.
+    progress   = frac;
+    lastProgAt = performance.now();
+    drawViz(frac);
+    if (widget && durationMs > 0) {
+      // Seek the real player to the clicked position.
+      widget.seekTo(Math.round(frac * durationMs));
+      // If paused, resume so the click feels like "play from here".
+      if (!isPlaying) {
+        widget.play();
+      }
+    } else {
+      // Widget not ready yet — load it, then seek + play once READY fires.
+      pendingPlay = true;
+      prepareAudio();
+      // Store the target fraction so READY can seek there.
+      pendingSeekFrac = frac;
+    }
+  });
+
+  let pendingSeekFrac = null;  // used when widget isn't loaded yet at click time
+
+  // ── Dismiss ────────────────────────────────────────────────────────────────
+  dismissBtn.addEventListener('click', function () {
+    bar.classList.remove('nr-visible');
+    bar.classList.add('nr-hidden');
+    if (widget && isPlaying) widget.pause();
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  });
 })();
 
 </script>
