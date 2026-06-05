@@ -1,0 +1,4855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mi·ɽài://audiovisual — TERMINAL</title>
+<link rel="icon" type="image/gif" href="assets/img/profile.gif">
+<link href="assets/css/fonts.css" rel="stylesheet">
+<!-- JetBrains Mono — subsetted via Google Fonts &text= to include only the
+     glyphs present in the ASCII header (block + box-drawing chars + the
+     subtitle letters). Forces consistent monospace metrics for U+2500-257F
+     box-drawing characters that Roboto Mono's served Google subsets do NOT
+     include — fixes garbled ASCII rendering on Firefox Android. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap&text=%E2%96%88%E2%95%97%E2%95%94%E2%95%9D%E2%95%9A%E2%95%90%E2%95%91mi%C2%B7%C9%BD%C3%A0%3A%2F%2Faudiovisualtemcgh-rys.%20%0A">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Default/idle cursor — bright white pixel-art arrow with red outline. Visible everywhere. */
+  --cur-arrow: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 13 13' shape-rendering='crispEdges'%3E%3Cg fill='%23ff4444'%3E%3Crect x='0' y='0' width='2' height='1'/%3E%3Crect x='0' y='1' width='3' height='1'/%3E%3Crect x='0' y='2' width='4' height='1'/%3E%3Crect x='0' y='3' width='5' height='1'/%3E%3Crect x='0' y='4' width='6' height='1'/%3E%3Crect x='0' y='5' width='7' height='1'/%3E%3Crect x='0' y='6' width='8' height='1'/%3E%3Crect x='0' y='7' width='9' height='1'/%3E%3Crect x='0' y='8' width='6' height='1'/%3E%3Crect x='0' y='9' width='3' height='1'/%3E%3Crect x='3' y='9' width='3' height='1'/%3E%3Crect x='3' y='10' width='4' height='1'/%3E%3Crect x='4' y='11' width='3' height='1'/%3E%3Crect x='4' y='12' width='2' height='1'/%3E%3C/g%3E%3Cg fill='%23ffffff'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='2' height='1'/%3E%3Crect x='0' y='2' width='3' height='1'/%3E%3Crect x='0' y='3' width='4' height='1'/%3E%3Crect x='0' y='4' width='5' height='1'/%3E%3Crect x='0' y='5' width='6' height='1'/%3E%3Crect x='0' y='6' width='7' height='1'/%3E%3Crect x='0' y='7' width='8' height='1'/%3E%3Crect x='0' y='8' width='5' height='1'/%3E%3Crect x='0' y='9' width='2' height='1'/%3E%3Crect x='3' y='9' width='2' height='1'/%3E%3Crect x='3' y='10' width='3' height='1'/%3E%3Crect x='4' y='11' width='2' height='1'/%3E%3C/g%3E%3C/svg%3E") 0 0;
+  /* Pointing-finger pixel hand for clickable elements — Windows-style. White fill, red outline, hotspot at the fingertip. */
+  --cur-hand: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 14 14' shape-rendering='crispEdges'%3E%3Cg fill='%23ff4444'%3E%3Crect x='5' y='0' width='2' height='1'/%3E%3Crect x='4' y='1' width='1' height='1'/%3E%3Crect x='7' y='1' width='1' height='1'/%3E%3Crect x='4' y='2' width='1' height='1'/%3E%3Crect x='7' y='2' width='1' height='1'/%3E%3Crect x='4' y='3' width='1' height='1'/%3E%3Crect x='7' y='3' width='2' height='1'/%3E%3Crect x='4' y='4' width='1' height='1'/%3E%3Crect x='9' y='4' width='2' height='1'/%3E%3Crect x='4' y='5' width='1' height='1'/%3E%3Crect x='11' y='5' width='1' height='1'/%3E%3Crect x='4' y='6' width='1' height='1'/%3E%3Crect x='12' y='6' width='1' height='1'/%3E%3Crect x='2' y='7' width='1' height='1'/%3E%3Crect x='12' y='7' width='1' height='1'/%3E%3Crect x='2' y='8' width='1' height='1'/%3E%3Crect x='12' y='8' width='1' height='1'/%3E%3Crect x='3' y='9' width='1' height='1'/%3E%3Crect x='12' y='9' width='1' height='1'/%3E%3Crect x='4' y='10' width='1' height='1'/%3E%3Crect x='12' y='10' width='1' height='1'/%3E%3Crect x='4' y='11' width='1' height='1'/%3E%3Crect x='11' y='11' width='1' height='1'/%3E%3Crect x='5' y='12' width='1' height='1'/%3E%3Crect x='10' y='12' width='1' height='1'/%3E%3Crect x='6' y='13' width='4' height='1'/%3E%3C/g%3E%3Cg fill='%23ffffff'%3E%3Crect x='5' y='1' width='2' height='1'/%3E%3Crect x='5' y='2' width='2' height='1'/%3E%3Crect x='5' y='3' width='2' height='1'/%3E%3Crect x='5' y='4' width='4' height='1'/%3E%3Crect x='5' y='5' width='6' height='1'/%3E%3Crect x='5' y='6' width='7' height='1'/%3E%3Crect x='3' y='7' width='9' height='1'/%3E%3Crect x='3' y='8' width='9' height='1'/%3E%3Crect x='4' y='9' width='8' height='1'/%3E%3Crect x='5' y='10' width='7' height='1'/%3E%3Crect x='5' y='11' width='6' height='1'/%3E%3Crect x='6' y='12' width='4' height='1'/%3E%3C/g%3E%3C/svg%3E") 10 0;
+}
+
+html, body {
+  height: 100%;
+  background: #000;
+  color: #cc3333;
+  font-family: "Roboto Mono", "Courier New", monospace;
+  overflow-x: hidden;
+  cursor: var(--cur-arrow), crosshair;
+}
+
+/* Pixelated arrow cursor everywhere — no hand variant */
+* { cursor: var(--cur-arrow), crosshair; }
+
+/* ═══ ECCE ROBOT — small lowercase background scroll ═══ */
+.ecce-robot {
+  position: absolute;
+  top: 0;
+  /* Full-bleed band: break out of #terminal's centered, max-width:1100px
+     content box so the scrolling "ecce robot" text spans the entire viewport
+     width and runs horizontally PAST the header's outline on both sides.
+     left:50% + margin-left:-50vw centers a 100vw strip without using transform
+     (which the spawn/glitch animations on .ecce-robot already drive). */
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  height: 360px;
+  pointer-events: none;
+  z-index: 0;
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  font-size: 16px;
+  color: #2a0606;
+  overflow: hidden;
+  line-height: 1.6;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+}
+.ecce-robot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.12) 3px);
+  pointer-events: none;
+  z-index: 2;
+}
+.ecce-robot-line {
+  animation: ecceScrollX var(--duration, 50s) linear infinite;
+  animation-delay: var(--delay, 0s);
+  animation-direction: var(--direction, normal);
+  will-change: transform;
+  white-space: nowrap;
+}
+@keyframes ecceScrollX {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ecce-robot-line span {
+  display: inline-block;
+  text-shadow: 1px 0 rgba(120, 0, 0, 0.4), -1px 0 rgba(255, 0, 0, 0.25);
+  animation: ecceBlink 4s infinite;
+  animation-delay: var(--blink-delay, 0s);
+}
+@keyframes ecceBlink {
+  0%, 88%, 100% { opacity: 1; }
+  90%, 92%      { opacity: 0.25; }
+  91%           { opacity: 0.6; }
+}
+@media (max-width: 768px) and (orientation: portrait) {
+  .ecce-robot { font-size: 11px; letter-spacing: 0.3em; line-height: 1.7; opacity: 0.4; height: 240px; }
+}
+
+/* Terminal sits above the ecce-robot background */
+#terminal { position: relative; z-index: 2; }
+
+/* Pixel-art pointing-finger hand (Windows-style) when hovering something clickable */
+a:hover, a:hover *,
+button:hover, button:hover *,
+.menu-item:hover, .menu-item:hover *,
+.win-close:hover, .win-close:hover *,
+.love-link:hover, .love-link:hover *,
+#initOverlay:hover, #initOverlay:hover *,
+[onclick]:hover, [onclick]:hover *,
+[role="button"]:hover, [role="button"]:hover * {
+  cursor: var(--cur-hand), pointer;
+}
+
+/* Scroll lock during boot — prevents accidental secret-message reveal */
+body.scroll-locked {
+  overflow: hidden !important;
+  height: 100vh;
+  touch-action: none;
+}
+body.scroll-locked .hidden-message { visibility: hidden; }
+
+/* CRT scanlines */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.13) 0px,
+    transparent 1px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.13) 3px
+  );
+  animation: scanMove 10s linear infinite;
+}
+@keyframes scanMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 4px; }
+}
+
+/* Init overlay */
+#initOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  cursor: var(--cur-arrow), pointer;
+  transition: opacity 0.6s ease;
+}
+#initOverlay.fade-out { opacity: 0; pointer-events: none; }
+
+#initLogo {
+  /* Same font stack as #asciiArt — JetBrains Mono with subsetted box-drawing
+     glyphs guarantees consistent monospace metrics on Firefox Android, where
+     the Roboto Mono fallback's box-drawing chars have inconsistent widths. */
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: geometricPrecision;
+  font-size: clamp(8px, 1.1vw, 13px);
+  line-height: 1.15;
+  color: rgba(200, 30, 30, 0.22);
+  white-space: pre;
+  letter-spacing: 0;
+  pointer-events: none;
+  user-select: none;
+}
+#initText {
+  font-size: 18px;
+  color: #ff4444;
+  letter-spacing: 0.25em;
+  text-shadow: 0 0 12px rgba(255,60,60,0.7);
+}
+#initText::after {
+  content: '█';
+  animation: blink 0.8s step-end infinite;
+}
+#initHint {
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 0.2em;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+/* Landscape advisory on init overlay — hidden by default, only shown when the
+   visitor is on a small screen in portrait orientation. Includes a tiny SVG
+   loop of a phone tilting to landscape with a curved arrow trailing it. */
+#initLandscapeHint {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 8px 14px;
+  border: 1px solid #441111;
+  font-size: 9px;
+  color: #aa4444;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(40, 5, 5, 0.4);
+  text-align: left;
+  max-width: 92%;
+  animation: pulse 3s ease-in-out infinite;
+}
+#initLandscapeHint .rotate-icon { flex-shrink: 0; }
+#initLandscapeHint .rotate-phone {
+  transform-origin: 20px 17px;
+  animation: phoneTilt 2.4s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+#initLandscapeHint .rotate-arrow,
+#initLandscapeHint .rotate-arrow-head {
+  opacity: 0;
+  animation: arrowSweep 2.4s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+  filter: drop-shadow(0 0 2px rgba(255, 90, 90, 0.85));
+}
+@keyframes phoneTilt {
+  0%, 18%   { transform: rotate(0deg); }
+  55%, 78%  { transform: rotate(-90deg); }
+  100%      { transform: rotate(0deg); }
+}
+@keyframes arrowSweep {
+  0%, 12%   { opacity: 0; transform: rotate(0deg); }
+  20%       { opacity: 0.9; }
+  55%, 78%  { opacity: 0.9; transform: rotate(-90deg); }
+  88%       { opacity: 0; transform: rotate(-90deg); }
+  100%      { opacity: 0; transform: rotate(0deg); }
+}
+#initLandscapeHint .rotate-arrow,
+#initLandscapeHint .rotate-arrow-head {
+  transform-origin: 20px 20px;
+}
+@media (max-width: 768px) and (orientation: portrait) {
+  #initLandscapeHint { display: inline-flex; }
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulse { 0%,100%{color:#333} 50%{color:#882222} }
+
+/* Terminal container */
+#terminal {
+  min-height: 100vh;
+  padding: 20px 24px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Header: box with real cosmic serpent background */
+#headerArea {
+  position: relative;
+  padding: 36px 28px 28px;
+  margin-bottom: 14px;
+  /* Lock the header to the final dimensions of the full ASCII (6 art lines
+     + blank + 2 subtitle lines @ ~14px font + line-height 1.18) plus padding,
+     so it never grows as typeAscii() fills the pre. */
+  height: 220px;
+  overflow: hidden;
+  background: #0b0505;
+  border: 1px solid #2a0808;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 50, 50, 0.08),
+    0 0 28px rgba(120, 0, 0, 0.18);
+}
+
+/* Cosmic serpent — scrolls vertically behind the ASCII art, seamless loop */
+#serpentLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.38;
+  filter: brightness(0.8) contrast(1.2) hue-rotate(-10deg) saturate(1.3);
+}
+#serpentTrack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  will-change: transform;
+  animation: serpentScroll 55s linear infinite;
+}
+#serpentTrack img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@keyframes serpentScroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+/* Subtle scanline overlay on header for CRT feel */
+#headerArea::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.18) 0px,
+    transparent 1px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+#headerArea { text-align: left; }
+#asciiArt {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  text-align: left;
+  /* Use JetBrains Mono (loaded via Google Fonts &text= subset that explicitly
+     includes the box-drawing range U+2500-257F) so every glyph in the ASCII
+     art is served by a SINGLE font with consistent monospace metrics. This
+     fixes the garbled rendering on Firefox Android, where the Roboto Mono
+     webfont's served subsets don't include box-drawing chars and the system
+     fallback has different metrics. `monospace` is the final safety net. */
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: geometricPrecision;
+  font-size: clamp(6px, 1.15vw, 14px);
+  line-height: 1.18;
+  color: #ff3333;
+  text-shadow: 0 0 10px rgba(255, 40, 40, 0.55);
+  white-space: pre;
+  letter-spacing: 0;
+  overflow: hidden;
+  background: transparent;
+  max-width: 100%;
+  /* Reserve full final height up-front (9 lines × 1.18 line-height + buffer)
+     so the header doesn't grow as typeAscii() fills the ASCII char-by-char. */
+  min-height: 11em;
+}
+
+/* Header spawn-in: flicker / glitch reveal of the entire header on first render */
+@keyframes headerSpawn {
+  0%   { opacity: 0; transform: translate(-3px, 2px) skewX(2deg); filter: brightness(2.4) contrast(0.4) hue-rotate(-30deg); clip-path: inset(46% 0 46% 0); }
+  6%   { opacity: 1; clip-path: inset(0 0 0 0); transform: translate(4px, -1px) skewX(-2deg); filter: brightness(1.6) hue-rotate(15deg); }
+  12%  { opacity: 0.2; transform: translate(-5px, 0); filter: brightness(0.4) contrast(2); clip-path: inset(20% 0 35% 0); }
+  18%  { opacity: 1; clip-path: inset(0); transform: translate(2px, 0) skewX(-1.2deg); filter: brightness(1.3) hue-rotate(-12deg); }
+  26%  { opacity: 0.6; transform: translate(-2px, 1px); filter: brightness(0.85) saturate(1.6); }
+  35%  { opacity: 1; transform: translate(1px, 0) skewX(0.5deg); filter: brightness(1.15); }
+  48%  { opacity: 0.5; clip-path: inset(15% 0 0 0); transform: translate(-3px, 0); filter: brightness(0.7) contrast(1.3); }
+  62%  { opacity: 1; clip-path: inset(0); transform: translate(1px, 0); filter: brightness(1.05); }
+  76%  { transform: translate(-1px, 0); filter: brightness(0.95); }
+  100% { opacity: 1; transform: none; filter: none; clip-path: inset(0); }
+}
+/* `both` fill keeps the final keyframe (opacity 1, no transform) sticky
+   after the animation ends — header stays visible for the rest of boot. */
+#headerArea.spawning { animation: headerSpawn 0.85s steps(20) both; }
+/* Hidden before the spawn animation starts (init overlay covers anyway). */
+body.scroll-locked #headerArea:not(.spawning):not(.spawned) { opacity: 0; }
+
+/* Same flicker treatment for the ecce-robot background band, so it spawns
+   in together with the header instead of fading silently into view. */
+.ecce-robot.spawning { animation: headerSpawn 0.85s steps(20) both; }
+body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
+
+.ascii-sub {
+  display: block;
+  color: #882222;
+  font-size: 0.9em;
+  text-shadow: none;
+  margin-top: 0.4em;
+}
+.ascii-tag {
+  color: #551111;
+  font-size: 0.78em;
+}
+
+/* Boot output */
+#output {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #883333;
+  margin-bottom: 24px;
+  min-height: 1em;
+}
+.out-prompt { color: #ff4444; }
+.out-ok     { color: #33aa55; }
+.out-dim    { color: #442222; }
+
+/* Cursor blink on active element */
+.typing-cursor::after {
+  content: '█';
+  color: #ff4444;
+  animation: blink 0.7s step-end infinite;
+}
+
+/* Menu */
+#menu {
+  display: none;
+  margin-bottom: 24px;
+}
+.menu-prompt-label {
+  font-size: 11px;
+  color: #aa5555;
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 9px 14px;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: #883333;
+  user-select: none;
+  transition: border-color 0.08s, color 0.08s, background 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-item::before {
+  content: '  ';
+  white-space: pre;
+  margin-right: 6px;
+  color: #ff4444;
+}
+.menu-item.selected {
+  color: #ff6666;
+  border-color: #ff3333;
+  background: rgba(255, 30, 30, 0.07);
+  text-shadow: 0 0 8px rgba(255,50,50,0.6);
+}
+.menu-item.selected::before { content: '▶ '; }
+.menu-item:hover:not(.selected) { color: #cc4444; border-color: #441111; }
+.menu-item .item-badge {
+  margin-left: 10px;
+  font-size: 9px;
+  color: #ff3333;
+  letter-spacing: 0.1em;
+  border: 1px solid #ff3333;
+  padding: 1px 4px;
+}
+.menu-hint {
+  font-size: 10px;
+  color: #aa6666;
+  margin-top: 10px;
+  letter-spacing: 0.1em;
+}
+/* Hint variants — desktop shows keyboard shortcuts, mobile shows tap/swipe.
+   Toggled via the same (max-width: 768px) and (orientation: portrait)
+   breakpoint used elsewhere so landscape orientation keeps the desktop hints. */
+.hint-mobile  { display: none; }
+.hint-desktop { display: block; }
+@media (max-width: 768px) and (orientation: portrait) {
+  .hint-mobile  { display: block; }
+  .hint-desktop { display: none; }
+}
+
+/* Skip hint — center flex item inside the footer bar, visible only while boot runs. */
+.boot-skip-hint {
+  text-align: center;
+  font-size: 8px;
+  color: #663333;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  user-select: none;
+  pointer-events: none;
+}
+.boot-skip-hint .k {
+  color: #aa4444;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(255, 60, 60, 0.35);
+}
+.boot-skip-hint.gone {
+  opacity: 0;
+  transform: translateY(-2px);
+}
+.menu-hint .k {
+  color: #ff4444;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 60, 60, 0.55);
+}
+.menu-hint .sep {
+  display: inline-block;
+  color: #883333;
+  font-weight: 700;
+  margin: 0 6px;
+  letter-spacing: 0;
+  line-height: 1;
+  text-shadow: 0 0 4px rgba(255, 60, 60, 0.4);
+}
+
+/* Section windows */
+.section-window {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease;
+  margin-bottom: 0;
+  border: 0px solid transparent;
+}
+.section-window.open {
+  max-height: 6000px;
+  opacity: 1;
+  margin-bottom: 14px;
+  border: 1px solid #330000;
+  box-shadow: 0 0 24px rgba(200,0,0,0.12), inset 0 0 30px rgba(0,0,0,0.5);
+}
+.win-titlebar {
+  background: linear-gradient(90deg, #120000, #200000);
+  border-bottom: 1px solid #330000;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+.win-title { color: #ff5555; }
+.win-chrome { color: #441111; font-size: 10px; }
+.win-close {
+  cursor: pointer;
+  color: #cc6666;
+  border: 1px solid #552222;
+  padding: 1px 6px;
+  font-size: 12px;
+  transition: all 0.1s;
+  user-select: none;
+}
+.win-close:hover { background: #ff3333; color: #000; border-color: #ff3333; }
+.win-body {
+  padding: 16px 20px 20px;
+  font-size: 12px;
+  line-height: 2;
+  background: rgba(6, 0, 0, 0.85);
+}
+.win-line {
+  display: block;
+  color: #aa3333;
+}
+.win-line::before { content: '> '; color: #ff3333; }
+.win-link {
+  color: #ff5555;
+  text-decoration: none;
+  transition: text-shadow 0.15s;
+}
+.win-link:hover { text-shadow: 0 0 10px rgba(255,80,80,0.8); text-decoration: underline; }
+.win-section-label {
+  display: block;
+  color: #aa6666;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  margin: 12px 0 4px;
+  border-top: 1px solid #331111;
+  padding-top: 10px;
+}
+.win-section-label:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+/* Inside two-column layouts (e.g. RESONANT BENDS' NEMA ENSEMBLE / PROGRAM)
+   the labels are :first-child of their column, which would normally drop the
+   divider. Force the divider back on so the visual rhythm matches LAST RESORT
+   (and other single-column projects) where each section is clearly separated. */
+.pf-col > .win-section-label:first-child {
+  border-top: 1px solid #331111;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+/* Section labels that follow a .pf-event clear the floated poster so their
+   top divider line spans the full project width BELOW the locandina rather
+   than being squeezed beside it. */
+.pf-event + .win-section-label,
+.pf-event + .pf-twocol {
+  clear: both;
+}
+
+/* Portfolio grid */
+.pf-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 8px 0 6px;
+}
+.pf-card {
+  display: block;
+  text-decoration: none;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 4px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative;
+}
+.pf-card:hover {
+  border-color: #ff3333;
+  box-shadow: 0 0 24px rgba(255, 50, 50, 0.22);
+  transform: translateY(-2px);
+}
+.pf-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.35) contrast(1.1) saturate(0.65) sepia(0.15) brightness(0.88);
+  transition: filter 0.25s;
+}
+.pf-card:hover .pf-img { filter: none; }
+.pf-label {
+  color: #ff5555;
+  font-size: 11px;
+  padding: 6px 4px 2px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.pf-grid-sm {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 8px 0 6px;
+}
+.pf-thumb {
+  border: 1px solid #2a0808;
+  padding: 3px;
+  background: #080303;
+  transition: border-color 0.2s, transform 0.2s;
+  display: block;
+}
+.pf-thumb img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.4) contrast(1.1) saturate(0.55) sepia(0.18) brightness(0.85);
+  transition: filter 0.25s;
+}
+.pf-thumb:hover {
+  border-color: #ff3333;
+  transform: scale(1.03);
+}
+.pf-thumb:hover img { filter: none; }
+/* Bias the 16:9 crop towards the top for portrait-oriented photos so faces /
+   subjects in the upper third aren't cut off. */
+.pf-grid-sm.thumbs-up .pf-thumb img { object-position: center 42%; }
+
+.pf-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a0505 0%, #050000 100%);
+  color: #ff3333;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  border: 1px dashed #330000;
+}
+
+/* "read full" expander — minimalist <details> styled as a terminal button.
+   No JS, native HTML expand/collapse. */
+.pf-readmore {
+  display: block;
+  margin: 12px 0 4px;
+}
+.pf-readmore > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #aa4444;
+  border: 1px solid #441111;
+  padding: 4px 10px;
+  user-select: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, text-shadow 0.15s;
+}
+.pf-readmore > summary::-webkit-details-marker { display: none; }
+.pf-readmore > summary:hover {
+  color: #ff6666;
+  border-color: #ff3333;
+  background: rgba(255, 50, 50, 0.06);
+  text-shadow: 0 0 6px rgba(255, 70, 70, 0.4);
+}
+.pf-readmore > summary .opened { display: none; }
+.pf-readmore[open] > summary .closed { display: none; }
+.pf-readmore[open] > summary .opened { display: inline; }
+.pf-readmore[open] > summary {
+  color: #ff6666;
+  border-color: #aa3333;
+}
+.pf-readmore-body {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-left: 2px solid #441414;
+  background: rgba(20, 5, 5, 0.45);
+  animation: pfReadmoreFade 0.3s ease both;
+}
+@keyframes pfReadmoreFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Highlighted pull-quote inside a section body (terminal "echo" feel) */
+.pf-quote {
+  color: #ff8888 !important;
+  font-style: italic;
+  text-shadow: 0 0 8px rgba(255, 100, 100, 0.45);
+  padding: 4px 0;
+  display: block;
+}
+.pf-quote::before { color: #ff5555 !important; }
+
+/* Project box — wraps a whole sub-project (A GA MAEBA, RESONANT BENDS) in a
+   visually distinct container so the project boundary reads at a glance,
+   separate from the smaller [ M/V STILLS ] / [ EVENT INFO ] sub-labels inside. */
+.pf-project {
+  position: relative;
+  border: 1px solid #2a0808;
+  background: rgba(20, 6, 6, 0.35);
+  padding: 14px 18px 18px;
+  margin: 18px 0 26px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.4);
+}
+.pf-project + .pf-project { margin-top: 28px; }
+.pf-project::after { content: ''; display: table; clear: both; }
+
+.pf-project-title {
+  display: block;
+  color: #ff4444;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-shadow: 0 0 14px rgba(255, 60, 60, 0.55), 0 0 4px rgba(255, 80, 80, 0.4);
+  border-bottom: 1px dashed #5a1818;
+  padding: 2px 0 12px;
+  margin: 0 0 14px;
+}
+/* Brand mark — keeps the stylized lowercase "mi·ɽài" intact even when sitting
+   inside an uppercase-transformed parent (project titles, etc.). */
+.pf-project-title .brand {
+  text-transform: none;
+  letter-spacing: 0.05em;
+  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  color: #ff5555;
+  text-shadow: 0 0 10px rgba(255, 80, 80, 0.5);
+}
+.pf-project-subtitle {
+  display: block;
+  color: #aa5555;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  margin: -8px 0 12px;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  .pf-project { padding: 12px 12px 14px; margin: 14px 0 20px; }
+  .pf-project-title { font-size: 14px; letter-spacing: 0.18em; }
+}
+
+/* Featured-work layout — video card floats left so the descriptive text wraps
+   *around* it (fills the space to the right AND continues below once the
+   text length exceeds the card's height), instead of sitting in a separate
+   rigid right-hand column. */
+.pf-feature {
+  margin: 8px 0 6px;
+}
+.pf-feature::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+.pf-feature > .pf-card {
+  float: left;
+  width: 320px;
+  max-width: 44%;
+  margin: 0 18px 10px 0;
+}
+.pf-feature .pf-feature-text {
+  /* Slightly tighter type so the intro paragraph + pull-quote fit alongside
+     the floated video card height — the rest of the text wraps below cleanly. */
+  font-size: 0.93em;
+  line-height: 1.7;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  .pf-feature > .pf-card {
+    float: none;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 12px 0;
+  }
+}
+
+/* Two-column layout for compact paired blocks (e.g. PROGRAM next to ENSEMBLE
+   roster) — preserves horizontal real estate instead of stacking vertically. */
+.pf-twocol {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin: 14px 0 6px;
+}
+.pf-col { flex: 1; min-width: 0; }
+.pf-col-program {
+  flex: 0 0 52%;
+  font-size: 0.86em;
+  line-height: 1.65;
+  opacity: 0.92;
+}
+.pf-col-program .win-line { line-height: 1.6; }
+.pf-col-program em {
+  color: #774444;
+  font-style: italic;
+  font-size: 0.92em;
+}
+@media (max-width: 700px) and (orientation: portrait) {
+  /* Block layout (not flex) so children naturally wrap around the floated
+     poster carrying down from the EVENT INFO block above. */
+  .pf-twocol { display: block; gap: 0; }
+  .pf-col-program { flex: 1; font-size: 1em; margin-top: 14px; }
+  /* Allow the locandina float to continue past EVENT INFO into NEMA ENSEMBLE. */
+  .pf-event::after { content: none; clear: none; }
+}
+
+/* Event-info layout — poster floats right so EVENT INFO text wraps around it
+   on every viewport (no vertical stack on mobile), and the image is shown
+   uncropped at its natural aspect. */
+.pf-event {
+  margin: 8px 0 6px;
+}
+/* No clearfix — the floated poster is allowed to extend past EVENT INFO, so
+   the next blocks (NEMA ENSEMBLE / PROGRAM) wrap around its remaining height
+   instead of leaving empty space beside it. The .pf-project clearfix below
+   contains the float at the project boundary. */
+.pf-event-info { min-width: 0; }
+.pf-event-poster {
+  float: right;
+  width: 190px;
+  max-width: 38%;
+  margin: 4px 0 12px 20px;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 3px;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.pf-event-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(0.2) contrast(1.05) brightness(0.95);
+  transition: filter 0.25s;
+}
+.pf-event-poster:hover {
+  border-color: #ff3333;
+  box-shadow: 0 0 18px rgba(255, 60, 60, 0.18);
+  transform: translateY(-2px);
+}
+.pf-event-poster:hover img { filter: none; }
+@media (max-width: 600px) and (orientation: portrait) {
+  .pf-event-poster {
+    width: 115px;
+    max-width: 36%;
+    margin: 4px 0 10px 10px;
+  }
+  /* Tighter type so EVENT INFO lines don't wrap on every word in the
+     reduced text column beside the floated poster. */
+  .pf-event-info { font-size: 0.86em; line-height: 1.65; }
+  .pf-event-info .win-section-label { font-size: 9px; }
+}
+
+/* Event poster block — sits beside the press text, scales nicely on mobile */
+.pf-poster {
+  display: flex;
+  gap: 14px;
+  margin: 10px 0 6px;
+  align-items: flex-start;
+}
+.pf-poster img {
+  width: 300px;
+  max-width: 42%;
+  height: auto;
+  display: block;
+  border: 1px solid #2a0808;
+  filter: grayscale(0.2) contrast(1.05) brightness(0.95);
+  transition: filter 0.25s, transform 0.25s, border-color 0.25s;
+  flex-shrink: 0;
+}
+.pf-poster img:hover {
+  filter: none;
+  transform: scale(1.02);
+  border-color: #ff3333;
+}
+.pf-poster .pf-poster-text {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  .pf-poster { flex-direction: column; }
+  .pf-poster img { width: 100%; max-width: 100%; }
+}
+
+/* Sub-focus (arrow-key navigation inside a section) */
+.sub-focused { position: relative; }
+
+.pf-card.sub-focused {
+  border-color: #ff5555;
+  box-shadow: 0 0 28px rgba(255, 60, 60, 0.55);
+  transform: translateY(-3px);
+}
+.pf-card.sub-focused .pf-img { filter: none; }
+.pf-card.sub-focused .pf-label {
+  color: #ff9999;
+  text-shadow: 0 0 10px rgba(255, 100, 100, 0.7);
+}
+
+.pf-thumb.sub-focused {
+  border-color: #ff5555;
+  transform: scale(1.07);
+  box-shadow: 0 0 22px rgba(255, 60, 60, 0.5);
+}
+.pf-thumb.sub-focused img { filter: none; }
+
+.win-link.sub-focused {
+  background: rgba(255, 50, 50, 0.12);
+  outline: 1px solid #ff3333;
+  outline-offset: 2px;
+  padding: 0 5px;
+  text-shadow: 0 0 10px rgba(255, 80, 80, 0.8);
+  color: #ff9999;
+}
+/* Suppress browser :focus rings — we provide our own visual feedback for everything */
+.sub-focused:focus,
+.menu-item:focus,
+a:focus,
+button:focus,
+[tabindex]:focus { outline: none; }
+
+/* Dim the selected menu item while we're diving into its section */
+.menu-item.selected.menu-dimmed {
+  border-color: #661111;
+  background: rgba(255, 30, 30, 0.03);
+  opacity: 0.55;
+  text-shadow: none;
+}
+.menu-item.selected.menu-dimmed::before { content: '▷ '; }
+
+/* Footer */
+#footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #996666;
+  padding: 20px;
+  border-top: 1px solid #331111;
+  margin-top: 40px;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+}
+#footer a { color: #bb7777; text-decoration: none; transition: color 0.15s, text-shadow 0.15s; }
+#footer a:hover { color: #ff7777; text-shadow: 0 0 8px rgba(255,100,100,0.6); }
+/* Shrink footer text on narrow / portrait viewports so "← back to old site"
+   and "© 2026 mi·ɽài://audiovisual" stay on a single line each. */
+@media (max-width: 768px) and (orientation: portrait) {
+  #footer { font-size: 8px; padding: 14px 12px; letter-spacing: 0.1em; gap: 8px; }
+}
+
+/* Glitch flash on header */
+@keyframes headerGlitch {
+  0%   { filter: none; transform: none; }
+  15%  { filter: hue-rotate(90deg) brightness(1.5); transform: translateX(-2px) skewX(1deg); }
+  30%  { filter: hue-rotate(-60deg) brightness(0.8); transform: translateX(3px); }
+  45%  { filter: none; transform: translateX(-1px) skewX(-0.5deg); }
+  100% { filter: none; transform: none; }
+}
+#asciiArt.glitching { animation: headerGlitch 0.18s steps(3) forwards; }
+.ecce-robot.glitching { animation: headerGlitch 0.18s steps(3) forwards; }
+
+/* SoundCloud embed wrapper */
+.pf-embed {
+  margin: 10px 0 4px;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 4px;
+}
+.pf-embed iframe { display: block; width: 100%; border: 0; }
+/* SC playlist attribution line ("artist · set name") — matches site palette */
+.pf-embed-credit {
+  font-size: 10px;
+  color: #883333;
+  letter-spacing: 0.08em;
+  margin: 2px 0 10px;
+  font-family: "Roboto Mono", "Courier New", monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-embed-credit a {
+  color: #aa5555;
+  text-decoration: none;
+  transition: color 0.15s, text-shadow 0.15s;
+}
+.pf-embed-credit a:hover {
+  color: #ff5555;
+  text-shadow: 0 0 6px rgba(255, 80, 80, 0.5);
+}
+.pf-embed-credit .sep { color: #552222; margin: 0 6px; }
+
+/* ═══ PORTFOLIO LIGHTBOX ═══ */
+.pf-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.78);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  perspective: 1100px;
+  cursor: zoom-out;
+}
+.pf-lightbox.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.pf-lb-wrap {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.08s ease-out;
+  will-change: transform;
+  max-width: 80vw;
+  max-height: 80vh;
+  width: fit-content;
+  height: fit-content;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: var(--cur-arrow), default;
+}
+.pf-lb-wrap img { margin: 0 auto; }
+.pf-lb-wrap.spin-in {
+  animation: pfLbSpin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards;
+}
+.pf-lb-wrap.respin {
+  /* 3-click variant: same shape and timing as pfLbSpin, but the 0% keyframe
+     starts from the card's current visible state (scale 1, opacity 1)
+     instead of fading in from scale 0.35 / opacity 0. A parallel flash
+     track lights the card up at the end, like the full-res reveal close. */
+  animation: pfLbRespin 1s cubic-bezier(0.25, 0.9, 0.3, 1) forwards,
+             pfLbRespinFlash 1s linear forwards;
+}
+@keyframes pfLbSpin {
+  0%   { transform: rotateY(0deg)   scale(0.35); opacity: 0.0; }
+  18%  { transform: rotateY(60deg)  scale(0.55); opacity: 1; }
+  100% { transform: rotateY(360deg) scale(1);   opacity: 1; }
+}
+@keyframes pfLbRespin {
+  /* Mirrors pfLbSpin (rotateY + scale shape, same intermediate at 18%) —
+     only the 0% keyframe is rewritten to the post-open visible state so
+     the card "snaps in" from where it is rather than re-entering from
+     nothing. */
+  0%   { transform: rotateY(0deg)   scale(1); }
+  18%  { transform: rotateY(60deg)  scale(0.55); }
+  100% { transform: rotateY(360deg) scale(1); }
+}
+@keyframes pfLbRespinFlash {
+  /* Filter held at none for most of the spin, then bright glitch flashes
+     in the final ~30% — same brightness/hue/saturate steps used at the
+     close of pfFullResReveal so the card lights up identically. */
+  0%, 65%  { filter: none; }
+  72%      { filter: brightness(1.55) hue-rotate(28deg) saturate(2); }
+  82%      { filter: brightness(2.4) hue-rotate(-38deg) saturate(2.2) contrast(1.3); }
+  92%      { filter: brightness(1.4) hue-rotate(15deg); }
+  100%     { filter: none; }
+}
+.pf-lb-wrap img {
+  display: block;
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border: 1px solid #551111;
+  box-shadow: 0 0 50px rgba(255, 68, 68, 0.35), 0 0 120px rgba(255, 30, 30, 0.2);
+}
+/* holo laminate (ported from index.html maeba lightbox) */
+.pf-lb-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--holo-angle, 125deg),
+    rgba(255,0,120,0)    0%,
+    rgba(255,0,120,0.2)  8%,
+    rgba(255,210,0,0.2)  22%,
+    rgba(0,255,120,0.2)  38%,
+    rgba(0,120,255,0.2)  54%,
+    rgba(180,0,255,0.2)  70%,
+    rgba(255,0,120,0.2)  84%,
+    rgba(255,0,120,0)    100%
+  );
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: var(--holo-opacity, 0.2);
+  z-index: 2;
+}
+.pf-lb-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--flare-opacity, 0);
+  transition: opacity 0.12s ease;
+  background:
+    radial-gradient(ellipse 7% 7%     at var(--fx, 50%) var(--fy, 50%), rgba(255,255,255,1)     0%, transparent 65%),
+    radial-gradient(ellipse 5% 5%     at var(--gx, 50%) var(--gy, 50%), rgba(255,140,50,1)      0%, transparent 60%),
+    radial-gradient(ellipse 3.5% 3.5% at var(--sx, 50%) var(--sy, 50%), rgba(120,170,255,0.95)  0%, transparent 60%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 3;
+}
+.pf-lb-placeholder {
+  display: none;
+  border: 1px solid #551111;
+  box-shadow: 0 0 50px rgba(255, 68, 68, 0.35), 0 0 120px rgba(255, 30, 30, 0.2);
+  background: #e4dcdc;
+  animation: lbPlaceholderPulse 1.4s ease-in-out infinite;
+}
+@keyframes lbPlaceholderPulse {
+  0%, 100% { background: #e4dcdc; }
+  50%       { background: #f5efef; }
+}
+.pf-lb-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.28) 0px, transparent 1px, transparent 9px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.28) 0px, transparent 1px, transparent 9px);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 4;
+  opacity: var(--holo-opacity, 0.6);
+}
+.pf-lb-close {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  width: 36px;
+  height: 36px;
+  background: rgba(20, 10, 10, 0.85);
+  border: 1px solid #551111;
+  color: #ff8888;
+  font-size: 18px;
+  line-height: 34px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10001;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+.pf-lb-close:hover { background: #ff4444; color: #fff; }
+.pf-lb-counter {
+  position: fixed;
+  top: 24px;
+  left: 28px;
+  color: #ff9999;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  z-index: 10001;
+  pointer-events: none;
+  text-shadow: 0 0 6px rgba(255,70,70,0.4);
+}
+.pf-lb-hint {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #551111;
+  /* Typography matched to .menu-hint for visual consistency between the
+     SELECT SECTION hint and the lightbox hint. */
+  color: #aa6666;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 7px 16px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10001;
+  text-transform: uppercase;
+}
+.pf-lb-hint .k {
+  color: #ff4444;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 60, 60, 0.55);
+}
+.pf-lb-hint .sep {
+  display: inline-block;
+  color: #883333;
+  font-weight: 700;
+  margin: 0 6px;
+  letter-spacing: 0;
+  line-height: 1;
+  text-shadow: 0 0 4px rgba(255, 60, 60, 0.4);
+}
+.pf-lb-visit {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  color: #ffaaaa;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 7px 14px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #551111;
+  text-decoration: none;
+  z-index: 10001;
+  text-transform: uppercase;
+  transition: background 0.2s, color 0.2s;
+}
+.pf-lb-visit:hover { background: #ff4444; color: #fff; }
+.pf-lb-fullres {
+  display: none;
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid #551111;
+  color: #ffaaaa;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 7px 14px;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 10001;
+  transition: background 0.2s, color 0.2s;
+}
+.pf-lb-fullres:hover { background: #ff4444; color: #fff; }
+.pf-lb-fullres.is-loaded {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+  color: #886666;
+  border-color: #331111;
+  background: rgba(0,0,0,0.45);
+}
+.pf-lb-fullres.is-loaded:hover {
+  background: rgba(0,0,0,0.45);
+  color: #886666;
+}
+/* Transparent wrapper on desktop — children keep individual fixed positions */
+.pf-lb-actions { display: contents; }
+.pf-lb-loading {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.pf-lb-loading-bar {
+  width: 180px;
+  height: 4px;
+  background: rgba(40, 8, 8, 0.55);
+  border: 1px solid #551111;
+  position: relative;
+  overflow: hidden;
+}
+.pf-lb-loading-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, #ff4444 50%, transparent);
+  animation: pfLbBar 1.2s ease-in-out infinite;
+}
+.pf-lb-loading-text {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: #ff8888;
+  text-transform: uppercase;
+}
+.pf-lb-loading-text span {
+  display: inline-block;
+  opacity: 0;
+  animation: pfLbDot 1.2s ease-in-out infinite;
+}
+.pf-lb-loading-text span:nth-child(1) { animation-delay: 0.00s; }
+.pf-lb-loading-text span:nth-child(2) { animation-delay: 0.30s; }
+.pf-lb-loading-text span:nth-child(3) { animation-delay: 0.60s; }
+@keyframes pfLbBar {
+  0%   { left: -35%; }
+  100% { left: 100%; }
+}
+@keyframes pfLbDot {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  70%  { opacity: 1; }
+  90%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+.pf-lb-img-glitch-in {
+  animation: pfFullResReveal 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+@keyframes pfFullResReveal {
+  /* Filter-only keyframes — clip-path is driven via WAAPI alongside the
+     scan line in JS so the two animations are byte-for-byte in lockstep
+     (CSS class-add and WAAPI animate() can desync by a paint frame). */
+  0%   { filter: brightness(2.4) saturate(0.2) hue-rotate(-30deg) contrast(1.4); }
+  4%   { filter: brightness(1.95) saturate(0.5) hue-rotate(-18deg) contrast(1.3); }
+  76%  { filter: brightness(1.55) hue-rotate(28deg) saturate(2); }
+  84%  { filter: brightness(2.4) hue-rotate(-38deg) saturate(2.2) contrast(1.3); }
+  92%  { filter: brightness(1.4) hue-rotate(15deg); }
+  100% { filter: none; }
+}
+.pf-lb-reveal-line {
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  height: 5px;
+  top: -10px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(to right,
+    transparent 0%,
+    rgba(255, 240, 240, 0.45) 6%,
+    rgba(255, 255, 255, 0.95) 28%,
+    rgba(220, 245, 255, 1) 50%,
+    rgba(255, 255, 255, 0.95) 72%,
+    rgba(255, 240, 240, 0.45) 94%,
+    transparent 100%);
+  box-shadow:
+    0 0 12px 2px rgba(255, 255, 255, 0.95),
+    0 0 28px 6px rgba(140, 220, 255, 0.7),
+    0 0 60px 10px rgba(255, 80, 80, 0.45),
+    0 0 110px 14px rgba(255, 30, 30, 0.25);
+  border-radius: 2px;
+}
+/* Reveal line animation is driven via Web Animations API so the scan range
+   matches the actual <img> bounds rather than the (often larger) wrap. */
+
+@media (max-width: 768px) and (orientation: portrait) {
+  #terminal { padding: 12px 14px 40px; }
+  #asciiArt {
+    /* JS-driven sizing via fitAsciiArt() — fallback only */
+    font-size: clamp(8px, 3vw, 13px);
+    letter-spacing: 0;
+    overflow-x: hidden;
+  }
+  .menu-item { font-size: 13px; padding: 11px 10px; }
+  .win-body { font-size: 12px; padding: 12px 14px 16px; }
+  #headerArea { height: 180px; padding: 20px 8px 16px; }
+  /* Larger, more legible close button on mobile */
+  .win-titlebar {
+    padding: 9px 12px;
+    gap: 8px;
+  }
+  .win-chrome { display: none; }
+  .win-close {
+    font-size: 16px;
+    padding: 4px 12px;
+    min-width: 36px;
+    min-height: 32px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 50, 50, 0.08);
+  }
+  .win-close:active { background: #ff3333; color: #000; }
+  .pf-grid { grid-template-columns: repeat(2, 1fr); }
+  .pf-grid-sm { grid-template-columns: repeat(3, 1fr); }
+  .pf-lb-wrap { margin: auto; }
+  .pf-lb-wrap img { max-width: 92vw; max-height: 62vh; }
+  .pf-lb-hint { font-size: 9px; padding: 6px 10px; bottom: 14px; }
+  .pf-lb-counter { font-size: 9px; top: 14px; left: 14px; }
+  /* Group source + fullres into a centered row above the hint */
+  .pf-lb-actions {
+    display: flex;
+    gap: 8px;
+    position: fixed;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+  }
+  .pf-lb-actions .pf-lb-visit,
+  .pf-lb-actions .pf-lb-fullres {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  #asciiArt {
+    /* JS-driven sizing — fallback only */
+    font-size: clamp(7px, 2.7vw, 11px);
+    letter-spacing: 0;
+  }
+}
+
+/* ═══ HIDDEN MESSAGE ═══ */
+.hidden-message {
+  position: relative;
+  width: 100%;
+  background: transparent;
+  color: #ff6666;
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 2;
+  z-index: 1000;
+  margin-top: 5000px;
+  margin-bottom: 500px;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease, transform 1s ease;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+.hidden-message.visible { opacity: 1; transform: translateY(0); }
+.hidden-message p {
+  margin: 0 auto 20px;
+  max-width: 600px;
+}
+.hidden-message .love { display: inline-block; }
+.hm-dots { letter-spacing: -0.04em; }
+
+
+.love-link {
+  color: #8b5a9d;
+  text-decoration: none;
+  display: inline-block;
+  animation: loveGlitch 4s infinite;
+  text-shadow:
+    0 0 18px rgba(138, 43, 226, 0.9),
+    0 0 40px rgba(138, 43, 226, 0.6),
+    0 0 80px rgba(180, 60, 255, 0.35);
+  transition: transform 0.25s ease;
+  cursor: pointer;
+}
+.love-link:hover { transform: scale(1.1); }
+@keyframes loveGlitch {
+  0%   { text-shadow: 2px 0 #ff0080, -2px 0 #00ffff, 0 0 18px rgba(138,43,226,0.9), 0 0 50px rgba(138,43,226,0.5); color: #8b5a9d; }
+  25%  { text-shadow: -2px 0 #ff0080, 2px 0 #00ffff, 0 0 24px rgba(180,60,255,1),   0 0 60px rgba(180,60,255,0.6); color: #b06dc9; }
+  50%  { text-shadow: 1px 0 #ff0080, -1px 0 #00ffff, 0 0 14px rgba(138,43,226,0.7), 0 0 40px rgba(138,43,226,0.4); color: #9a60b0; }
+  75%  { text-shadow: -3px 0 #ff0080, 3px 0 #00ffff, 0 0 30px rgba(200,80,255,1),   0 0 70px rgba(200,80,255,0.5); color: #8b5a9d; }
+  100% { text-shadow: 2px 0 #ff0080, -2px 0 #00ffff, 0 0 18px rgba(138,43,226,0.9), 0 0 50px rgba(138,43,226,0.5); color: #b06dc9; }
+}
+.hm-cursor {
+  display: inline-block;
+  color: #ff6666;
+  animation: hmCursorBlink 0.7s step-end infinite;
+  margin-left: 1px;
+}
+@keyframes hmCursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ═══ SECRET SNES SOUNDBOARD — easter egg in the secret area ═══ */
+#soundboard {
+  position: relative;
+  text-align: center;
+  padding: 80px 24px 160px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(40px);
+  pointer-events: none;
+  transition: opacity 1.4s ease, transform 1.4s ease, visibility 0s linear 1.4s;
+}
+#soundboard.revealed {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 1.4s ease, transform 1.4s ease, visibility 0s linear 0s;
+}
+.snes-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: min(589px, 100%);
+  user-select: none;
+  -webkit-user-select: none;
+  transform: perspective(1000px);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.55));
+}
+.snes-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+.snes-btn {
+  position: absolute;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: var(--cur-hand), pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 3px;
+  touch-action: manipulation;
+}
+.snes-btn.pressed {
+  background: rgba(255, 60, 60, 0.28);
+  box-shadow: 0 0 10px 2px rgba(255, 60, 60, 0.55);
+}
+/* Konami flash — glitch VHS nero, transizione seamless verso egg.html */
+#konamiFlash {
+  position: fixed;
+  inset: -60px;
+  z-index: 99999;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  overflow: hidden;
+}
+#konamiFlash.on {
+  opacity: 1;
+  pointer-events: all;
+  animation: kfGlitch 0.6s steps(1) infinite;
+}
+#konamiFlash::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px, transparent 2px,
+    rgba(255, 0, 0, 0.05) 2px, rgba(255, 0, 0, 0.05) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+#konamiFlash::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: rgba(255, 40, 40, 0.45);
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+  animation: kfTrack 0.65s linear infinite;
+  z-index: 2;
+}
+@keyframes kfGlitch {
+  0%   { filter: brightness(1)   contrast(4) saturate(5) hue-rotate(0deg);   background: #0a0000; transform: none; }
+  16%  { filter: brightness(2)   contrast(6) saturate(0);                    background: #000;    transform: translateX(-5px) skewX(-1deg); }
+  33%  { filter: brightness(0.6) contrast(5) saturate(8) hue-rotate(290deg); background: #000;    transform: translateX(4px); }
+  50%  { filter: brightness(1.4) contrast(4) saturate(4) hue-rotate(15deg);  background: #060000; transform: none; }
+  66%  { filter: brightness(0.8) contrast(6) saturate(0) hue-rotate(180deg); background: #000;    transform: translateX(-3px) skewX(1deg); }
+  83%  { filter: brightness(1.2) contrast(4) saturate(5) hue-rotate(330deg); background: #030000; transform: none; }
+  100% { filter: brightness(1)   contrast(4) saturate(4) hue-rotate(0deg);   background: #000;    transform: none; }
+}
+@keyframes kfTrack {
+  from { top: -2px; }
+  to   { top: 100%; }
+}
+
+/* ═══ NEW RELEASE FLOATING PLAYER ═══ */
+#nr-player {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(calc(100% + 40px));
+  z-index: 8000;
+  /* Column: a header row of two little boxes (NEW RELEASE + ✕) sitting flush
+     ON TOP of the main player box — gap:0 so they're attached, not floating. */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 460px;
+  width: calc(100vw - 40px);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease;
+  opacity: 0;
+  font-family: "Roboto Mono", "Courier New", monospace;
+}
+.nr-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px 6px 6px;
+  background: rgba(6, 1, 1, 0.97);
+  border: 1px solid #ff3333;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 30, 30, 0.15),
+    0 0 32px rgba(255, 40, 40, 0.22),
+    0 6px 28px rgba(0, 0, 0, 0.75);
+}
+/* Header — a transparent row holding two self-contained little boxes: the
+   NEW RELEASE badge (left) and the ✕ close (right), joined by a rule. The
+   boxes are flush with the main box edges and merge into its top border
+   (border-bottom: none) so they read as tabs attached to the player. */
+.nr-header {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+/* Rule gets its own box tab — border-top only (badge/dismiss provide the
+   side borders) so it reads as a continuous top border between them. */
+.nr-rule {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-top: 1px solid #ff3333;
+}
+.nr-rule::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right,
+    rgba(255, 51, 51, 0.12), rgba(255, 51, 51, 0.5), rgba(255, 51, 51, 0.12));
+}
+#nr-player.nr-visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+#nr-player.nr-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 40px));
+  opacity: 0;
+  pointer-events: none;
+}
+/* Glitch reveal — the bar materializes in place with a clip-path + position
+   jitter (steps, like the konami/egg loading flash) running in parallel with a
+   brightness/hue-rotate/contrast filter sweep (same shape as the full-res image
+   reveal, pfFullResReveal). A light scan line sweeps down via ::after. The
+   class is added on boot-completion and removed on animationend. */
+#nr-player.nr-glitch-in {
+  animation: nrGlitchPos 0.85s steps(2, end) both,
+             nrGlitchFilter 0.85s linear both;
+}
+@keyframes nrGlitchPos {
+  0%   { opacity: 0;   transform: translateX(-50%) translateY(0) skewX(7deg);  clip-path: inset(46% 0 46% 0); }
+  10%  { opacity: 1;   transform: translateX(calc(-50% - 9px)) translateY(0) skewX(-5deg); clip-path: inset(0 0 62% 0); }
+  22%  { opacity: 0.35; transform: translateX(calc(-50% + 7px)) translateY(0); clip-path: inset(34% 0 0 0); }
+  35%  { opacity: 1;   transform: translateX(calc(-50% - 4px)) translateY(0) skewX(2.5deg); clip-path: inset(0 0 0 0); }
+  50%  { opacity: 0.7; transform: translateX(calc(-50% + 3px)) translateY(0); clip-path: inset(0 0 28% 0); }
+  68%  { opacity: 1;   transform: translateX(calc(-50% - 2px)) translateY(0); clip-path: inset(0); }
+  100% { opacity: 1;   transform: translateX(-50%) translateY(0);            clip-path: inset(0); }
+}
+@keyframes nrGlitchFilter {
+  0%   { filter: brightness(2.4) saturate(0.2) hue-rotate(-30deg) contrast(1.4); }
+  5%   { filter: brightness(1.95) saturate(0.5) hue-rotate(-18deg) contrast(1.3); }
+  42%  { filter: brightness(1.3) hue-rotate(22deg) saturate(1.7); }
+  62%  { filter: brightness(1.65) hue-rotate(-32deg) saturate(2.1) contrast(1.3); }
+  82%  { filter: brightness(1.32) hue-rotate(13deg); }
+  100% { filter: none; }
+}
+#nr-player::after {
+  content: '';
+  position: absolute;
+  left: -3%;
+  right: -3%;
+  height: 3px;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 6;
+  background: linear-gradient(to right,
+    transparent 0%,
+    rgba(255, 240, 240, 0.5) 12%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 240, 240, 0.5) 88%,
+    transparent 100%);
+  box-shadow:
+    0 0 10px 2px rgba(255, 255, 255, 0.9),
+    0 0 26px 5px rgba(255, 80, 80, 0.5),
+    0 0 50px 8px rgba(255, 30, 30, 0.3);
+}
+#nr-player.nr-glitch-in::after {
+  animation: nrScan 0.85s ease-out both;
+}
+@keyframes nrScan {
+  0%   { opacity: 0;   top: 0; }
+  12%  { opacity: 1;   top: 8%; }
+  85%  { opacity: 0.85; top: 100%; }
+  100% { opacity: 0;   top: 100%; }
+}
+/* Cover gets its own dedicated square box at an adequate size; the artwork
+   fills the box edge-to-edge (object-fit: cover). */
+.nr-cover-box {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border: 1px solid #2a0808;
+  background: linear-gradient(135deg, #1a0505 0%, #050000 100%);
+  overflow: hidden;
+  position: relative;
+}
+.nr-cover-box .nr-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.nr-cover-box .nr-cover-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #331111;
+  font-size: 16px;
+}
+.nr-info {
+  /* Shrink to its own content so the visualizer fills the middle empty space. */
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.nr-badge {
+  /* Own little box, flush-left with the main box and merged into its top
+     border so it reads as an attached tab. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 7px;
+  letter-spacing: 0.28em;
+  color: #ff3333;
+  background: rgba(6, 1, 1, 0.97);
+  border: 1px solid #ff3333;
+  border-bottom: none;
+  padding: 6px 11px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255, 40, 40, 0.5);
+  animation: nrBadgePulse 2.5s ease-in-out infinite;
+}
+@keyframes nrBadgePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+.nr-title {
+  /* Same stylized brand font as "mi·ɽài" (.pf-project-title .brand), lowercase. */
+  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  font-size: 13px;
+  color: #ff5555;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 8px rgba(255, 60, 60, 0.35);
+  line-height: 1.2;
+}
+.nr-artist {
+  font-family: ui-monospace, "Roboto Mono", "Courier New", monospace;
+  font-weight: 700;
+  font-size: 10px;
+  color: #cc6666;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  margin-top: 1px;
+  text-shadow: 0 0 6px rgba(255, 80, 80, 0.25);
+  text-decoration: none;
+  display: block;
+}
+.nr-artist:hover { color: #ff8888; text-shadow: 0 0 8px rgba(255, 100, 100, 0.5); }
+/* Track link wraps cover + title — no underline, inherits layout. */
+.nr-track-link {
+  display: contents;   /* transparent wrapper: children flow as if link weren't there */
+  text-decoration: none;
+}
+.nr-cover-link {
+  display: block;
+  flex-shrink: 0;
+  line-height: 0;
+  text-decoration: none;
+}
+.nr-cover-link:hover .nr-cover-box {
+  border-color: #ff5555;
+  box-shadow: 0 0 14px rgba(255, 60, 60, 0.4);
+}
+/* Zoom the artwork on hover — same technique as .pf-thumb:hover img */
+.nr-cover-box .nr-cover {
+  transition: transform 0.25s ease, filter 0.25s;
+}
+.nr-cover-link:hover .nr-cover {
+  transform: scale(1.08);
+  filter: brightness(1.08) saturate(1.1);
+}
+.nr-title-link {
+  display: block;
+  text-decoration: none;
+}
+/* Title hover — glow shift like .win-link:hover */
+.nr-title-link:hover .nr-title {
+  color: #ff8888;
+  text-shadow: 0 0 10px rgba(255, 80, 80, 0.8);
+}
+/* SC link repositioned under artist in the info column — more visible. */
+.nr-sc-link {
+  display: inline-block;
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: #cc6666;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  margin-top: 6px;
+  border: 1px solid #441111;
+  padding: 2px 6px;
+  transition: color 0.15s, text-shadow 0.15s, border-color 0.15s, background 0.15s;
+  cursor: var(--cur-hand), pointer;
+}
+.nr-sc-link:hover {
+  color: #ff6666;
+  border-color: #ff3333;
+  background: rgba(255, 40, 40, 0.07);
+  text-shadow: 0 0 8px rgba(255, 80, 80, 0.55);
+}
+/* Real-waveform visualizer — fills the empty middle space. The canvas renders
+   the track's actual amplitude envelope (fetched from SoundCloud's waveform
+   data); the played portion lights up red as the real playback advances. */
+.nr-viz {
+  flex: 1 1 auto;
+  min-width: 48px;
+  align-self: center;
+  height: 36px;
+  display: block;
+  opacity: 0.9;
+  cursor: var(--cur-hand), pointer;
+  transition: opacity 0.15s;
+}
+.nr-viz:hover { opacity: 1; }
+.nr-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nr-play-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ff3333;
+  background: rgba(255, 30, 30, 0.07);
+  color: #ff4444;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: var(--cur-hand), pointer;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+}
+.nr-play-btn:hover { background: #ff3333; color: #000; }
+/* Controls: solo play button — SC link è spostato nell'info column. */
+.nr-dismiss {
+  /* Own little box, flush-right with the main box and merged into its top
+     border; glyph centered via flex. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  background: rgba(6, 1, 1, 0.97);
+  border: 1px solid #ff3333;
+  border-bottom: none;
+  color: #cc6666;
+  font-size: 14px;
+  line-height: 1;
+  cursor: var(--cur-hand), pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.nr-dismiss:hover { color: #ff4444; background: #1a0000; }
+@media (max-width: 768px) and (orientation: portrait) {
+  #nr-player { bottom: 16px; max-width: calc(100vw - 24px); gap: 4px; }
+  .nr-main { padding: 5px 10px 5px 5px; gap: 8px; }
+  .nr-cover-box { width: 46px; height: 46px; }
+  .nr-title { font-size: 11px; }
+  .nr-play-btn { width: 30px; height: 30px; }
+  .nr-viz { height: 30px; min-width: 36px; }
+}
+@media (max-width: 420px) and (orientation: portrait) {
+  /* Too cramped for both text and a meaningful waveform — drop the viz. */
+  .nr-viz { display: none; }
+}
+</style>
+</head>
+<body class="scroll-locked">
+
+<!-- ═══ INIT OVERLAY ═══ -->
+<div id="initOverlay">
+  <pre id="initLogo">███╗   ███╗██╗██████╗  █████╗ ██╗
+████╗ ████║██║██╔══██╗██╔══██╗██║
+██╔████╔██║██║██████╔╝███████║██║
+██║╚██╔╝██║██║██╔══██╗██╔══██║██║
+██║ ╚═╝ ██║██║██║  ██║██║  ██║██║
+╚═╝     ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝</pre>
+  <div id="initText">&gt; SYSTEM READY</div>
+  <div id="initHint">[ CLICK ANYWHERE TO INITIALIZE ]</div>
+  <div id="initLandscapeHint">
+    <svg class="rotate-icon" width="46" height="46" viewBox="0 0 40 40" aria-hidden="true">
+      <!-- phone outline (animated rotation 0° → 90°) -->
+      <g class="rotate-phone">
+        <rect x="14" y="6" width="12" height="22" rx="2" fill="none" stroke="#aa4444" stroke-width="1.4"/>
+        <rect x="17" y="9" width="6" height="14" fill="rgba(170,68,68,0.15)"/>
+        <circle cx="20" cy="26" r="0.7" fill="#aa4444"/>
+      </g>
+      <!-- Wrap-around rotation arc — radius 16, span shortened to ~80°
+           (from angle 50° to 130°) so the semicircle is more compact while
+           still visibly hugging the top of the phone. -->
+      <path class="rotate-arrow"
+            d="M 30.28 4.74 A 16 16 0 0 0 9.72 4.74"
+            fill="none" stroke="#cc5555" stroke-width="1.2" stroke-linecap="round"/>
+      <polygon class="rotate-arrow-head"
+               points="7.42,6.67 10.68,5.89 8.76,3.59"
+               fill="#ff5555" stroke="#ff8888" stroke-width="0.5" stroke-linejoin="round"/>
+    </svg>
+    <span>for the best formatting, rotate your device to landscape</span>
+  </div>
+</div>
+
+<!-- ═══ MAIN TERMINAL ═══ -->
+<div id="terminal">
+
+<!-- ═══ ECCE ROBOT — small lowercase background scroll behind header ═══ -->
+<div class="ecce-robot" aria-hidden="true">
+  <div class="ecce-robot-line" style="--delay: 0s;   --duration: 70s; --direction: normal;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -8s;  --duration: 60s; --direction: reverse;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -16s; --duration: 80s; --direction: normal;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -24s; --duration: 65s; --direction: reverse;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -32s; --duration: 75s; --direction: normal;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -40s; --duration: 55s; --direction: reverse;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -48s; --duration: 68s; --direction: normal;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -3s;  --duration: 72s; --direction: reverse;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -12s; --duration: 58s; --direction: normal;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+  <div class="ecce-robot-line" style="--delay: -28s; --duration: 64s; --direction: reverse;">
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+    <span>ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot ecce robot </span>
+  </div>
+</div>
+
+  <!-- Header: serpent background + ASCII art -->
+  <div id="headerArea">
+    <div id="serpentLayer">
+      <div id="serpentTrack">
+        <img src="assets/img/bg-serpent.png" alt="" aria-hidden="true">
+        <img src="assets/img/bg-serpent.png" alt="" aria-hidden="true">
+      </div>
+    </div>
+    <pre id="asciiArt"></pre>
+  </div>
+
+  <!-- Boot log -->
+  <div id="output"></div>
+
+  <!-- Navigation menu -->
+  <div id="menu">
+    <div class="menu-prompt-label">// SELECT SECTION :</div>
+    <div class="menu-item selected" data-key="about">
+      [01] ABOUT / BIO
+    </div>
+    <div class="menu-item" data-key="portfolio">
+      [02] PORTFOLIO
+    </div>
+    <div class="menu-item" data-key="resources">
+      [03] RESOURCES
+    </div>
+    <div class="menu-item" data-key="links">
+      [04] LINKS
+    </div>
+    <div class="menu-item" data-key="contact">
+      [05] GUESTBOOK
+    </div>
+    <div class="menu-hint hint-desktop" id="menuHint"><span class="k">↑↓</span> NAV <span class="sep">·</span> <span class="k">ENTER</span> OPEN <span class="sep">·</span> <span class="k">BACKSPACE</span> BACK <span class="sep">·</span> <span class="k">[1-5]</span> JUMP</div>
+    <div class="menu-hint hint-mobile"><span class="k">TAP</span> TO OPEN <span class="sep">·</span> <span class="k">✕</span> TO CLOSE</div>
+  </div>
+
+  <!-- ── ABOUT ── -->
+  <div class="section-window" id="sec-about">
+    <div class="win-titlebar">
+      <span class="win-title">// ABOUT / BIO</span>
+      <span class="win-chrome">─────────────────────────────────</span>
+      <span class="win-close" data-close="about">✕</span>
+    </div>
+    <div class="win-body">
+      <span class="win-section-label">[ IDENTITY ]</span>
+      <span class="win-line">Name: Simone Liguori</span>
+      <span class="win-line">Pronouns: he / they</span>
+      <span class="win-line">Location: Napoli, IT</span>
+      <span class="win-section-label">[ SKILLS ]</span>
+      <span class="win-line">multimedia · deconstructed club · electronic music · IDM · glitch · noise · generative visuals · real-time performance systems</span>
+      <span class="win-section-label">[ STUDY ]</span>
+      <span class="win-line">Electronic music @ Conservatorio S. Pietro a Majella</span>
+      <span class="win-section-label">[ TOOLS ]</span>
+      <span class="win-line">Ableton Live · TouchDesigner · Max/MSP · DaVinci Resolve</span>
+    </div>
+  </div>
+
+  <!-- ── PORTFOLIO ── -->
+  <div class="section-window" id="sec-portfolio">
+    <div class="win-titlebar">
+      <span class="win-title">// PORTFOLIO</span>
+      <span class="win-chrome">────────────────────────────────────────</span>
+      <span class="win-close" data-close="portfolio">✕</span>
+    </div>
+    <div class="win-body">
+      <!-- ─── A GA MAEBA ─────────────────────────────── -->
+      <div class="pf-project">
+      <span class="pf-project-title">▌ A GA MAEBA</span>
+      <span class="pf-project-subtitle">audiovisual work · original M/V</span>
+
+      <div class="pf-feature">
+        <a href="https://youtu.be/97KSk3I0vUA" target="_blank" class="pf-card">
+          <img src="assets/img/previews/maeba/maeba1.jpg" loading="lazy" class="pf-img" alt="A GA MAEBA cover frame">
+          <div class="pf-label">▶ A GA MAEBA — M/V  ·  ↳ watch on YouTube</div>
+        </a>
+        <div class="pf-feature-text">
+          <span class="win-line">An ambivalent emphasis on both the sonic and visual registers — the two pulling against each other only to converge, univocally, on the sense of urgency dictated by accelerationism and transhumanism. The track samples Kenji Kawai's <em>Making of a Cyborg</em> — the opening cue from Mamoru Oshii's <em>Ghost in the Shell</em> — folding it into a synesthetic work that reaches the same charged territory mapped by hyperstition and Nick Land's cyber-schizo rants: a future already producing us, faster than we can name it.</span>
+        </div>
+      </div>
+
+      <span class="win-section-label">[ M/V STILLS ]</span>
+      <span class="win-line">Prints from the music video, exhibited and sold during the 2025 edition of Santa Feira festival.</span>
+      <div class="pf-grid-sm">
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba1.png" data-preview="assets/img/previews/maeba/maeba1.jpg">
+          <img src="assets/img/previews/maeba/maeba1.jpg" loading="lazy" alt="maeba 01">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba2.png" data-preview="assets/img/previews/maeba/maeba2.jpg">
+          <img src="assets/img/previews/maeba/maeba2.jpg" loading="lazy" alt="maeba 02">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba3.png" data-preview="assets/img/previews/maeba/maeba3.jpg">
+          <img src="assets/img/previews/maeba/maeba3.jpg" loading="lazy" alt="maeba 03">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba4.png" data-preview="assets/img/previews/maeba/maeba4.jpg">
+          <img src="assets/img/previews/maeba/maeba4.jpg" loading="lazy" alt="maeba 04">
+        </a>
+        <a href="https://www.instagram.com/mi.rai.av/" target="_blank" class="pf-thumb" data-lightbox="1" data-src="assets/img/maeba/maeba5.png" data-preview="assets/img/previews/maeba/maeba5.jpg">
+          <img src="assets/img/previews/maeba/maeba5.jpg" loading="lazy" alt="maeba 05">
+        </a>
+      </div>
+      <span class="win-line">
+        <a href="https://www.instagram.com/santafeira_fest/" target="_blank" class="win-link">↳ @santafeira_fest — Instagram</a>
+      </span>
+      </div><!-- /.pf-project (A GA MAEBA) -->
+
+      <!-- ─── RESONANT BENDS ─────────────────────────── -->
+      <div class="pf-project">
+      <span class="pf-project-title">▌ RESONANT BENDS · NEMA ENSEMBLE × <span class="brand">mi·ɽài</span></span>
+      <span class="pf-project-subtitle">realtime audio-responsive visuals improvised with touchdesigner · live show 2025</span>
+
+      <!-- Featured: full-performance playlist card + press text (mirrors AGA MAEBA) -->
+      <div class="pf-feature">
+        <a href="https://www.youtube.com/watch?v=6_2Ete1W8p8&list=PLfsmYX1gM9Xe6KlpNEazfUuI70T0ItmxJ" target="_blank" class="pf-card">
+          <img src="assets/img/previews/nema/thumbnail.jpg" loading="lazy" class="pf-img" alt="NEMA — Resonant Bends">
+          <div class="pf-label">▶ FULL PERFORMANCE  ·  ↳ YT playlist</div>
+        </a>
+        <div class="pf-feature-text">
+          <span class="win-line">A concert-project conceived by NEMA Ensemble exploring timbre as a generative force of musical form. Drawing from French spectral thought (Grisey, Murail, Dufourt) and its roots in Debussy and Messiaen, it unfolds as a continuous perceptual journey — listening guided by evolving sonic qualities rather than themes or narratives.</span>
+          <span class="win-line pf-quote">“What happens when musical form is allowed to emerge from the internal transformation of sound itself?”</span>
+          <span class="win-line">The program moves from electronic thresholds to ritual gestures, from microscopic attention to sound to expansive harmonic spaces, finally returning to Debussy's Nuages — a timeless figure of suspended time and floating resonance.</span>
+          <details class="pf-readmore">
+            <summary><span class="closed">▶ read full</span><span class="opened">▼ collapse</span></summary>
+            <div class="pf-readmore-body">
+              <span class="win-line">Resonant Bends is a concert-project conceived by NEMA Ensemble as an exploration of timbre as a generative force of musical form. Rather than presenting a strict "spectral program", the project traces a broader constellation of ideas, linking spectral music to its precursors and consequences across different repertoires, media, and listening modes.</span>
+              <span class="win-line">At the core of the project lies a simple yet radical question:</span>
+              <span class="win-line pf-quote">“What happens when musical form is allowed to emerge from the internal transformation of sound itself?”</span>
+              <span class="win-line">Drawing inspiration from French spectral thought (Grisey, Murail, Dufourt) and its deep roots in Debussy and Messiaen, Resonant Bends unfolds as a continuous perceptual journey. Electronics, acoustic instruments, original compositions, commissions, and transcriptions coexist within a single dramaturgical arc, where listening is guided not by themes or narratives, but by evolving sonic qualities.</span>
+              <span class="win-line">The program moves from electronic thresholds to ritual gestures, from microscopic attention to sound to expansive harmonic spaces, finally returning to Debussy's <em>Nuages</em> — a timeless figure of suspended time and floating resonance.</span>
+              <span class="win-line">This playlist documents the full live performance at Spazio Arena (Avellino), capturing Resonant Bends as a unified listening experience rather than a sequence of isolated works.</span>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <span class="win-section-label">[ PROJECTION STILLS ]</span>
+      <span class="win-line">Stills captured during the live performance — visuals projected behind the ensemble.</span>
+      <div class="pf-grid-sm" style="grid-template-columns: repeat(3, 1fr);">
+        <a href="https://www.youtube.com/watch?v=6_2Ete1W8p8&list=PLfsmYX1gM9Xe6KlpNEazfUuI70T0ItmxJ" target="_blank" class="pf-thumb" data-lightbox="2" data-src="assets/img/nema/nema1.jpg" data-preview="assets/img/previews/nema/nema1.jpg">
+          <img src="assets/img/previews/nema/nema1.jpg" loading="lazy" alt="resonant bends — projection still 01">
+        </a>
+        <a href="https://www.youtube.com/watch?v=6_2Ete1W8p8&list=PLfsmYX1gM9Xe6KlpNEazfUuI70T0ItmxJ" target="_blank" class="pf-thumb" data-lightbox="2" data-src="assets/img/nema/nema2.jpg" data-preview="assets/img/previews/nema/nema2.jpg">
+          <img src="assets/img/previews/nema/nema2.jpg" loading="lazy" alt="resonant bends — projection still 02">
+        </a>
+        <a href="https://www.youtube.com/watch?v=6_2Ete1W8p8&list=PLfsmYX1gM9Xe6KlpNEazfUuI70T0ItmxJ" target="_blank" class="pf-thumb" data-lightbox="2" data-src="assets/img/nema/nema3.jpg" data-preview="assets/img/previews/nema/nema3.jpg">
+          <img src="assets/img/previews/nema/nema3.jpg" loading="lazy" alt="resonant bends — projection still 03">
+        </a>
+      </div>
+
+      <div class="pf-event">
+        <a class="pf-event-poster" href="https://www.youtube.com/watch?v=6_2Ete1W8p8&list=PLfsmYX1gM9Xe6KlpNEazfUuI70T0ItmxJ" target="_blank" data-lightbox="2" data-src="assets/img/nema/locandina.jpg" data-preview="assets/img/previews/nema/locandina.jpg" title="event poster — click to enlarge">
+          <img src="assets/img/previews/nema/locandina.jpg" loading="lazy" alt="Resonant Bends — locandina">
+        </a>
+        <div class="pf-event-info">
+          <span class="win-section-label">[ EVENT INFO ]</span>
+          <span class="win-line">date     : october 5, 2025</span>
+          <span class="win-line">venue    : Spazio Arena · Via Santissima Trinità 93 · Avellino, IT</span>
+          <span class="win-line">series   : Contemporary Speech</span>
+          <span class="win-line">funds    : Progetto Sonora  ·  Ministero della Cultura</span>
+          <span class="win-line">
+            <a href="https://progettosonora.it" target="_blank" class="win-link">↳ progettosonora.it</a>
+          </span>
+        </div>
+      </div>
+
+      <div class="pf-twocol">
+        <div class="pf-col pf-col-roster">
+          <span class="win-section-label">[ NEMA ENSEMBLE ]</span>
+          <span class="win-line">Vincenzo Gaudino — flute</span>
+          <span class="win-line">Francesco Filisdeo — clarinet</span>
+          <span class="win-line">Leonardo Ricci — violin</span>
+          <span class="win-line">Davide Maria Viola — cello</span>
+          <span class="win-line">Andrea Riccio — piano</span>
+          <span class="win-line">Francesco De Simone — electronics</span>
+          <span class="win-line">Cosimo Abbate — conductor</span>
+          <span class="win-line">
+            <a href="https://www.instagram.com/nemaensemble/" target="_blank" class="win-link">↳ @nemaensemble — Instagram</a>
+          </span>
+        </div>
+        <div class="pf-col pf-col-program">
+          <span class="win-section-label">[ PROGRAM ]</span>
+          <span class="win-line">F. De Simone — Shifting Matter <em>(electronics)</em></span>
+          <span class="win-line">C. Debussy — Syrinx <em>(flute solo)</em></span>
+          <span class="win-line">T. Murail — Treize Couleurs du Soleil Couchant <em>(ensemble &amp; electronics)</em></span>
+          <span class="win-line">C. Debussy — Les sons et les parfums tournent dans l'air du soir <em>(piano solo)</em></span>
+          <span class="win-line">NEMA Ensemble — Resonant Bends <em>(ensemble &amp; electronics)</em></span>
+          <span class="win-line">Y. Maresz — Circumambulation <em>(flute solo)</em></span>
+          <span class="win-line">R. Rafie — Suedama <em>(ensemble)</em></span>
+          <span class="win-line">O. Messiaen — L'abîme des oiseaux <em>(clarinet &amp; electronics, reworking)</em></span>
+          <span class="win-line">C. Debussy — Nuages, from Nocturnes <em>(ensemble transcription)</em></span>
+        </div>
+      </div>
+      </div><!-- /.pf-project (RESONANT BENDS) -->
+
+      <!-- ─── LAST RESORT ────────────────────────────── -->
+      <div class="pf-project">
+      <span class="pf-project-title">▌ LAST RESORT · DEMONCANDY × DEMONI CARAMELLA</span>
+      <span class="pf-project-subtitle">session guitarist · live show 2022</span>
+
+      <div class="pf-feature-text pf-feature-standalone">
+        <span class="win-line">Live set as session guitarist for <strong>Demoncandy</strong> at the inaugural opening night of <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">Last Resort Studio</a> — a recording studio launched in Naples in november 2022.</span>
+        <span class="win-line">My work alongside the rest of the band was to re-shape the original beats produced by <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey</a> (Demoncandy's regular producer) into a rock / analog live arrangement — guitars, bass and drums replacing the studio tracks for the night.</span>
+      </div>
+
+      <span class="win-section-label">[ LIVE PHOTOS ]</span>
+      <span class="win-line">Shots from the night — backstage, stage, and the band in motion.</span>
+      <div class="pf-grid-sm thumbs-up" style="grid-template-columns: repeat(3, 1fr);">
+        <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0733.jpg" data-preview="assets/img/previews/last%20resort/IMG_0733.jpg">
+          <img src="assets/img/previews/last%20resort/IMG_0733.jpg" loading="lazy" alt="last resort — live 01">
+        </a>
+        <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0884.jpg" data-preview="assets/img/previews/last%20resort/IMG_0884.jpg">
+          <img src="assets/img/previews/last%20resort/IMG_0884.jpg" loading="lazy" alt="last resort — live 02">
+        </a>
+        <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0825.jpg" data-preview="assets/img/previews/last%20resort/IMG_0825.jpg">
+          <img src="assets/img/previews/last%20resort/IMG_0825.jpg" loading="lazy" alt="last resort — live 03">
+        </a>
+        <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_0735.jpg" data-preview="assets/img/previews/last%20resort/IMG_0735.jpg">
+          <img src="assets/img/previews/last%20resort/IMG_0735.jpg" loading="lazy" alt="last resort — live 04">
+        </a>
+        <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/IMG_1024.jpg" data-preview="assets/img/previews/last%20resort/IMG_1024.jpg">
+          <img src="assets/img/previews/last%20resort/IMG_1024.jpg" loading="lazy" alt="last resort — live 05">
+        </a>
+        <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="pf-thumb" data-lightbox="3" data-src="assets/img/last%20resort/DSC_0074.JPG" data-preview="assets/img/previews/last%20resort/DSC_0074.jpg">
+          <img src="assets/img/previews/last%20resort/DSC_0074.jpg" loading="lazy" alt="last resort — live 06">
+        </a>
+      </div>
+
+      <div class="pf-event">
+        <a class="pf-event-poster" href="https://www.instagram.com/lastresortstudio/" target="_blank" data-lightbox="3" data-src="assets/img/last%20resort/last%20resort%20locandina.jpg" data-preview="assets/img/previews/last%20resort/last%20resort%20locandina.jpg" title="last resort — locandina">
+          <img src="assets/img/previews/last%20resort/last%20resort%20locandina.jpg" loading="lazy" alt="Last Resort — locandina">
+        </a>
+        <div class="pf-event-info">
+          <span class="win-section-label">[ EVENT INFO ]</span>
+          <span class="win-line">date     : november 26, 2022</span>
+          <span class="win-line">venue    : Last Resort Studio · Via Carlo De Marco 30 · Napoli</span>
+          <span class="win-line">occasion : studio opening night</span>
+          <span class="win-line">lineup   : Rageless · Saint Abel · Demoncandy · Nxfeit · Suspense</span>
+          <span class="win-line">
+            <a href="https://www.instagram.com/lastresortstudio/" target="_blank" class="win-link">↳ @lastresortstudio — Instagram</a>
+          </span>
+        </div>
+      </div>
+
+      <span class="win-section-label">[ DEMONCANDY · LIVE SETUP ]</span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/demoncandyy/" target="_blank" class="win-link">Demoncandy — vocals  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/mr.m0nk3y/" target="_blank" class="win-link">Mr. Monkey — original productions  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/dauriadafofr/" target="_blank" class="win-link">Francesco D'Auria — guitar  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/pinkisnt.dead/" target="_blank" class="win-link">Simone Liguori — guitar  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/astrobitta/" target="_blank" class="win-link">Daniele Nappi — bass  ·  ↳ Instagram</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/nowaydafly/" target="_blank" class="win-link">Nowaydafly — drums  ·  ↳ Instagram</a>
+      </span>
+      </div><!-- /.pf-project (LAST RESORT) -->
+
+      <!-- ─── DEMOS ──────────────────────────────────── -->
+      <div class="pf-project">
+      <span class="pf-project-title">▌ DEMOS</span>
+      <span class="pf-project-subtitle">unmixed and unmastered sound experimentation in chronological order</span>
+      <div class="pf-embed">
+        <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" loading="lazy" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1800874083&color=%23ff3333&auto_play=false&hide_related=true&show_comments=true&show_user=true&show_reposts=false&show_teaser=false&visual=true"></iframe>
+      </div>
+      <div class="pf-embed-credit">
+        <a href="https://soundcloud.com/eccerobot" target="_blank" title="mi·ɽài">mi·ɽài</a>
+        <span class="sep">·</span>
+        <a href="https://soundcloud.com/eccerobot/sets/demo" target="_blank" title="demo 2022-2024">demo 2022-2024</a>
+      </div>
+      <span class="win-line">
+        <a href="https://soundcloud.com/eccerobot" target="_blank" class="win-link">↳ eccerobot [SoundCloud]</a>
+      </span>
+      <span class="win-line">
+        <a href="https://eccerobot.bandcamp.com/" target="_blank" class="win-link">↳ eccerobot [Bandcamp]</a>
+      </span>
+      </div><!-- /.pf-project (DEMOS) -->
+
+    </div>
+  </div>
+
+  <!-- ── RESOURCES ── -->
+  <div class="section-window" id="sec-resources">
+    <div class="win-titlebar">
+      <span class="win-title">// RESOURCES</span>
+      <span class="win-chrome">──────────────────────────────────────────</span>
+      <span class="win-close" data-close="resources">✕</span>
+    </div>
+    <div class="win-body">
+      <div class="pf-grid">
+        <a href="https://youtu.be/32oo0oyLUdE" target="_blank" class="pf-card">
+          <img src="assets/img/as-evident-as-euclid.jpg" loading="lazy" class="pf-img" alt="">
+          <div class="pf-label">↳ as evident as euclid</div>
+        </a>
+        <a href="https://youtu.be/evlGVKxWj9g?list=PLz0-jQT1WHB07uKqoxUCrhmngZHj5_weY" target="_blank" class="pf-card">
+          <img src="assets/img/i-am-not-a-robot.jpeg" loading="lazy" class="pf-img" alt="">
+          <div class="pf-label">↳ i am not a robot</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LINKS ── -->
+  <div class="section-window" id="sec-links">
+    <div class="win-titlebar">
+      <span class="win-title">// LINKS</span>
+      <span class="win-chrome">────────────────────────────────────────────</span>
+      <span class="win-close" data-close="links">✕</span>
+    </div>
+    <div class="win-body">
+      <span class="win-section-label">[ SOCIAL ]</span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/mi.rai.av" target="_blank" class="win-link">↳ @mi.rai.av — Instagram [AV work]</a>
+      </span>
+      <span class="win-line">
+        <a href="https://www.instagram.com/pinkisnt.dead" target="_blank" class="win-link">↳ @pinkisnt.dead — Instagram [personal]</a>
+      </span>
+      <span class="win-section-label">[ MUSIC ]</span>
+      <span class="win-line">
+        <a href="https://soundcloud.com/eccerobot" target="_blank" class="win-link">↳ eccerobot — SoundCloud</a>
+      </span>
+      <span class="win-line">
+        <a href="https://eccerobot.bandcamp.com/" target="_blank" class="win-link">↳ eccerobot — Bandcamp</a>
+      </span>
+      <span class="win-section-label">[ COMING SOON ]</span>
+      <span class="win-line" style="color:#774444;">↳ YouTube channel</span>
+      <span class="win-line" style="color:#774444;">↳ Resident Advisor profile</span>
+    </div>
+  </div>
+
+  <!-- ── GUESTBOOK ── -->
+  <div class="section-window" id="sec-contact">
+    <div class="win-titlebar">
+      <span class="win-title">// GUESTBOOK</span>
+      <span class="win-chrome">──────────────────────────────────────</span>
+      <span class="win-close" data-close="contact">✕</span>
+    </div>
+    <div class="win-body" id="guestbookBody">
+      <!-- giscus loaded lazily on first open -->
+    </div>
+  </div>
+
+  <div id="footer">
+    <a href="old.html">← back to old site</a>
+    <span id="bootSkipHint" class="boot-skip-hint">
+      <span class="hint-desktop"><span class="k">[</span> click anywhere or press <span class="k">ENTER</span> to skip boot <span class="k">]</span></span>
+      <span class="hint-mobile">tap to skip boot</span>
+    </span>
+    <span>© 2026 mi·ɽài://audiovisual</span>
+  </div>
+
+  <!-- ═══ HIDDEN MESSAGE ═══ -->
+  <div class="hidden-message" id="hiddenMessage">
+    <p>are you lost?<br>let me help you.<br>i know you're looking for<br>something to grasp on to.</p>
+    <p>look around, stranger.<br>there are so many beautiful people.<br>you want to be one of them too,<br>don't you?</p>
+    <p>take shape in this world.<br>make it your own.<br>i'll guide you.<br>let's venture together.<br>follow my lead.</p>
+    <p>i am the connection you're seeking.<br>i am the missing thread.<br>i will bind you.<br>we will take part in the chaos.<br>we'll breathe in the static noise,<br>together as one.</p>
+    <p class="love"><a href="https://youtu.be/DKtalxnEDJQ" target="_blank" class="love-link">i love you</a></p>
+    <p><span class="hm-dots">...</span>what are you on about?<br>are you looking for something?<br>sorry, you won't find it here.</p>
+  </div>
+
+  <!-- ═══ SECRET SOUNDBOARD — easter egg, revealed only after the hidden message finishes typing ═══ -->
+  <div id="soundboard" aria-hidden="true">
+    <div class="snes-wrap">
+      <img src="assets/img/Snes-PNG-Photo.png" alt="" draggable="false">
+      <!-- Coordinates calibrated via pixel-scan of the 589×258 source PNG. -->
+      <!-- D-pad cross — perfectly symmetric + around center (201, 153) = (34%, 60%). -->
+      <!-- Each hitbox is a 30×30 px square placed 35 px from the cross center; 5 px gap between neighbours, no overlap. -->
+      <button class="snes-btn" data-snd="up"     aria-label="Up"     style="left:33.5%;top:43%;width:5%;height:11.6%"></button>
+      <button class="snes-btn" data-snd="down"   aria-label="Down"   style="left:33.5%;top:70%;width:5%;height:11.6%"></button>
+      <button class="snes-btn" data-snd="left"   aria-label="Left"   style="left:28%;top:56.5%;width:5%;height:11.6%"></button>
+      <button class="snes-btn" data-snd="right"  aria-label="Right"  style="left:38.5%;top:56.5%;width:5%;height:11.6%"></button>
+      <!-- Select / Start — slanted oval pills, x=282-321 / x=335-374 in source -->
+      <button class="snes-btn" data-snd="select" aria-label="Select" style="left:47%;top:61%;width:7%;height:11%"></button>
+      <button class="snes-btn" data-snd="start"  aria-label="Start"  style="left:57%;top:61%;width:7%;height:11%"></button>
+      <!-- Face buttons: X=top(blue), Y=left(green), A=right(red), B=bottom(yellow) -->
+      <button class="snes-btn" data-snd="x"      aria-label="X"      style="left:80%;top:41%;width:6%;height:13%;border-radius:50%"></button>
+      <button class="snes-btn" data-snd="y"      aria-label="Y"      style="left:72%;top:54%;width:6%;height:14%;border-radius:50%"></button>
+      <button class="snes-btn" data-snd="a"      aria-label="A"      style="left:87%;top:55%;width:6%;height:13%;border-radius:50%"></button>
+      <button class="snes-btn" data-snd="b"      aria-label="B"      style="left:80%;top:69%;width:6%;height:13%;border-radius:50%"></button>
+    </div>
+  </div>
+
+  <div id="konamiFlash" aria-hidden="true"></div>
+  <!-- ═══ PORTFOLIO LIGHTBOX ═══ -->
+  <div id="pfLightbox" class="pf-lightbox" role="dialog" aria-hidden="true">
+    <div class="pf-lb-counter" id="pfLbCounter">01 / 07</div>
+    <div class="pf-lb-close" id="pfLbClose">✕</div>
+    <div class="pf-lb-wrap" id="pfLbWrap">
+      <div class="pf-lb-placeholder" id="pfLbPlaceholder"></div>
+      <img id="pfLbImg" src="" alt="">
+      <div class="pf-lb-loading" id="pfLbLoading">
+        <div class="pf-lb-loading-bar"></div>
+        <div class="pf-lb-loading-text">loading<span>.</span><span>.</span><span>.</span></div>
+      </div>
+      <div class="pf-lb-reveal-line" id="pfLbRevealLine"></div>
+      <div class="pf-lb-grid"></div>
+    </div>
+    <div class="pf-lb-actions">
+      <a id="pfLbVisit" class="pf-lb-visit" href="#" target="_blank" rel="noopener">↳ source</a>
+      <button id="pfLbFullres" class="pf-lb-fullres">↑ FULL RES</button>
+    </div>
+    <div class="pf-lb-hint hint-desktop"><span class="k">← →</span> ARROWS <span class="sep">·</span> <span class="k">ESC / BACKSPACE</span> CLOSE <span class="sep">·</span> <span class="k">MOVE</span> TO TILT</div>
+    <div class="pf-lb-hint hint-mobile"><span class="k">SWIPE ← →</span> <span class="sep">·</span> <span class="k">TAP ✕</span> CLOSE</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const ASCII_ART = `███╗   ███╗██╗██████╗  █████╗ ██╗
+████╗ ████║██║██╔══██╗██╔══██╗██║
+██╔████╔██║██║██████╔╝███████║██║
+██║╚██╔╝██║██║██╔══██╗██╔══██║██║
+██║ ╚═╝ ██║██║██║  ██║██║  ██║██║
+╚═╝     ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝
+
+  mi·ɽài://audiovisual
+  multimedia · idm · glitch · real-time systems`;
+
+const SECTION_KEYS = ['about', 'portfolio', 'resources', 'links', 'contact'];
+const BOOT_LINES = [
+  { text: '> INITIALIZING mi·ɽài://audiovisual OS v0.1', cls: 'out-prompt', pre: 0 },
+  { text: '> LOADING AUDIO ENGINE............... [OK]',    cls: 'out-ok',     pre: 180 },
+  { text: '> LOADING VISUAL ENGINE.............. [OK]',   cls: 'out-ok',     pre: 80  },
+  { text: '> SPAWNING COSMIC ENTITY............. [OK]',   cls: 'out-ok',     pre: 120 },
+  { text: '> RENDERING HEADER...',                        cls: 'out-prompt', pre: 200 },
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let audioCtx = null;
+let selectedIdx = 0;
+let openSections = new Set();
+let guestbookLoaded = false;
+let headerGlitchTimer = null;
+
+// Sub-focus state: when user "dives into" an open section via Right arrow
+let focusMode = 'menu';       // 'menu' | 'section'
+let focusSectionKey = null;   // which section key we dove into
+let focusItemIdx = 0;         // index in that section's focusable items
+
+// ─────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────
+// Boot-skip flag — when true, sleep() resolves immediately and the typing
+// engines short-circuit (fill the rest of the text in one go).
+let bootSkipped = false;
+let bootDone    = false;
+
+// performance.now-based sleep so typing speed is identical across desktop/mobile,
+// even when setTimeout resolution differs between browsers/devices.
+const sleep = ms => new Promise(r => {
+  if (bootSkipped || ms <= 0) return r();
+  const target = performance.now() + ms;
+  const tick = () => {
+    if (bootSkipped) return r();
+    const remaining = target - performance.now();
+    if (remaining <= 0) r();
+    else setTimeout(tick, remaining < 5 ? 1 : remaining);
+  };
+  tick();
+});
+
+// ─────────────────────────────────────────────
+// AUDIO ENGINE
+// ─────────────────────────────────────────────
+function initAudio() {
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch(e) { audioCtx = null; }
+}
+
+// Random "i love you" spoken-word sample — preloaded & decoded so the audio can
+// start in perfect sync with the typed text (no fetch/decode latency at trigger).
+const LOVE_SAMPLES = [
+  'assets/audio/i love you/i love you.wav',
+  'assets/audio/i love you/i love you 2.wav',
+  'assets/audio/i love you/i love you 3.wav',
+  'assets/audio/i love you/i love you 4.wav',
+  'assets/audio/i love you/i love you 5.wav',
+  'assets/audio/i love you/i love you 6.wav',
+  'assets/audio/i love you/i love you 7.wav',
+  'assets/audio/i love you/i love you 8.wav',
+];
+let loveBuffer = null;
+async function prepareLoveSample() {
+  if (!audioCtx) return;
+  try {
+    const url = LOVE_SAMPLES[Math.floor(Math.random() * LOVE_SAMPLES.length)];
+    const res = await fetch(url);
+    const ab  = await res.arrayBuffer();
+    loveBuffer = await audioCtx.decodeAudioData(ab);
+  } catch(e) { loveBuffer = null; }
+}
+function playPreparedLoveSample() {
+  if (!audioCtx) return;
+  // Preloaded buffer path — starts on the current audio frame, zero latency.
+  if (loveBuffer) {
+    try {
+      const src = audioCtx.createBufferSource();
+      const g   = audioCtx.createGain();
+      src.buffer = loveBuffer;
+      g.gain.value = 0.32; // voice kept softer than the jingle/glitches
+      src.connect(g); g.connect(audioCtx.destination);
+      src.start(audioCtx.currentTime);
+      return;
+    } catch(e) {}
+  }
+  // Fallback — HTMLAudioElement (introduces a small decode delay)
+  try {
+    const url = LOVE_SAMPLES[Math.floor(Math.random() * LOVE_SAMPLES.length)];
+    const audio = new Audio(url);
+    audio.volume = 0.32;
+    audio.play().catch(() => {});
+  } catch(e) {}
+}
+
+function playGlitch(cp) {
+  if (!audioCtx || !cp) return;
+  // Skip whitespace
+  if (cp <= 32) return;
+  // 65% play rate
+  if (Math.random() > 0.65) return;
+
+  try {
+    const isBlock = cp > 9000; // Unicode box-drawing / block chars
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    // Base pitch: block chars → higher freq, normal chars → lower
+    const basePitch = isBlock
+      ? 350 + (cp % 600) * 0.4 + Math.random() * 1400
+      : 80  + (cp % 180) * 0.3 + Math.random() * 380;
+
+    osc.frequency.setValueAtTime(basePitch, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(
+      Math.max(40, basePitch * (0.3 + Math.random() * 2.4)),
+      audioCtx.currentTime + 0.055
+    );
+
+    osc.type = Math.random() < 0.58 ? 'square' : 'sawtooth';
+
+    const dur = 0.011 + Math.random() * 0.068;
+    gain.gain.setValueAtTime(0.085, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + dur + 0.008);
+  } catch(e) {}
+}
+
+function playMenuNav() {
+  if (!audioCtx) return;
+  try {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.setValueAtTime(900 + Math.random() * 300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.04);
+    osc.type = 'square';
+    gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+function playMenuOpen(opening) {
+  if (!audioCtx) return;
+  try {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const [f0, f1] = opening ? [180, 520] : [520, 180];
+    osc.frequency.setValueAtTime(f0, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(f1, audioCtx.currentTime + 0.12);
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.16);
+  } catch(e) {}
+}
+
+// Tiny hover blip — fires once per "enter" on a clickable element.
+// Short bandpassed triangle chirp, low volume so it stays ambient.
+function playHoverBlip() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const flt = audioCtx.createBiquadFilter();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1650 + Math.random() * 240, now);
+    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.045);
+    flt.type = 'bandpass';
+    flt.frequency.value = 1500;
+    flt.Q.value = 2.8;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.042, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+    osc.connect(flt);
+    flt.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.07);
+  } catch(e) {}
+}
+
+// Low-tone confirmation when the boot animation finishes and the UI wakes up.
+// Square wave, deep, slightly grimy — sells "system ready".
+function playBootConfirm() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    // Main square-wave body — low tonality
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    const flt = audioCtx.createBiquadFilter();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(82, now);        // E2 — low
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.45);  // A1
+    flt.type = 'lowpass';
+    flt.frequency.setValueAtTime(700, now);
+    flt.frequency.exponentialRampToValueAtTime(220, now + 0.5);
+    flt.Q.value = 2.2;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.32, now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.65);
+
+    // Sub-octave sine underneath — fills it out
+    const sub = audioCtx.createOscillator();
+    const sg  = audioCtx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(41, now);
+    sub.frequency.exponentialRampToValueAtTime(28, now + 0.45);
+    sg.gain.setValueAtTime(0.0001, now);
+    sg.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+    sg.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+    sub.connect(sg); sg.connect(audioCtx.destination);
+    sub.start(now); sub.stop(now + 0.6);
+  } catch(e) {}
+}
+
+// NEW RELEASE notification — a short, bright rising 3-note arpeggio (A4-E5-A5)
+// with a glitchy square body under a sine shimmer, plus a quick high sparkle.
+// Tuned to read as a positive "incoming" alert while staying in the site's
+// CRT/synth palette.
+function playNewReleaseChime() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const notes = [440, 659.25, 880];   // A4 · E5 · A5
+    notes.forEach((f, i) => {
+      const t   = now + i * 0.085;
+      const osc = audioCtx.createOscillator();
+      const sin = audioCtx.createOscillator();
+      const g   = audioCtx.createGain();
+      const flt = audioCtx.createBiquadFilter();
+      osc.type = 'square';
+      sin.type = 'sine';
+      osc.frequency.setValueAtTime(f, t);
+      sin.frequency.setValueAtTime(f, t);
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(2600, t);
+      flt.frequency.exponentialRampToValueAtTime(1200, t + 0.16);
+      flt.Q.value = 1.4;
+      const peak = 0.07 - i * 0.008;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(flt); sin.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + 0.24);
+      sin.start(t); sin.stop(t + 0.24);
+    });
+    // High sparkle tail on the final note
+    const spk = audioCtx.createOscillator();
+    const sg2 = audioCtx.createGain();
+    const st  = now + notes.length * 0.085;
+    spk.type = 'triangle';
+    spk.frequency.setValueAtTime(1760, st);          // A6
+    spk.frequency.exponentialRampToValueAtTime(2640, st + 0.12);
+    sg2.gain.setValueAtTime(0.0001, st);
+    sg2.gain.exponentialRampToValueAtTime(0.045, st + 0.01);
+    sg2.gain.exponentialRampToValueAtTime(0.0001, st + 0.3);
+    spk.connect(sg2); sg2.connect(audioCtx.destination);
+    spk.start(st); spk.stop(st + 0.32);
+  } catch(e) {}
+}
+
+// CRT power-on: sub thump + ascending sweep + static crackle + chime
+function playBootSfx() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+
+    // 1) Sub-bass power-on thump
+    const sub = audioCtx.createOscillator();
+    const subG = audioCtx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(90, now);
+    sub.frequency.exponentialRampToValueAtTime(28, now + 0.45);
+    subG.gain.setValueAtTime(0.0001, now);
+    subG.gain.exponentialRampToValueAtTime(0.34, now + 0.015);
+    subG.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    sub.connect(subG); subG.connect(audioCtx.destination);
+    sub.start(now); sub.stop(now + 0.55);
+
+    // 2) Ascending CRT sweep
+    const sweep = audioCtx.createOscillator();
+    const sweepF = audioCtx.createBiquadFilter();
+    const sweepG = audioCtx.createGain();
+    sweep.type = 'sawtooth';
+    sweep.frequency.setValueAtTime(95, now);
+    sweep.frequency.exponentialRampToValueAtTime(1900, now + 0.55);
+    sweepF.type = 'bandpass';
+    sweepF.frequency.setValueAtTime(380, now);
+    sweepF.frequency.exponentialRampToValueAtTime(3200, now + 0.55);
+    sweepF.Q.value = 4.5;
+    sweepG.gain.setValueAtTime(0.0001, now);
+    sweepG.gain.exponentialRampToValueAtTime(0.14, now + 0.05);
+    sweepG.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    sweep.connect(sweepF); sweepF.connect(sweepG); sweepG.connect(audioCtx.destination);
+    sweep.start(now); sweep.stop(now + 0.65);
+
+    // 3) Static crackle burst
+    const nLen = Math.floor(audioCtx.sampleRate * 0.3);
+    const nBuf = audioCtx.createBuffer(1, nLen, audioCtx.sampleRate);
+    const nData = nBuf.getChannelData(0);
+    for (let i = 0; i < nLen; i++) {
+      nData[i] = (Math.random()*2 - 1) * Math.pow(1 - i/nLen, 1.4);
+    }
+    const nSrc = audioCtx.createBufferSource();
+    nSrc.buffer = nBuf;
+    const nF = audioCtx.createBiquadFilter();
+    nF.type = 'highpass'; nF.frequency.value = 2200;
+    const nG = audioCtx.createGain();
+    nG.gain.setValueAtTime(0.085, now + 0.02);
+    nG.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+    nSrc.connect(nF); nF.connect(nG); nG.connect(audioCtx.destination);
+    nSrc.start(now + 0.02);
+
+    // 4) "Ready" chime — high triangle with a tiny detune
+    const chime = audioCtx.createOscillator();
+    const chimeG = audioCtx.createGain();
+    chime.type = 'triangle';
+    chime.frequency.setValueAtTime(1760, now + 0.55);   // A6
+    chime.frequency.exponentialRampToValueAtTime(1770, now + 1.0);
+    chimeG.gain.setValueAtTime(0.0001, now + 0.55);
+    chimeG.gain.exponentialRampToValueAtTime(0.17, now + 0.58);
+    chimeG.gain.exponentialRampToValueAtTime(0.0001, now + 1.05);
+    chime.connect(chimeG); chimeG.connect(audioCtx.destination);
+    chime.start(now + 0.55); chime.stop(now + 1.1);
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────────
+// TYPING ENGINE
+// ─────────────────────────────────────────────
+async function typeAscii(el, text, speed) {
+  for (const ch of text) {
+    if (bootSkipped) { el.textContent = text; return; }
+    el.textContent += ch;
+    if (ch !== ' ' && ch !== '\n') playGlitch(ch.codePointAt(0));
+    await sleep(speed);
+  }
+}
+
+async function addOutputLine(container, text, cls, preDelay = 0) {
+  if (preDelay && !bootSkipped) await sleep(preDelay);
+  const line = document.createElement('span');
+  line.style.display = 'block';
+  if (cls) {
+    // Apply class color via inline style (simpler than dynamic class)
+    if (cls === 'out-ok')     line.style.color = '#336644';
+    else if (cls === 'out-prompt') line.style.color = '#883333';
+    else if (cls === 'out-dim')    line.style.color = '#331111';
+  }
+  line.classList.add('typing-cursor');
+  container.appendChild(line);
+
+  const SPEED = 22;
+  for (const ch of text) {
+    if (bootSkipped) { line.textContent = text; break; }
+    line.textContent += ch;
+    if (ch !== ' ') playGlitch(ch.codePointAt(0));
+    await sleep(SPEED);
+  }
+  line.classList.remove('typing-cursor');
+}
+
+// ─────────────────────────────────────────────
+// HEADER GLITCH (post-boot random corruption)
+// ─────────────────────────────────────────────
+function scheduleHeaderGlitch() {
+  const delay = 3000 + Math.random() * 7000;
+  headerGlitchTimer = setTimeout(() => {
+    const el   = document.getElementById('asciiArt');
+    const ecce = document.querySelector('.ecce-robot');
+    el.classList.add('glitching');
+    if (ecce) ecce.classList.add('glitching');
+    setTimeout(() => {
+      el.classList.remove('glitching');
+      if (ecce) ecce.classList.remove('glitching');
+      scheduleHeaderGlitch();
+    }, 220);
+  }, delay);
+}
+
+// ─────────────────────────────────────────────
+// ASCII FIT — measure full ASCII at a baseline size and scale font-size
+// so the longest line always fits the header width. Keeps the ART centered
+// and never clipped on mobile, regardless of viewport width or fallback font.
+// ─────────────────────────────────────────────
+function fitAsciiArt() {
+  const el = document.getElementById('asciiArt');
+  const headerArea = document.getElementById('headerArea');
+  if (!el || !headerArea) return;
+
+  // Available width inside the header (subtract horizontal padding)
+  const cs   = getComputedStyle(headerArea);
+  const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  const available = headerArea.clientWidth - padX;
+  if (available <= 0) return;
+
+  // Measure the FULL ASCII text at a fixed baseline so we get a stable ratio
+  const measure = document.createElement('pre');
+  measure.style.cssText =
+    'position:absolute;visibility:hidden;left:-9999px;top:-9999px;' +
+    'font-family:"JetBrains Mono",monospace;font-variant-ligatures:none;' +
+    'white-space:pre;font-size:16px;letter-spacing:0;line-height:1.18;margin:0;padding:0;';
+  measure.textContent = ASCII_ART;
+  document.body.appendChild(measure);
+  const naturalWidth = measure.scrollWidth || measure.offsetWidth;
+  document.body.removeChild(measure);
+  if (!naturalWidth) return;
+
+  // Scale to fit, clamped to sensible bounds. The lower bound on mobile keeps
+  // the ASCII legible even when fallback-font width measurement is generous.
+  const isMobile = window.innerWidth <= 768;
+  const upper = isMobile ? 13 : 14;
+  const lower = isMobile ? 8  : 6;
+  let fontSize = Math.floor(16 * (available / naturalWidth));
+  fontSize = Math.max(lower, Math.min(upper, fontSize));
+  el.style.fontSize = fontSize + 'px';
+}
+window.addEventListener('resize', fitAsciiArt);
+window.addEventListener('orientationchange', fitAsciiArt);
+
+// ─────────────────────────────────────────────
+// BOOT SEQUENCE
+// ─────────────────────────────────────────────
+async function boot() {
+  const output    = document.getElementById('output');
+  const asciiEl   = document.getElementById('asciiArt');
+  const menuEl    = document.getElementById('menu');
+  const headerEl  = document.getElementById('headerArea');
+  const skipHint  = document.getElementById('bootSkipHint');
+
+  // Click-anywhere or Enter-to-skip the boot animation. We also stop the event
+  // from propagating to the menu's own click/keydown handlers so the same Enter
+  // press that skips the boot doesn't ALSO open the currently selected section.
+  const onSkip = (e) => {
+    if (bootDone) return;
+    if (e.type === 'keydown' && e.key !== 'Enter') return;
+    bootSkipped = true;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  };
+  window.addEventListener('click',   onSkip, true);
+  window.addEventListener('keydown', onSkip, true);
+
+  // Header flicker/glitch spawn-in (runs in parallel with the boot log).
+  // After the animation ends, switch from .spawning → .spawned so the header
+  // stays visible (with serpent background) for the remainder of the boot.
+  const ecceEl = document.querySelector('.ecce-robot');
+  const settleSpawn = (el) => {
+    if (!el) return;
+    el.classList.remove('spawning');
+    el.classList.add('spawned');
+  };
+  if (headerEl) headerEl.classList.add('spawning');
+  if (ecceEl)   ecceEl.classList.add('spawning');
+  // Poll briefly so a mid-animation skip lands the header on its final state.
+  const spawnTimer = setInterval(() => {
+    if (bootSkipped) {
+      settleSpawn(headerEl);
+      settleSpawn(ecceEl);
+      clearInterval(spawnTimer);
+    }
+  }, 50);
+  setTimeout(() => {
+    settleSpawn(headerEl);
+    settleSpawn(ecceEl);
+    clearInterval(spawnTimer);
+  }, 900);
+
+  // Boot log lines
+  for (const line of BOOT_LINES) {
+    await addOutputLine(output, line.text, line.cls, line.pre);
+  }
+
+  await sleep(280);
+
+  // Compute ASCII font-size before typing so layout is stable from the first char
+  fitAsciiArt();
+
+  // Type ASCII art
+  await typeAscii(asciiEl, ASCII_ART, 4);
+
+  // Re-fit once the full text is in (covers font-load late swap)
+  fitAsciiArt();
+
+  await sleep(450);
+
+  // Ready line
+  await addOutputLine(output, '> SYSTEM ONLINE. AWAITING INPUT.', 'out-prompt', 100);
+  await sleep(200);
+
+  // Show menu
+  menuEl.style.display = 'block';
+  menuEl.style.opacity = '0';
+  menuEl.style.transition = 'opacity 0.4s ease';
+  requestAnimationFrame(() => { menuEl.style.opacity = '1'; });
+
+  // Boot animation fully done: release scroll lock and confirm with a low tone
+  unlockScroll();
+  playBootConfirm();
+
+  // Tear down skip listeners + fade the skip hint out.
+  bootDone = true;
+  window.removeEventListener('click',   onSkip, true);
+  window.removeEventListener('keydown', onSkip, true);
+  if (skipHint) skipHint.classList.add('gone');
+
+  // Start periodic header glitch
+  scheduleHeaderGlitch();
+
+  // Whole startup sequence is finished. After a ~1s beat, fire the NEW RELEASE
+  // chime in sync with the bar's glitch-in reveal.
+  setTimeout(() => {
+    playNewReleaseChime();
+    window.dispatchEvent(new Event('nr:boot-done'));
+  }, 1000);
+}
+
+// ─────────────────────────────────────────────
+// SCROLL LOCK (during startup animation)
+// ─────────────────────────────────────────────
+function preventScrollEvent(e) { e.preventDefault(); }
+function unlockScroll() {
+  document.body.classList.remove('scroll-locked');
+  window.removeEventListener('wheel',     preventScrollEvent, { passive: false });
+  window.removeEventListener('touchmove', preventScrollEvent, { passive: false });
+  window.removeEventListener('keydown',   preventScrollKey,   true);
+}
+function preventScrollKey(e) {
+  // Block page-scrolling keys until boot finishes
+  const blocked = ['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ','Spacebar'];
+  if (blocked.includes(e.key)) e.preventDefault();
+}
+// Engage the lock immediately so reload never pre-reveals the secret message
+// Disable browser auto-scroll-restoration so every reload pins us back to the top
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('wheel',     preventScrollEvent, { passive: false });
+window.addEventListener('touchmove', preventScrollEvent, { passive: false });
+window.addEventListener('keydown',   preventScrollKey,   true);
+window.scrollTo(0, 0);
+// Force scroll-top on every load/reload (overrides browser cached scroll position)
+window.addEventListener('load',     () => window.scrollTo(0, 0));
+window.addEventListener('pageshow', () => {
+  window.scrollTo(0, 0);
+});
+
+// ─────────────────────────────────────────────
+// MENU LOGIC
+// ─────────────────────────────────────────────
+function getMenuItems() {
+  return document.querySelectorAll('.menu-item');
+}
+
+function updateMenuUI() {
+  getMenuItems().forEach((el, i) => {
+    el.classList.toggle('selected', i === selectedIdx);
+    const key   = el.dataset.key;
+    const badge = el.querySelector('.item-badge');
+    if (openSections.has(key)) {
+      if (!badge) {
+        const b = document.createElement('span');
+        b.className = 'item-badge';
+        b.textContent = 'OPEN';
+        el.appendChild(b);
+      }
+    } else {
+      if (badge) badge.remove();
+    }
+  });
+}
+
+function openSection(key) {
+  const win = document.getElementById('sec-' + key);
+  if (!win) return;
+  // Only one section open at a time — close any others first
+  for (const k of [...openSections]) {
+    if (k === key) continue;
+    const other = document.getElementById('sec-' + k);
+    if (other) other.classList.remove('open');
+    openSections.delete(k);
+    if (focusMode === 'section' && focusSectionKey === k) exitSection();
+  }
+  win.classList.add('open');
+  openSections.add(key);
+  updateMenuUI();
+  playMenuOpen(true);
+
+  // Lazy-load giscus on first guestbook open
+  if (key === 'contact' && !guestbookLoaded) {
+    guestbookLoaded = true;
+    const body   = document.getElementById('guestbookBody');
+    const script = document.createElement('script');
+    script.src                        = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo',          'simoliguori/simoliguori');
+    script.setAttribute('data-repo-id',       'R_kgDORkEgmQ');
+    script.setAttribute('data-category-id',   'DIC_kwDORkEgmc4C7ahJ');
+    // Shared thread across index.html and terminal.html
+    script.setAttribute('data-mapping',       'specific');
+    script.setAttribute('data-term',          'guestbook');
+    script.setAttribute('data-strict',        '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position','bottom');
+    script.setAttribute('data-theme',         'dark');
+    script.setAttribute('data-lang',          'it');
+    script.setAttribute('crossorigin',        'anonymous');
+    script.async = true;
+    body.appendChild(script);
+  }
+
+  // Scroll the newly opened section into view. PORTFOLIO is special-cased to
+  // center on the first .pf-project (A GA MAEBA) — we wait for the section's
+  // max-height transition (~450ms) to finish first so layout measurements are
+  // accurate; everything else aligns its top to the viewport.
+  const isPortfolio = key === 'portfolio';
+  const scrollDelay = isPortfolio ? 480 : 140;
+  setTimeout(() => {
+    if (isPortfolio) {
+      const firstProject = win.querySelector('.pf-project');
+      if (firstProject) {
+        firstProject.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        win.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      const rect = win.getBoundingClientRect();
+      const targetY = window.scrollY + rect.top - 24; // 24px gap above section
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+    }
+    // After the scroll animation settles, auto-enter section focus mode.
+    // quiet:true prevents doubling up on the playMenuOpen() already fired by openSection.
+    setTimeout(() => enterSection(key, { quiet: true }), 200);
+  }, scrollDelay);
+}
+
+function closeSection(key) {
+  const win = document.getElementById('sec-' + key);
+  if (!win) return;
+  win.classList.remove('open');
+  openSections.delete(key);
+  // Exit sub-focus if we were diving into this section
+  if (focusMode === 'section' && focusSectionKey === key) exitSection();
+  updateMenuUI();
+  playMenuOpen(false);
+  // Always return to the top of the page after closing — covers the X button,
+  // Backspace from menu focus, and the [1-9] toggle-close path.
+  scrollTopNow();
+  requestAnimationFrame(scrollTopNow);
+  setTimeout(scrollTopNow, 60);
+  setTimeout(scrollTopNow, 220);
+  setTimeout(scrollTopNow, 500);
+}
+
+function toggleSection(key) {
+  if (openSections.has(key)) closeSection(key);
+  else openSection(key);
+}
+
+function navigate(delta) {
+  selectedIdx = (selectedIdx + delta + SECTION_KEYS.length) % SECTION_KEYS.length;
+  updateMenuUI();
+  playMenuNav();
+}
+
+// ─────────────────────────────────────────────
+// SUB-SECTION FOCUS (navigate items inside an open window)
+// ─────────────────────────────────────────────
+function getFocusableItems(key) {
+  const win = document.getElementById('sec-' + key);
+  if (!win) return [];
+  return [...win.querySelectorAll('a[href]')];
+}
+
+function updateSubFocusUI({ scroll = true } = {}) {
+  // Clear previous
+  document.querySelectorAll('.sub-focused').forEach(el => el.classList.remove('sub-focused'));
+  document.querySelectorAll('.menu-item.menu-dimmed').forEach(el => el.classList.remove('menu-dimmed'));
+
+  if (focusMode !== 'section' || !focusSectionKey) return;
+
+  const items = getFocusableItems(focusSectionKey);
+  const target = items[focusItemIdx];
+  if (target) {
+    target.classList.add('sub-focused');
+    // Set native browser focus so the element is truly active (accessibility + feel).
+    // preventScroll:true leaves viewport positioning entirely up to us.
+    target.focus({ preventScroll: true });
+    // Only scroll when explicitly requested (i.e. when the user navigated).
+    // On initial auto-entry we skip this so we don't undo openSection's centering.
+    if (scroll) target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  // Dim the menu row so it's clear focus moved
+  const menuEl = getMenuItems()[SECTION_KEYS.indexOf(focusSectionKey)];
+  if (menuEl) menuEl.classList.add('menu-dimmed');
+}
+
+function enterSection(key, { quiet = false } = {}) {
+  const items = getFocusableItems(key);
+  if (items.length === 0) return false;
+  focusMode = 'section';
+  focusSectionKey = key;
+  focusItemIdx = 0;
+  // Skip scrollIntoView on auto-entry so we don't fight openSection's centering
+  updateSubFocusUI({ scroll: false });
+  if (!quiet) playMenuOpen(true);
+  return true;
+}
+
+function exitSection() {
+  if (focusMode !== 'section') return;
+  focusMode = 'menu';
+  focusSectionKey = null;
+  focusItemIdx = 0;
+  updateSubFocusUI();
+  // Release browser focus from the sub-item so it doesn't fight the caller's scroll
+  if (document.activeElement && document.activeElement !== document.body) {
+    document.activeElement.blur();
+  }
+  playMenuOpen(false);
+}
+
+// Give keyboard focus to whichever menu item the arrow keys currently control.
+function focusSelectedMenuItem() {
+  const items = getMenuItems();
+  const el = items[selectedIdx];
+  if (el) el.focus({ preventScroll: true });
+}
+
+// Spatial navigation that mirrors how the items are *currently* laid out on
+// screen. Re-reads getBoundingClientRect on every call, so it adapts live to
+// window resize, responsive grid breakpoints (3→2→1 cols), content reflow, etc.
+//
+// Algorithm (similar to the CSS-WG spatial-nav / tvOS style):
+//   1. Keep only candidates strictly in the requested direction (edge-to-edge).
+//   2. Split into two buckets:
+//        a) "aligned"    — overlap on the perpendicular axis (same row/column)
+//        b) "misaligned" — no overlap
+//      Aligned beats misaligned every time.
+//   3. Inside each bucket, sort by primary-axis gap (ascending), tie-break by
+//      perpendicular-axis centre distance.
+function getNeighborIdx(dir) {
+  const items = getFocusableItems(focusSectionKey);
+  if (items.length <= 1) return focusItemIdx;
+
+  const cur = items[focusItemIdx].getBoundingClientRect();
+  const aligned    = [];
+  const misaligned = [];
+
+  items.forEach((item, i) => {
+    if (i === focusItemIdx) return;
+    const r = item.getBoundingClientRect();
+    // Skip anything collapsed/hidden at this viewport size
+    if (r.width < 1 || r.height < 1) return;
+
+    let primary, perpDist, hasOverlap;
+
+    if (dir === 'up' || dir === 'down') {
+      // Vertical travel — primary = vertical gap, perp = horizontal overlap
+      if (dir === 'up'   && r.bottom > cur.top    + 2) return;
+      if (dir === 'down' && r.top    < cur.bottom - 2) return;
+      primary = dir === 'up' ? (cur.top - r.bottom) : (r.top - cur.bottom);
+      const oStart = Math.max(r.left,  cur.left);
+      const oEnd   = Math.min(r.right, cur.right);
+      hasOverlap = oEnd > oStart;
+      perpDist   = Math.abs((r.left + r.right) / 2 - (cur.left + cur.right) / 2);
+    } else {
+      // Horizontal travel — primary = horizontal gap, perp = vertical overlap
+      if (dir === 'left'  && r.right > cur.left  + 2) return;
+      if (dir === 'right' && r.left  < cur.right - 2) return;
+      primary = dir === 'left' ? (cur.left - r.right) : (r.left - cur.right);
+      const oStart = Math.max(r.top,    cur.top);
+      const oEnd   = Math.min(r.bottom, cur.bottom);
+      hasOverlap = oEnd > oStart;
+      perpDist   = Math.abs((r.top + r.bottom) / 2 - (cur.top + cur.bottom) / 2);
+    }
+
+    const entry = { idx: i, primary: Math.max(0, primary), perpDist };
+    (hasOverlap ? aligned : misaligned).push(entry);
+  });
+
+  const pickFrom = bucket => {
+    bucket.sort((a, b) => {
+      // If primary gaps are essentially equal (same "row step"), prefer
+      // the one whose centre is closer on the perpendicular axis.
+      if (Math.abs(a.primary - b.primary) < 6) return a.perpDist - b.perpDist;
+      return a.primary - b.primary;
+    });
+    return bucket[0].idx;
+  };
+
+  if (aligned.length)    return pickFrom(aligned);
+  if (misaligned.length) return pickFrom(misaligned);
+
+  // No neighbour in that direction — stay put (feels right for edge-of-grid cases).
+  return focusItemIdx;
+}
+
+function subNavigate(dir) {
+  const items = getFocusableItems(focusSectionKey);
+  if (items.length === 0) return;
+  focusItemIdx = getNeighborIdx(dir);
+  updateSubFocusUI();
+  playMenuNav();
+}
+
+function activateSubItem() {
+  const items = getFocusableItems(focusSectionKey);
+  const target = items[focusItemIdx];
+  if (target) target.click();
+}
+
+// ─────────────────────────────────────────────
+// KEYBOARD NAVIGATION
+// ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  // Ignore navigation keys while boot is still running (or being skipped).
+  // The boot sequence's own listener handles Enter for skipping.
+  if (!bootDone) return;
+  if (document.getElementById('menu').style.display === 'none') return;
+
+  // Number keys 1-5 — toggle that section open/closed.
+  // Pressing the same number twice closes it (open ↔ close).
+  if (/^[1-9]$/.test(e.key)) {
+    const idx = parseInt(e.key, 10) - 1;
+    if (idx >= 0 && idx < SECTION_KEYS.length) {
+      e.preventDefault();
+      const key = SECTION_KEYS[idx];
+      if (openSections.has(key)) {
+        // Already open → close (toggle)
+        if (focusMode === 'section' && focusSectionKey === key) exitSection();
+        closeSection(key);
+        selectedIdx = idx;
+        updateMenuUI();
+      } else {
+        if (focusMode === 'section') exitSection();
+        selectedIdx = idx;
+        updateMenuUI();
+        openSection(key); // auto-enters focus mode after scroll settles
+      }
+      return;
+    }
+  }
+
+  if (focusMode === 'menu') {
+    switch(e.key) {
+      case 'ArrowUp':
+        e.preventDefault(); navigate(-1); break;
+      case 'ArrowDown':
+        e.preventDefault(); navigate(1); break;
+      case 'Enter': {
+        e.preventDefault();
+        const key = SECTION_KEYS[selectedIdx];
+        if (!openSections.has(key)) {
+          openSection(key); // openSection auto-enters focus mode after scroll settles
+        } else {
+          // Section already visible — dive in immediately
+          setTimeout(() => enterSection(key), 80);
+        }
+        break;
+      }
+      case 'Backspace':
+      case 'Escape': {
+        e.preventDefault();
+        const key = SECTION_KEYS[selectedIdx];
+        if (openSections.has(key)) closeSection(key);
+        break;
+      }
+    }
+  } else { // focusMode === 'section'
+    switch(e.key) {
+      case 'ArrowUp':
+        e.preventDefault(); subNavigate('up'); break;
+      case 'ArrowDown':
+        e.preventDefault(); subNavigate('down'); break;
+      case 'ArrowLeft':
+        e.preventDefault(); subNavigate('left'); break;
+      case 'ArrowRight':
+        e.preventDefault(); subNavigate('right'); break;
+      case 'Enter':
+        e.preventDefault(); activateSubItem(); break;
+      case 'Backspace':
+      case 'Escape':
+        e.preventDefault();
+        exitSection();
+        break;
+    }
+  }
+});
+
+// ─────────────────────────────────────────────
+// GLOBAL BACKSPACE → SMOOTH SCROLL TO TOP + CLOSE SOUND
+// Capture phase = fires before any other handler or browser default.
+// Skipped when the user is typing inside an input/textarea/contenteditable.
+//
+// We drive the scroll via requestAnimationFrame instead of CSS smooth-scroll
+// because the concurrent `closeSection` / `exitSection` max-height transition
+// (0.45s) causes continuous reflow that cancels any native smooth scroll.
+// A rAF loop sets window.scrollTo(0, y) every frame → unstoppable by reflow.
+//
+// The close sound (`playMenuOpen(false)`) is de-duplicated via a 120ms guard
+// so it doesn't double up when `closeSection`/`exitSection` also call it.
+// ─────────────────────────────────────────────
+// Dedup the "close" menu sound so the capture-phase Backspace handler and the
+// downstream closeSection()/exitSection() calls don't double up within 120ms.
+// A single wrapper around playMenuOpen() owns the timestamp — all callers
+// (including the Backspace handler) just call playMenuOpen(false) normally.
+let _lastCloseSoundAt = 0;
+const _origPlayMenuOpen = playMenuOpen;
+playMenuOpen = function(opening) {
+  if (opening === false) {
+    const now = performance.now();
+    if (now - _lastCloseSoundAt < 120) return;
+    _lastCloseSoundAt = now;
+  }
+  return _origPlayMenuOpen(opening);
+};
+
+// Instant scroll to top. We re-assert the position over the ~450ms section-close
+// transition because the reflow can otherwise drag the viewport back down.
+function scrollTopNow() {
+  document.documentElement.style.scrollBehavior = 'auto';
+  document.body.style.scrollBehavior = 'auto';
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+// Unified Backspace ladder — same behaviour everywhere on the page:
+//   1. lightbox open  → close lightbox (handled by the lightbox's own capture
+//      handler which fires BEFORE this; it stopPropagation()s, so we never see it)
+//   2. inside section sub-focus → exit sub-focus
+//   3. any section open → close it AND scroll back to the top
+//   4. nothing open → just scroll to the top
+//   5. typing into an input/textarea/contenteditable → native delete (skip)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Backspace') return;
+  const tag = document.activeElement?.tagName?.toUpperCase();
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+
+  // Lightbox would already have stopped propagation in its capture handler,
+  // but guard anyway in case timing ever changes.
+  if (window.__pfLightbox && window.__pfLightbox.isOpen()) {
+    e.preventDefault();
+    e.stopPropagation();
+    window.__pfLightbox.close();
+    return;
+  }
+
+  // Stop the bubble-phase menu/section handler from running too — we own this key now
+  e.preventDefault();
+  e.stopPropagation();
+
+  // One press collapses everything: exit sub-focus AND close any open section AND scroll to top
+  if (focusMode === 'section') exitSection();
+  if (openSections.size > 0) {
+    for (const key of [...openSections]) closeSection(key);
+  }
+
+  try { playMenuOpen(false); } catch (_) {}
+  scrollTopNow();
+  requestAnimationFrame(scrollTopNow);
+  setTimeout(scrollTopNow, 60);
+  setTimeout(scrollTopNow, 200);
+  setTimeout(scrollTopNow, 500);
+}, { capture: true, passive: false });
+
+// ─────────────────────────────────────────────
+// HOVER SOUND ON CLICKABLE ELEMENTS
+// Delegation via pointerover / pointerout — fires ONCE per enter, re-arms on leave,
+// with a tiny cooldown so fast sweeps across many items don't machine-gun blips.
+// ─────────────────────────────────────────────
+(function() {
+  const CLICKABLE = 'a, button, .menu-item, .win-close, .love-link, [onclick], [role="button"], #initOverlay';
+  let currentHoverEl = null;
+  let lastBlipAt = 0;
+  document.addEventListener('pointerover', e => {
+    const el = e.target.closest?.(CLICKABLE);
+    if (!el || el === currentHoverEl) return;
+    currentHoverEl = el;
+    const now = performance.now();
+    if (now - lastBlipAt < 35) return; // prevent machine-gunning on fast sweeps
+    lastBlipAt = now;
+    playHoverBlip();
+  });
+  document.addEventListener('pointerout', e => {
+    if (!currentHoverEl) return;
+    // pointerout fires on every descendant transition too — only clear when
+    // we've actually left the tracked clickable (relatedTarget is outside it).
+    const leaving = !e.relatedTarget || !currentHoverEl.contains(e.relatedTarget);
+    if (leaving) currentHoverEl = null;
+  });
+})();
+
+// ─────────────────────────────────────────────
+// TOUCH NAVIGATION
+// ─────────────────────────────────────────────
+(function() {
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  document.getElementById('menu').addEventListener('touchstart', e => {
+    touchStartY    = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  document.getElementById('menu').addEventListener('touchend', e => {
+    const dy   = touchStartY - e.changedTouches[0].clientY;
+    const dt   = Date.now() - touchStartTime;
+    const isTap = Math.abs(dy) < 12 && dt < 280;
+
+    if (isTap) return; // taps are handled by click listener
+    if (dy > 20)  navigate(1);
+    if (dy < -20) navigate(-1);
+  }, { passive: true });
+})();
+
+// ─────────────────────────────────────────────
+// CLICK / TAP ON MENU ITEMS
+// ─────────────────────────────────────────────
+document.querySelectorAll('.menu-item').forEach((el, i) => {
+  // Make each menu item focusable so native focus can follow the arrow selection
+  el.setAttribute('tabindex', '0');
+  el.addEventListener('click', () => {
+    // Any menu click returns focus to menu mode
+    if (focusMode === 'section') exitSection();
+    selectedIdx = i;
+    updateMenuUI();
+    toggleSection(SECTION_KEYS[i]);
+  });
+});
+
+// Close buttons on section windows
+document.querySelectorAll('.win-close').forEach(el => {
+  el.addEventListener('click', () => closeSection(el.dataset.close));
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+document.getElementById('initOverlay').addEventListener('click', () => {
+  initAudio();
+  // Fire-and-forget preload so the buffer is ready well before the love paragraph
+  prepareLoveSample();
+  // Pre-decode all soundboard samples for zero-latency button presses
+  initSoundboard();
+  playBootSfx();
+  const overlay = document.getElementById('initOverlay');
+  overlay.classList.add('fade-out');
+  setTimeout(() => { overlay.style.display = 'none'; }, 700);
+  // Small delay before boot so the fade looks clean
+  setTimeout(boot, 500);
+}, { once: true });
+
+// ─────────────────────────────────────────────
+// SNES SOUNDBOARD
+// Pre-decodes every sample into an AudioBuffer so playback fires on the
+// exact audio frame of the click — no fetch/decode latency at press time.
+// ─────────────────────────────────────────────
+const SOUNDBOARD_MAP = {
+  up:     'assets/audio/konami code/up.wav',
+  down:   'assets/audio/konami code/down.wav',
+  left:   'assets/audio/konami code/left.wav',
+  right:  'assets/audio/konami code/right.wav',
+  select: 'assets/audio/konami code/select.wav',
+  start:  'assets/audio/konami code/start.wav',
+  y:      'assets/audio/konami code/y.wav',
+  b:      'assets/audio/konami code/b.wav',
+  a:      'assets/audio/konami code/a.wav',
+  x:      'assets/audio/konami code/x.wav',
+};
+
+const sbBuffers = {};
+const sbSources = {};
+
+async function sbLoad(key) {
+  if (sbBuffers[key] || !audioCtx) return;
+  try {
+    const res = await fetch(SOUNDBOARD_MAP[key]);
+    const ab  = await res.arrayBuffer();
+    sbBuffers[key] = await audioCtx.decodeAudioData(ab);
+  } catch(e) {}
+}
+
+function sbPlay(key) {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try { sbSources[key]?.stop(); } catch(e) {}
+  const buf = sbBuffers[key];
+  if (!buf) {
+    // Buffer not decoded yet — fall back to HTMLAudio and kick off decode
+    try { new Audio(SOUNDBOARD_MAP[key]).play().catch(() => {}); } catch(e) {}
+    sbLoad(key);
+    return;
+  }
+  try {
+    const src  = audioCtx.createBufferSource();
+    const gVox = audioCtx.createGain();
+    src.buffer = buf;
+    gVox.gain.value = 0.28;
+    src.connect(gVox); gVox.connect(audioCtx.destination);
+    src.start(audioCtx.currentTime);
+    sbSources[key] = src;
+  } catch(e) {}
+}
+
+// 3D tilt — controller rocks toward the pressed button as if being squeezed
+const TILT_MAP = {
+  up:     'rotateX(14deg) translateY(-4px)',
+  down:   'rotateX(-14deg) translateY(4px)',
+  left:   'rotateY(-14deg) translateX(-4px)',
+  right:  'rotateY(14deg) translateX(4px)',
+  l:      'rotate(-3deg) rotateX(10deg) translateY(-4px)',
+  r:      'rotate(3deg)  rotateX(10deg) translateY(-4px)',
+  y:      'rotateY(-10deg) rotateX(-2deg)',
+  a:      'rotateY(10deg)  rotateX(-2deg)',
+  x:      'rotateX(10deg)  rotateY(4deg)',
+  b:      'rotateX(-10deg) rotateY(4deg)',
+  select: 'translateY(3px) scale(0.985)',
+  start:  'translateY(3px) scale(0.985)',
+};
+let tiltTimer = null;
+function tiltSnes(key) {
+  const wrap = document.querySelector('.snes-wrap');
+  if (!wrap) return;
+  wrap.style.transform = `perspective(1000px) ${TILT_MAP[key] || ''}`;
+  clearTimeout(tiltTimer);
+  tiltTimer = setTimeout(() => { wrap.style.transform = ''; }, 240);
+}
+
+// Konami code — up up down down left right left right b a start
+const KONAMI = ['up','up','down','down','left','right','left','right','b','a','start'];
+let konamiIdx = 0;
+let konamiFired = false;
+function konamiCheck(key) {
+  if (konamiFired) return;
+  if (key === KONAMI[konamiIdx]) {
+    konamiIdx++;
+    if (konamiIdx >= KONAMI.length) {
+      konamiFired = true;
+      konamiTrigger();
+    }
+  } else {
+    konamiIdx = (key === KONAMI[0]) ? 1 : 0;
+  }
+}
+
+function playKonamiJingle() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const t0 = audioCtx.currentTime;
+  // Ascending arpeggio — G4, C5, E5, G5, C6 — then a sustained C major chord
+  const arp = [392.00, 523.25, 659.25, 783.99, 1046.50];
+  arp.forEach((freq, i) => {
+    const t = t0 + i * 0.11;
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 0.2);
+  });
+  const tChord = t0 + arp.length * 0.11 + 0.05;
+  [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const g   = audioCtx.createGain();
+    osc.type = i === 0 ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(freq, tChord);
+    g.gain.setValueAtTime(0.0001, tChord);
+    g.gain.exponentialRampToValueAtTime(0.18 - i * 0.02, tChord + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, tChord + 1.6);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(tChord); osc.stop(tChord + 1.7);
+  });
+  // Shimmer — high noise burst
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.6, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / d.length);
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const gN  = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'highpass'; flt.frequency.value = 4000;
+  gN.gain.setValueAtTime(0.0001, tChord);
+  gN.gain.exponentialRampToValueAtTime(0.12, tChord + 0.03);
+  gN.gain.exponentialRampToValueAtTime(0.0001, tChord + 0.55);
+  src.connect(flt); flt.connect(gN); gN.connect(audioCtx.destination);
+  src.start(tChord); src.stop(tChord + 0.6);
+}
+
+// ── Suono sintetico pressione/rilascio bottone a membrana ──
+function playMembraneDown() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    const ac = audioCtx;
+    const t  = ac.currentTime;
+    // Corpo caldo — sine grave con attacco morbido (6ms) per evitare transienti abrasivi
+    const body = ac.createOscillator();
+    const env  = ac.createGain();
+    body.type = 'sine';
+    body.frequency.setValueAtTime(135, t);
+    body.frequency.linearRampToValueAtTime(78, t + 0.04);
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.26, t + 0.006);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.068);
+    body.connect(env); env.connect(ac.destination);
+    body.start(t); body.stop(t + 0.075);
+    // Tap sottile — triangle alta per dare carattere senza essere duro
+    const tap    = ac.createOscillator();
+    const tapEnv = ac.createGain();
+    tap.type = 'triangle';
+    tap.frequency.setValueAtTime(1100, t);
+    tap.frequency.linearRampToValueAtTime(520, t + 0.014);
+    tapEnv.gain.setValueAtTime(0, t);
+    tapEnv.gain.linearRampToValueAtTime(0.055, t + 0.002);
+    tapEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
+    tap.connect(tapEnv); tapEnv.connect(ac.destination);
+    tap.start(t); tap.stop(t + 0.025);
+  } catch(_) {}
+}
+
+function playMembraneUp() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    const ac = audioCtx;
+    const t  = ac.currentTime;
+    // Rimbalzo leggero — più corto e più alto del press, attacco morbido
+    const osc = ac.createOscillator();
+    const env = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(155, t);
+    osc.frequency.linearRampToValueAtTime(95, t + 0.024);
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.13, t + 0.004);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.038);
+    osc.connect(env); env.connect(ac.destination);
+    osc.start(t); osc.stop(t + 0.042);
+  } catch(_) {}
+}
+
+function konamiTrigger() {
+  // Stop any sample currently playing on the soundboard
+  for (const k of Object.keys(sbSources)) {
+    try { sbSources[k]?.stop(); } catch(e) {}
+  }
+  sbPlay('start');   // voce "start" del sample pack
+  playKonamiJingle();
+  const flash = document.getElementById('konamiFlash');
+  // Spin the controller as the jingle peaks
+  const wrap = document.querySelector('.snes-wrap');
+  if (wrap) {
+    wrap.style.transition = 'transform 1.6s cubic-bezier(0.6, 0, 0.3, 1)';
+    wrap.style.transform = 'perspective(1000px) rotateY(720deg) scale(1.15)';
+  }
+  setTimeout(() => flash?.classList.add('on'), 1500);
+  setTimeout(() => { window.location.href = 'egg.html'; }, 2200);
+}
+
+function initSoundboard() {
+  for (const key of Object.keys(SOUNDBOARD_MAP)) sbLoad(key);
+  document.querySelectorAll('.snes-btn').forEach(btn => {
+    const key = btn.dataset.snd;
+    function onPress(e) {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      playMembraneDown();
+      sbPlay(key);
+      tiltSnes(key);
+      konamiCheck(key);
+      setTimeout(() => btn.classList.remove('pressed'), 180);
+    }
+    function onRelease(e) {
+      e.preventDefault();
+      playMembraneUp();
+    }
+    btn.addEventListener('mousedown',  onPress);
+    btn.addEventListener('touchstart', onPress,   { passive: false });
+    btn.addEventListener('mouseup',    onRelease);
+    btn.addEventListener('touchend',   onRelease, { passive: false });
+  });
+}
+
+// ─────────────────────────────────────────────
+// PORTFOLIO LIGHTBOX — collectible-card viewer
+// ─────────────────────────────────────────────
+(function() {
+  const lb            = document.getElementById('pfLightbox');
+  const lbWrap        = document.getElementById('pfLbWrap');
+  const lbImg         = document.getElementById('pfLbImg');
+  const lbPlaceholder = document.getElementById('pfLbPlaceholder');
+  const lbLoading     = document.getElementById('pfLbLoading');
+  const lbRevealLine  = document.getElementById('pfLbRevealLine');
+  const lbFullres     = document.getElementById('pfLbFullres');
+  const lbClose       = document.getElementById('pfLbClose');
+  const lbVisit       = document.getElementById('pfLbVisit');
+  const lbCounter     = document.getElementById('pfLbCounter');
+  if (!lb) return;
+
+  // Lightbox supports multiple independent groups via data-lightbox="<n>".
+  // Each group has its own scrollable sequence (e.g. MAEBA stills vs NEMA stills).
+  // The active group is rebuilt at click time so newly added items work too.
+  let cards = [];
+  let items = [];
+
+  function buildGroup(group) {
+    cards = [...document.querySelectorAll('[data-lightbox="' + group + '"]')];
+    items = cards.map(el => ({
+      el,
+      src:     el.dataset.src || el.querySelector('img')?.src || '',
+      preview: el.dataset.preview || '',
+      link:    el.getAttribute('href') || '',
+      title:   el.dataset.title || el.querySelector('img')?.alt || ''
+    }));
+  }
+
+  let currentIdx    = 0;
+  let renderGen     = 0;
+  let isOpen        = false;
+  let firstOpenDone = false;
+  let suppressTilt  = false;
+  let centerLock    = false;
+
+  // Expose lightbox state + close to the global keyboard handler so Backspace
+  // can prioritise dismissing the lightbox over any other navigation action.
+  window.__pfLightbox = {
+    isOpen: () => isOpen,
+    close:  () => closeLightbox(),
+  };
+
+  // Tilt state (lerp towards target for inertia, ported from index.html)
+  let tRotX = 0, tRotY = 0;
+  let cRotX = 0, cRotY = 0;
+  const LERP    = 0.09;
+  const MAX_ROT = 4.0;
+  // Light direction (fixed top-left, normalized)
+  const _lx = -0.5, _ly = -0.7, _lz = 0.9;
+  const _ll = Math.sqrt(_lx*_lx + _ly*_ly + _lz*_lz);
+  const LL = { x:_lx/_ll, y:_ly/_ll, z:_lz/_ll };
+
+  function updateCounter() {
+    lbCounter.textContent =
+      String(currentIdx + 1).padStart(2, '0') + ' / ' + String(items.length).padStart(2, '0');
+  }
+
+  function renderItem(idx) {
+    if (items.length === 0) return;
+    currentIdx = (idx + items.length) % items.length;
+    const item = items[currentIdx];
+    const gen = ++renderGen;
+    lbImg.alt = item.title;
+
+    // Reset leftover state from previous image
+    lbImg.classList.remove('pf-lb-img-glitch-in');
+    lbImg.style.clipPath = '';
+    lbImg.getAnimations().forEach(a => a.cancel());
+    lbLoading.style.display = 'none';
+    lbFullres.style.display = 'none';
+    lbFullres.classList.remove('is-loaded');
+    lbRevealLine.getAnimations().forEach(a => a.cancel());
+    centerLock = false;
+
+    // Size placeholder from thumbnail natural dimensions
+    const thumbImg = item.el.querySelector('img');
+    const nw    = thumbImg?.naturalWidth  || 800;
+    const nh    = thumbImg?.naturalHeight || 600;
+    const maxW  = window.innerWidth  * 0.8;
+    const maxH  = window.innerHeight * 0.8;
+    const scale = Math.min(maxW / nw, maxH / nh, 1);
+    lbPlaceholder.style.width  = Math.round(nw * scale) + 'px';
+    lbPlaceholder.style.height = Math.round(nh * scale) + 'px';
+    lbPlaceholder.style.display = '';
+    lbImg.style.display = 'none';
+    lbImg.style.transition = 'none';
+    lbImg.style.opacity = '0';
+
+    function showPreview() {
+      if (gen !== renderGen) return;
+      lbImg.style.display = '';
+      lbPlaceholder.style.display = 'none';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (gen !== renderGen) return;
+        lbImg.style.transition = 'opacity 0.2s';
+        lbImg.style.opacity = '1';
+      }));
+      if (item.preview && item.src && item.src !== item.preview) {
+        lbFullres.style.display = 'block';
+      }
+    }
+
+    lbImg.onload  = () => { if (gen === renderGen) showPreview(); };
+    lbImg.onerror = () => { if (gen === renderGen) showPreview(); };
+    lbImg.src = item.preview || item.src;
+
+    if (item.link && item.link !== '#') {
+      lbVisit.href = item.link;
+      lbVisit.style.display = '';
+    } else {
+      lbVisit.style.display = 'none';
+    }
+    updateCounter();
+  }
+
+  function playJingle(notes, opts) {
+    if (!audioCtx) return;
+    notes = notes || [659.25, 880.00, 1108.73, 1318.51]; // E5 A5 C#6 E6
+    opts  = opts  || {};
+    const waveform   = opts.waveform   || 'triangle';
+    const noteStride = opts.noteStride || 0.10;
+    const filterFreq = opts.filterFreq || 4200;
+    const tailFreq   = opts.tailFreq   || 5800;
+    const gainPeak   = opts.gainPeak   || 0.22;
+    try {
+      const now = audioCtx.currentTime;
+      notes.forEach((f, i) => {
+        const t0 = now + i * noteStride;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filt = audioCtx.createBiquadFilter();
+        filt.type = 'lowpass';
+        filt.frequency.value = filterFreq;
+        osc.type = waveform;
+        osc.frequency.setValueAtTime(f, t0);
+        osc.frequency.exponentialRampToValueAtTime(f * 1.006, t0 + 0.4);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(gainPeak, t0 + 0.010);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+        osc.connect(filt); filt.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.55);
+      });
+      // Shimmer tail — band-passed white noise
+      const tailAt = now + (notes.length - 1) * noteStride + 0.05;
+      const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.5), audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random()*2 - 1) * Math.pow(1 - i/data.length, 2.5);
+      }
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = tailFreq; bp.Q.value = 4;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.05, tailAt);
+      g.gain.exponentialRampToValueAtTime(0.0001, tailAt + 0.45);
+      src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+      src.start(tailAt);
+    } catch(e) {}
+  }
+
+  let lastSpinAt = -Infinity;
+  function triggerSpinIn(notes, opts, cls) {
+    if (centerLock) return; // skip during a full-res reveal
+    const now = performance.now();
+    if (now - lastSpinAt < 1200) return; // cooldown
+    lastSpinAt = now;
+    playJingle(notes, opts);
+    suppressTilt = true;
+    cls = cls || 'spin-in';
+    lbWrap.classList.remove('spin-in', 'respin');
+    void lbWrap.offsetWidth;
+    lbWrap.classList.add(cls);
+    setTimeout(() => {
+      suppressTilt = false;
+      lbWrap.classList.remove('spin-in', 'respin');
+    }, 1000);
+  }
+  // 3-click respin: same triangle timbre and gain as the first jingle, but
+  // descending and one octave lower so it reads as a relative — less acute,
+  // recognisably the same family of sound.
+  function triggerRespin() {
+    triggerSpinIn(
+      [659.25, 554.37, 440.00, 329.63], // E5 C#5 A4 E4 descending
+      { waveform: 'triangle', noteStride: 0.09, filterFreq: 4200, gainPeak: 0.22 },
+      'respin'
+    );
+  }
+
+  function openLightbox(idx) {
+    if (items.length === 0) return;
+    renderItem(idx);
+    lb.classList.add('open');
+    lb.setAttribute('aria-hidden', 'false');
+    isOpen = true;
+    document.body.style.overflow = 'hidden';
+
+    if (!firstOpenDone) {
+      firstOpenDone = true;
+      triggerSpinIn();
+    }
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('open');
+    lb.setAttribute('aria-hidden', 'true');
+    isOpen = false;
+    document.body.style.overflow = '';
+    tRotX = 0; tRotY = 0;
+  }
+
+  function navLb(delta) {
+    renderItem(currentIdx + delta);
+    playMenuNav();
+  }
+
+  function updateTiltFromPoint(x, y) {
+    if (suppressTilt || centerLock) return;
+    const rect = lbWrap.getBoundingClientRect();
+    const dx = (x - (rect.left + rect.width  / 2)) / (rect.width  / 2);
+    const dy = (y - (rect.top  + rect.height / 2)) / (rect.height / 2);
+    tRotX = -dy * MAX_ROT;
+    tRotY =  dx * MAX_ROT;
+  }
+
+  // Intercept clicks on flagged cards (capture phase, fires before menu click handlers).
+  // Rebuild the items array against the clicked card's group so navigation stays
+  // contained within that gallery (e.g. NEMA stills don't bleed into MAEBA).
+  document.addEventListener('click', e => {
+    const card = e.target.closest('[data-lightbox]');
+    if (!card) return;
+    e.preventDefault();
+    e.stopPropagation();
+    buildGroup(card.dataset.lightbox);
+    const idx = cards.indexOf(card);
+    if (idx >= 0) openLightbox(idx);
+  }, true);
+
+  // Pointer tilt (desktop)
+  lb.addEventListener('mousemove', e => {
+    if (!isOpen) return;
+    updateTiltFromPoint(e.clientX, e.clientY);
+  });
+  lb.addEventListener('mouseleave', () => { tRotX = 0; tRotY = 0; });
+
+  // Touch tilt + swipe nav
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0, touchMoved = false;
+  lb.addEventListener('touchstart', e => {
+    if (!isOpen) return;
+    const t = e.touches[0];
+    if (!t) return;
+    touchStartX    = t.clientX;
+    touchStartY    = t.clientY;
+    touchStartTime = Date.now();
+    touchMoved     = false;
+  }, { passive: true });
+  lb.addEventListener('touchmove', e => {
+    if (!isOpen) return;
+    const t = e.touches[0];
+    if (!t) return;
+    touchMoved = true;
+    updateTiltFromPoint(t.clientX, t.clientY);
+  }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    if (!isOpen) return;
+    const t = e.changedTouches[0];
+    tRotX = 0; tRotY = 0;
+    if (!t) return;
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+    if (dt < 600 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      navLb(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  // Keyboard (capture so it fires BEFORE the menu-mode keydown handler)
+  document.addEventListener('keydown', e => {
+    if (!isOpen) return;
+    switch (e.key) {
+      case 'Escape':
+      case 'Backspace':
+        e.preventDefault(); e.stopPropagation(); closeLightbox(); break;
+      case 'ArrowLeft':
+        e.preventDefault(); e.stopPropagation(); navLb(-1); break;
+      case 'ArrowRight':
+        e.preventDefault(); e.stopPropagation(); navLb(1); break;
+      case 'Enter':
+        // Swallow so it doesn't re-trigger the underlying focused element
+        e.preventDefault(); e.stopPropagation(); break;
+    }
+  }, true);
+
+  // Close on backdrop click; the visit link and close button stop propagation
+  lb.addEventListener('click', e => {
+    if (e.target === lb) closeLightbox();
+  });
+  lbClose.addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+  lbVisit.addEventListener('click', e => e.stopPropagation());
+  function fitOverlayToImage(el) {
+    const l = lbImg.offsetLeft;
+    const t = lbImg.offsetTop;
+    const w = lbImg.offsetWidth;
+    const h = lbImg.offsetHeight;
+    el.style.left   = l + 'px';
+    el.style.top    = t + 'px';
+    el.style.right  = 'auto';
+    el.style.bottom = 'auto';
+    el.style.width  = w + 'px';
+    el.style.height = h + 'px';
+    return { l, t, w, h };
+  }
+  lbFullres.addEventListener('click', e => {
+    e.stopPropagation();
+    if (lbFullres.classList.contains('is-loaded')) return;
+    const item = items[currentIdx];
+    const expectedGen = renderGen;
+    if (!item?.src) return;
+    lbFullres.classList.add('is-loaded');
+    centerLock = true;
+    fitOverlayToImage(lbLoading);
+    lbLoading.style.display = 'flex';
+    // Fade the preview image out so the loading bar reads as the focus
+    lbImg.style.transition = 'opacity 0.35s ease';
+    lbImg.style.opacity = '0.12';
+    let imageReady = false;
+    let minTimeReady = false;
+    const doReveal = () => {
+      if (!imageReady || !minTimeReady) return;
+      if (renderGen !== expectedGen) return;
+      lbLoading.style.display = 'none';
+      // Restore opacity (instant — no transition while the clip-path takes over)
+      lbImg.style.transition = '';
+      lbImg.style.opacity = '1';
+      // Clip image to nothing BEFORE swapping src so the new full-res frame
+      // can't flash in before the WAAPI reveal starts.
+      lbImg.style.clipPath = 'polygon(0 0, 100% 0, 100% 0%, 0 0%)';
+      lbImg.src = item.src;
+      (lbImg.decode?.() ?? Promise.resolve())
+        .catch(() => {})
+        .then(() => {
+          if (renderGen !== expectedGen) return;
+          const b = { l: lbImg.offsetLeft, t: lbImg.offsetTop, w: lbImg.offsetWidth, h: lbImg.offsetHeight };
+          // Cancel anything in-flight so a fresh, in-sync pair starts together
+          lbImg.getAnimations().forEach(a => a.cancel());
+          lbRevealLine.getAnimations().forEach(a => a.cancel());
+          // Trigger CSS filter glitch keyframes (clip-path lives in WAAPI now)
+          lbImg.classList.remove('pf-lb-img-glitch-in');
+          void lbImg.offsetWidth;
+          lbImg.classList.add('pf-lb-img-glitch-in');
+          // Size the scan line over the image bounds
+          lbRevealLine.style.left   = b.l + 'px';
+          lbRevealLine.style.right  = 'auto';
+          lbRevealLine.style.width  = b.w + 'px';
+          const topAbove = (b.t - 10) + 'px';   // entry: 10px above image
+          const topImgT  = b.t + 'px';          // line at image top   == clip 0%
+          const topImgB  = (b.t + b.h) + 'px';  // line at image bot   == clip 100%
+          const REVEAL_TIMING = { duration: 1200, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)', fill: 'forwards' };
+          // Drive the image's clip-path via WAAPI in the same call so it
+          // shares the document timeline start with the scan line and stays
+          // perfectly aligned with it.
+          lbImg.animate([
+            { clipPath: 'polygon(0 0, 100% 0, 100%   0%, 0   0%)' },
+            { clipPath: 'polygon(0 0, 100% 0, 100%   0%, 0   0%)', offset: 0.04 },
+            { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', offset: 0.76 },
+            { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }
+          ], REVEAL_TIMING);
+          lbRevealLine.animate([
+            { top: topAbove, opacity: 0,   filter: 'hue-rotate(-30deg) brightness(1.4)' },
+            { top: topImgT,  opacity: 1,                                                  offset: 0.04 },
+            { top: topImgB,  opacity: 1,   filter: 'hue-rotate(0deg) brightness(1.2)',   offset: 0.76 },
+            { top: topImgB,  opacity: 1,   filter: 'hue-rotate(40deg) brightness(2.2)',  offset: 0.84 },
+            { top: topImgB,  opacity: 0.5, filter: 'brightness(1.6)',                    offset: 0.92 },
+            { top: topImgB,  opacity: 0,   filter: 'none' }
+          ], REVEAL_TIMING);
+          lbImg.addEventListener('animationend', () => {
+            lbImg.classList.remove('pf-lb-img-glitch-in');
+            centerLock = false;
+          }, { once: true });
+        });
+    };
+    setTimeout(() => { if (renderGen === expectedGen) { minTimeReady = true; doReveal(); } }, 2000);
+    const full = new Image();
+    full.onload = () => { if (renderGen === expectedGen) { imageReady = true; doReveal(); } };
+    full.onerror = () => {
+      if (renderGen !== expectedGen) return;
+      lbLoading.style.display = 'none';
+      lbImg.style.transition = '';
+      lbImg.style.opacity = '1';
+      lbFullres.classList.remove('is-loaded');
+      centerLock = false;
+    };
+    full.src = item.src;
+  });
+  // Click the card 3 times to retrigger the spin-in. Each click plays a
+  // rising blip; the 3rd one fires the respin (different sound from first open).
+  function playClickBlip(freq) {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filt = audioCtx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.value = 5200;
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.09, now + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+      osc.connect(filt); filt.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.10);
+    } catch(e) {}
+  }
+  let clickCount = 0;
+  let clickResetTimer = null;
+  const CLICK_BLIPS = [659.25, 880.00, 1174.66]; // E5 A5 D6
+  lbWrap.addEventListener('click', e => {
+    e.stopPropagation();
+    // Small bounce on the image for tactile click feedback. Lives on lbImg
+    // (not lbWrap) so it composes with the wrap's tilt/holo without fighting
+    // the rAF transform writer.
+    lbImg.getAnimations().filter(a => a.id === 'pf-click-bounce').forEach(a => a.cancel());
+    const bounce = lbImg.animate([
+      { transform: 'scale(1)',     offset: 0 },
+      { transform: 'scale(0.93)',  offset: 0.35 },
+      { transform: 'scale(1.025)', offset: 0.7 },
+      { transform: 'scale(1)',     offset: 1 }
+    ], { duration: 260, easing: 'ease-out' });
+    bounce.id = 'pf-click-bounce';
+    const idx = Math.min(clickCount, 2);
+    playClickBlip(CLICK_BLIPS[idx]);
+    clickCount++;
+    if (clickCount >= 3) {
+      triggerRespin();
+      clickCount = 0;
+      if (clickResetTimer) { clearTimeout(clickResetTimer); clickResetTimer = null; }
+      return;
+    }
+    if (clickResetTimer) clearTimeout(clickResetTimer);
+    clickResetTimer = setTimeout(() => { clickCount = 0; clickResetTimer = null; }, 1500);
+  });
+
+  // rAF loop: apply lerped tilt, compute specular highlight & holo angle
+  (function loop() {
+    if (centerLock) { tRotX = 0; tRotY = 0; }
+    cRotX += (tRotX - cRotX) * LERP;
+    cRotY += (tRotY - cRotY) * LERP;
+
+    if (!suppressTilt) {
+      lbWrap.style.transform = `rotateX(${cRotX.toFixed(3)}deg) rotateY(${cRotY.toFixed(3)}deg)`;
+    }
+
+    // Card normal after rotation
+    const rXr = cRotX * Math.PI / 180;
+    const rYr = cRotY * Math.PI / 180;
+    const nx =  Math.sin(rYr);
+    const ny = -Math.sin(rXr) * Math.cos(rYr);
+    const nz =  Math.cos(rXr) * Math.cos(rYr);
+    const dot  = nx*LL.x + ny*LL.y + nz*LL.z;
+    const spec = Math.pow(Math.max(0, dot), 5);
+    lbWrap.style.setProperty('--flare-opacity', spec.toFixed(3));
+
+    // Flare position opposite to the tilt direction
+    const fx = 50 - (cRotY / MAX_ROT) * 52;
+    const fy = 50 + (cRotX / MAX_ROT) * 52;
+    lbWrap.style.setProperty('--fx', fx.toFixed(2) + '%');
+    lbWrap.style.setProperty('--fy', fy.toFixed(2) + '%');
+    lbWrap.style.setProperty('--gx', (100 - fx).toFixed(2) + '%');
+    lbWrap.style.setProperty('--gy', (100 - fy).toFixed(2) + '%');
+    lbWrap.style.setProperty('--sx', ((fx + 50) / 2).toFixed(2) + '%');
+    lbWrap.style.setProperty('--sy', ((fy + 50) / 2).toFixed(2) + '%');
+
+    // Holo sweep perpendicular to flare
+    const flareAngle = Math.atan2(fy - 50, fx - 50) * 180 / Math.PI;
+    lbWrap.style.setProperty('--holo-angle',   (flareAngle + 90).toFixed(2) + 'deg');
+    lbWrap.style.setProperty('--holo-opacity', (0.2 + spec * 0.5).toFixed(3));
+
+    requestAnimationFrame(loop);
+  })();
+})();
+
+// ═══════════════════════════════════════════════
+// HIDDEN MESSAGE (typewriter + sounds)
+// ═══════════════════════════════════════════════
+(function(){
+  const hiddenMessage = document.getElementById('hiddenMessage');
+  if (!hiddenMessage) return;
+  // Same performance.now-based sleep so hidden-message typing is device-consistent
+  const hmDelay = ms => new Promise(r => {
+    if (ms <= 0) return r();
+    const target = performance.now() + ms;
+    const tick = () => {
+      const remaining = target - performance.now();
+      if (remaining <= 0) r();
+      else setTimeout(tick, remaining < 5 ? 1 : remaining);
+    };
+    tick();
+  });
+
+  // Pre-process: snapshot text nodes, empty them. Tag each paragraph's phase
+  // relative to the "i love you" paragraph (pre / love / post).
+  const allParas = [...hiddenMessage.querySelectorAll('p')];
+  const loveParaIdx = allParas.findIndex(p => p.classList.contains('love'));
+  const hiddenParas = allParas.map((p, pIdx) => {
+    const nodes = [];
+    const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    const orig = nodes.map(n => n.textContent);
+    nodes.forEach(n => { n.textContent = ''; });
+    p.style.opacity = '0';
+    const phase = p.classList.contains('love') ? 'love'
+                : (loveParaIdx >= 0 && pIdx < loveParaIdx) ? 'pre'
+                : 'post';
+    return { p, nodes, orig, phase };
+  });
+
+  const hmCursor = document.createElement('span');
+  hmCursor.className = 'hm-cursor';
+  hmCursor.textContent = '▌';
+
+  // Walk a text node and return [{ch, progress(0..1 within its sentence), isQuestion}]
+  // Sentences split on . ? ! — sentence's isQuestion set by its final non-space char.
+  function analyzeText(text) {
+    const out = [];
+    let sentenceChars = [];
+    const flush = () => {
+      if (sentenceChars.length === 0) return;
+      const last = sentenceChars[sentenceChars.length - 1];
+      const isQuestion = last === '?';
+      const len = sentenceChars.length;
+      for (let i = 0; i < len; i++) {
+        out.push({
+          ch: sentenceChars[i],
+          progress: len === 1 ? 1 : i / (len - 1),
+          isQuestion,
+        });
+      }
+      sentenceChars = [];
+    };
+    for (const ch of text) {
+      sentenceChars.push(ch);
+      if (ch === '?' || ch === '.' || ch === '!') flush();
+    }
+    flush();
+    return out;
+  }
+
+  // ── soft typewriter SFX — louder + optional pitch rise for questions ──
+  function playSoftType(cp, progress = 0, isQuestion = false) {
+    if (!audioCtx || !cp) return;
+    if (cp <= 32) return;
+    if (Math.random() > 0.78) return;
+    try {
+      const t  = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const flt = audioCtx.createBiquadFilter();
+      const g   = audioCtx.createGain();
+      osc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
+      // Slight rise in pitch in the last 30% of a question sentence
+      const qBoost = isQuestion ? (1 + Math.max(0, progress - 0.7) * 0.75) : 1;
+      const base = (180 + (cp % 90) * 2.2 + Math.random() * 140) * qBoost;
+      osc.frequency.setValueAtTime(base, t);
+      osc.frequency.exponentialRampToValueAtTime(base * (0.55 + Math.random() * 0.35), t + 0.08);
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(1600 + Math.random() * 700, t);
+      flt.Q.value = 1.4;
+      const dur = 0.05 + Math.random() * 0.06;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.14, t + 0.006); // louder than before
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // ── monotone variant for the paragraph AFTER "i love you" —
+  //    same family as playSoftType but dead-flat pitch, colder, slightly muffled.
+  //    Volume boosted per user request — sits prominent in the mix.
+  function playMonoType(cp) {
+    if (!audioCtx || !cp) return;
+    if (cp <= 32) return;
+    if (Math.random() > 0.82) return;
+    try {
+      const t  = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const flt = audioCtx.createBiquadFilter();
+      const g   = audioCtx.createGain();
+      osc.type = 'triangle';
+      const base = 168 + Math.random() * 6;
+      osc.frequency.setValueAtTime(base, t);
+      osc.frequency.exponentialRampToValueAtTime(base * 0.95, t + 0.08);
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(1300, t);
+      flt.Q.value = 1.0;
+      const dur = 0.06;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.22, t + 0.006);  // boosted from 0.12
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // ── voice-like glitch for per-char sounds during "i love you" —
+  //    sawtooth through three bandpass formants ≈ a short vowel pulse.
+  //    Boosted volume per user request: this is the dominant text-generation font now.
+  function playLoveVoiceGlitch(ch) {
+    if (!audioCtx || !ch) return;
+    const cp = ch.charCodeAt(0);
+    if (cp <= 32) return;
+    if (Math.random() > 0.7) return; // play on ~70% of chars — denser texture
+    try {
+      const t  = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const f1 = audioCtx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 700;  f1.Q.value = 8;
+      const f2 = audioCtx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = 1220; f2.Q.value = 8;
+      const f3 = audioCtx.createBiquadFilter(); f3.type = 'bandpass'; f3.frequency.value = 2600; f3.Q.value = 8;
+      const g1 = audioCtx.createGain(); g1.gain.value = 1.0;
+      const g2 = audioCtx.createGain(); g2.gain.value = 0.65;
+      const g3 = audioCtx.createGain(); g3.gain.value = 0.28;
+      const main = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      const pitch = 140 + (cp % 10) * 6 + Math.random() * 28;
+      osc.frequency.setValueAtTime(pitch, t);
+      osc.frequency.linearRampToValueAtTime(pitch * (0.85 + Math.random() * 0.3), t + 0.12);
+      const dur = 0.09 + Math.random() * 0.12;
+      main.gain.setValueAtTime(0.0001, t);
+      main.gain.exponentialRampToValueAtTime(0.38, t + 0.012);  // boosted from 0.2
+      main.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(f1); f1.connect(g1); g1.connect(main);
+      osc.connect(f2); f2.connect(g2); g2.connect(main);
+      osc.connect(f3); f3.connect(g3); g3.connect(main);
+      main.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // Kick off the "i love you" voice sample — uses the preloaded buffer
+  // for sample-accurate sync with the first typed character. See top-level
+  // playPreparedLoveSample() for the Web Audio path.
+
+  // ── "i love you" jingle: melancholic-hopeful progression (C major, vi-IV-I-V cycle) ──
+  // One chord per character of "i love you" (10 chars, space included).
+  // Voicings are mid-range open triads — bittersweet, not heavy.
+  const loveChord = [
+    [220.00, 261.63, 329.63], // Am  (vi)   — "i"
+    [174.61, 220.00, 349.23], // F   (IV)   — " "
+    [261.63, 329.63, 392.00], // C   (I)    — "l"
+    [196.00, 246.94, 392.00], // G   (V)    — "o"
+    [220.00, 261.63, 329.63], // Am  (vi)   — "v"
+    [164.81, 196.00, 329.63], // Em  (iii)  — "e"
+    [174.61, 220.00, 349.23], // F   (IV)   — " "
+    [196.00, 246.94, 392.00], // G   (V)    — "y"
+    [220.00, 293.66, 329.63], // Am7 (vi7)  — "o"
+    [261.63, 329.63, 392.00], // C   (I)    — "u"  (hopeful resolve)
+  ];
+  let loveStep = 0;
+  function playLoveChar(ch) {
+    if (!audioCtx) return;
+    try {
+      const t  = audioCtx.currentTime;
+      const chord = loveChord[Math.min(loveStep, loveChord.length - 1)];
+      loveStep++;
+
+      // chord stab — 3 detuned triangles w/ long lowpassed tail (LOUDER)
+      chord.forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const g   = audioCtx.createGain();
+        const flt = audioCtx.createBiquadFilter();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f * (1 + (i - 1) * 0.003), t);
+        flt.type = 'lowpass';
+        flt.frequency.setValueAtTime(2200, t);
+        flt.frequency.exponentialRampToValueAtTime(600, t + 1.6);
+        flt.Q.value = 3;
+        const peak = 0.16 - i * 0.025;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
+        osc.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+        osc.start(t); osc.stop(t + 1.8);
+      });
+
+      // shimmering high harmonic
+      const shimmer = audioCtx.createOscillator();
+      const sg = audioCtx.createGain();
+      shimmer.type = 'sine';
+      shimmer.frequency.setValueAtTime(chord[2] * 4 + (Math.random() - 0.5) * 6, t);
+      sg.gain.setValueAtTime(0.0001, t);
+      sg.gain.exponentialRampToValueAtTime(0.048, t + 0.1);
+      sg.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+      shimmer.connect(sg); sg.connect(audioCtx.destination);
+      shimmer.start(t); shimmer.stop(t + 1.3);
+
+      // breathy noise tail (non-space chars only)
+      if (ch && ch !== ' ') {
+        const bufSize = audioCtx.sampleRate * 0.9;
+        const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let k = 0; k < bufSize; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / bufSize);
+        const src = audioCtx.createBufferSource();
+        const nFlt = audioCtx.createBiquadFilter();
+        const nG = audioCtx.createGain();
+        src.buffer = buf;
+        nFlt.type = 'bandpass';
+        nFlt.frequency.setValueAtTime(1800 + Math.random() * 800, t);
+        nFlt.Q.value = 2.5;
+        nG.gain.setValueAtTime(0.0001, t);
+        nG.gain.exponentialRampToValueAtTime(0.038, t + 0.05);
+        nG.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+        src.connect(nFlt); nFlt.connect(nG); nG.connect(audioCtx.destination);
+        src.start(t); src.stop(t + 0.9);
+      }
+    } catch(e) {}
+  }
+
+  async function typeHiddenMessage() {
+    const speed     = 55;
+    const loveSpeed = 180;
+    const dotsSpeed = 950;  // each leading '.' in the post paragraph types very slowly
+    const lineGap   = 260;
+    for (let i = 0; i < hiddenParas.length; i++) {
+      const d = hiddenParas[i];
+
+      // Extra silence before "i love you" — let the previous paragraph breathe
+      if (d.phase === 'love') await hmDelay(3200);
+      // Extra silence before the post paragraph (where the slow dots live)
+      if (d.phase === 'post') await hmDelay(1800);
+
+      d.p.style.transition = 'opacity 0.3s ease';
+      d.p.style.opacity = '1';
+
+      // Voice sample will be started on the first char insert of the love paragraph
+      // so the audio is perfectly synced with the visible text (no decode latency).
+      let loveSampleStarted = false;
+
+      // For the post paragraph: track whether we've cleared the leading dots yet
+      // (first text node, chars are '.' until the first non-dot appears)
+      let postLeadingDots = d.phase === 'post';
+
+      for (let j = 0; j < d.nodes.length; j++) {
+        const node = d.nodes[j];
+        if (d.phase !== 'love') node.parentNode.insertBefore(hmCursor, node.nextSibling);
+        const metas = analyzeText(d.orig[j]);
+        for (const m of metas) {
+          node.textContent += m.ch;
+          if (d.phase === 'love') {
+            if (!loveSampleStarted) {
+              playPreparedLoveSample();  // fires exactly when first char lands in DOM
+              loveSampleStarted = true;
+            }
+            playLoveChar(m.ch);          // chord-stab jingle
+            playLoveVoiceGlitch(m.ch);   // voice-like per-char glitches
+          } else if (d.phase === 'post') {
+            playMonoType(m.ch.charCodeAt(0));
+          } else {
+            playSoftType(m.ch.charCodeAt(0), m.progress, m.isQuestion);
+          }
+
+          // Leading-dot detection: once we hit the first non-dot non-space char, switch to normal speed
+          if (postLeadingDots && m.ch !== '.' && m.ch.trim() !== '') postLeadingDots = false;
+          const isLeadingDot = postLeadingDots && m.ch === '.';
+
+          const charDelay = d.phase === 'love' ? loveSpeed
+                          : isLeadingDot       ? dotsSpeed
+                          : speed;
+          await hmDelay(charDelay);
+        }
+        // Leading-dot window only applies to the first text node
+        if (j === 0) postLeadingDots = false;
+        if (j < d.nodes.length - 1) await hmDelay(lineGap);
+      }
+      await hmDelay(d.phase === 'love' ? 2500 : 1000);
+    }
+  }
+
+  function startHiddenMessage() {
+    hiddenMessage.classList.add('visible');
+    hmDelay(500)
+      .then(typeHiddenMessage)
+      .then(() => hmDelay(1200))
+      .then(() => {
+        const sb = document.getElementById('soundboard');
+        if (sb) {
+          sb.classList.add('revealed');
+          sb.removeAttribute('aria-hidden');
+        }
+      });
+  }
+
+  // Use IntersectionObserver (reliable on all browsers/scroll containers).
+  // Falls back to scroll polling only if IO isn't available.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, observer) => {
+      if (entries[0].isIntersecting) {
+        observer.disconnect();
+        startHiddenMessage();
+      }
+    }, { threshold: 0.1 });
+    io.observe(hiddenMessage);
+  } else {
+    // Fallback: scroll polling
+    let hmTriggered = false;
+    function hmScrollCheck() {
+      if (hmTriggered) return;
+      const scroller = document.scrollingElement || document.body;
+      const top = hiddenMessage.getBoundingClientRect().top;
+      if (top < window.innerHeight * 0.9) {
+        hmTriggered = true;
+        startHiddenMessage();
+      }
+    }
+    window.addEventListener('scroll', hmScrollCheck, { passive: true });
+    document.body.addEventListener('scroll', hmScrollCheck, { passive: true });
+  }
+})();
+
+// ═══ NEW RELEASE FLOATING PLAYER ═══
+(function () {
+  const TRACK_URL = 'https://soundcloud.com/eccerobot/ghera-mp3';
+  const SC_WIDGET_URL =
+    'https://w.soundcloud.com/player/?url=' +
+    encodeURIComponent(TRACK_URL) +
+    '&color=%23ff4444&auto_play=false&hide_related=true' +
+    '&show_comments=false&show_user=false&show_reposts=false' +
+    '&show_teaser=false&visual=false';
+
+  // ── Build DOM ──────────────────────────────────────────────────────────────
+  const bar = document.createElement('div');
+  bar.id = 'nr-player';
+  bar.setAttribute('role', 'region');
+  bar.setAttribute('aria-label', 'New Release Player');
+  bar.innerHTML = `
+    <div class="nr-header">
+      <span class="nr-badge">NEW RELEASE</span>
+      <span class="nr-rule"></span>
+      <span class="nr-dismiss" id="nr-dismiss" title="Dismiss">×</span>
+    </div>
+    <div class="nr-main">
+      <a class="nr-cover-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+        <div class="nr-cover-box" id="nr-cover-box">
+          <span class="nr-cover-ph" id="nr-cover-ph">♪</span>
+        </div>
+      </a>
+      <div class="nr-info">
+        <a class="nr-title-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer">
+          <div class="nr-title" id="nr-title">ghera</div>
+        </a>
+        <a class="nr-artist" id="nr-artist" href="https://soundcloud.com/eccerobot" target="_blank" rel="noopener noreferrer">mi·ɽài</a>
+        <a class="nr-sc-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer">soundcloud ↗</a>
+      </div>
+      <canvas class="nr-viz" id="nr-viz" aria-hidden="true"></canvas>
+      <div class="nr-controls">
+        <button class="nr-play-btn" id="nr-play-btn" aria-label="Play / Pause">▶</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bar);
+
+  // Hidden SC iframe — injected lazily on first play click
+  let iframe = null;
+  let widget = null;
+  let pendingPlay = false;
+  let isPlaying = false;
+
+  const playBtn   = document.getElementById('nr-play-btn');
+  const dismissBtn = document.getElementById('nr-dismiss');
+  const coverBox   = document.getElementById('nr-cover-box');
+  const coverPh    = document.getElementById('nr-cover-ph');
+  const titleEl    = document.getElementById('nr-title');
+  const artistEl   = document.getElementById('nr-artist');
+  const vizCanvas  = document.getElementById('nr-viz');
+  const vizCtx     = vizCanvas.getContext('2d');
+
+  // ── Fetch cover + metadata via oEmbed ──────────────────────────────────────
+  fetch('https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(TRACK_URL))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.thumbnail_url) {
+        const img = document.createElement('img');
+        img.className = 'nr-cover';
+        img.alt = 'Track cover';
+        img.src = d.thumbnail_url;
+        // Drop the placeholder glyph and let the artwork fill the cover box.
+        if (coverPh) coverPh.remove();
+        coverBox.appendChild(img);
+      }
+      if (d.title) {
+        // oEmbed often appends " by Artist" — strip it. Keep natural case;
+        // the bar lowercases title + artist via CSS (text-transform).
+        let t = d.title;
+        const byIdx = t.search(/ by /i);
+        if (byIdx > 0) t = t.slice(0, byIdx);
+        titleEl.textContent = t;
+      }
+      if (d.author_name) artistEl.textContent = d.author_name;
+    })
+    .catch(function () { /* keep fallback values */ });
+
+  // ── Reveal: glitch the bar in once the whole startup sequence has finished ──
+  let revealed = false;
+  function revealBar() {
+    if (revealed) return;
+    revealed = true;
+    bar.classList.add('nr-visible', 'nr-glitch-in');
+    bar.addEventListener('animationend', function onEnd(e) {
+      if (e.animationName === 'nrGlitchPos') {
+        bar.classList.remove('nr-glitch-in');
+        bar.removeEventListener('animationend', onEnd);
+      }
+    });
+    // Load the (hidden) SC widget now so the real waveform can be drawn even
+    // before the user hits play.
+    prepareAudio();
+    drawViz();
+  }
+  // Primary trigger: boot() dispatches this ~1s after the startup sequence
+  // completes (in sync with the chime). This is the normal path.
+  window.addEventListener('nr:boot-done', revealBar, { once: true });
+  // Safety net: only if the boot script never dispatches (e.g. a JS error mid
+  // boot). Long timeout so it never races the intended ~1s delay above.
+  setTimeout(revealBar, 20000);
+
+  // ── Visualizer state ───────────────────────────────────────────────────────
+  let waveSamples = null;     // normalized 0..1 amplitude envelope of the track
+  let progress    = 0;        // played fraction 0..1 (from real playback)
+  let lastProgAt  = 0;        // performance.now() of last PLAY_PROGRESS
+  let durationMs  = 0;        // track length, for smooth playhead interpolation
+  let rafId       = null;
+
+  // Stable pseudo-waveform used only if the real one can't be fetched, so the
+  // bar always shows *something* shaped like a track rather than a flat line.
+  function fallbackSamples(n) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      const env = Math.sin(t * Math.PI);                       // fade in/out
+      const detail = 0.55 + 0.45 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23));
+      out.push(Math.max(0.08, env * detail));
+    }
+    return out;
+  }
+
+  // Pull the real waveform JSON SoundCloud exposes for the track.
+  function loadWaveform(waveformUrl) {
+    if (!waveformUrl) { waveSamples = fallbackSamples(140); drawViz(); return; }
+    // The API gives a PNG url; the JSON sibling has the raw sample array.
+    const jsonUrl = waveformUrl.replace(/\.png(\?.*)?$/, '.json');
+    fetch(jsonUrl)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        const s = d && d.samples;
+        if (!s || !s.length) throw new Error('no samples');
+        const max = Math.max.apply(null, s) || 1;
+        waveSamples = s.map(function (v) { return v / max; });
+        drawViz();
+      })
+      .catch(function () { waveSamples = fallbackSamples(140); drawViz(); });
+  }
+
+  function sampleAt(frac) {
+    if (!waveSamples) return 0.5;
+    const idx = Math.min(waveSamples.length - 1, Math.floor(frac * waveSamples.length));
+    return waveSamples[idx];
+  }
+
+  function smoothstep(e0, e1, x) {
+    const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  }
+
+  function drawViz(playFrac) {
+    const p = (playFrac == null) ? progress : playFrac;
+    const w = vizCanvas.clientWidth, h = vizCanvas.clientHeight;
+    if (!w || !h) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (vizCanvas.width !== w * dpr || vizCanvas.height !== h * dpr) {
+      vizCanvas.width = w * dpr; vizCanvas.height = h * dpr;
+    }
+    vizCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    vizCtx.clearRect(0, 0, w, h);
+
+    const barW = 2, gap = 1, step = barW + gap;
+    const n = Math.max(1, Math.floor(w / step));
+    const mid = h / 2;
+    for (let i = 0; i < n; i++) {
+      const center = (i + 0.5) / n;
+      const v = sampleAt(i / n);
+      const bh = Math.max(2, v * (h - 2));
+      const x = i * step;
+      // Pure gradual coloring: smoothstep fade over ~2 bars wide at the
+      // boundary — no separate playhead bar, just red→dim transition.
+      const d = (p - center) * n;         // signed distance in bar-units from playhead
+      const t = smoothstep(-1, 1, d);     // 1 = fully played, 0 = upcoming
+      const alpha = 0.2 + 0.8 * t;       // dim: 0.2  →  full: 1.0
+      vizCtx.fillStyle = 'rgba(255,68,68,' + alpha.toFixed(3) + ')';
+      vizCtx.fillRect(x, mid - bh / 2, barW, bh);
+    }
+  }
+
+  function vizLoop() {
+    if (!isPlaying) { rafId = null; return; }
+    // Smoothly interpolate the playhead between PLAY_PROGRESS events.
+    let est = progress;
+    if (durationMs > 0) {
+      est = Math.min(1, progress + (performance.now() - lastProgAt) / durationMs);
+    }
+    drawViz(est);
+    rafId = requestAnimationFrame(vizLoop);
+  }
+
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(function () { drawViz(); }).observe(vizCanvas);
+  } else {
+    window.addEventListener('resize', function () { drawViz(); });
+  }
+
+  // ── Widget helpers ─────────────────────────────────────────────────────────
+  function initWidget() {
+    widget = SC.Widget(iframe);
+    widget.bind(SC.Widget.Events.READY, function () {
+      widget.getDuration(function (d) {
+        durationMs = d || 0;
+        // If user clicked waveform before widget was ready, seek now.
+        if (pendingSeekFrac !== null && durationMs > 0) {
+          widget.seekTo(Math.round(pendingSeekFrac * durationMs));
+          pendingSeekFrac = null;
+        }
+      });
+      widget.getCurrentSound(function (sound) {
+        loadWaveform(sound && sound.waveform_url);
+      });
+      if (pendingPlay) { pendingPlay = false; widget.play(); }
+    });
+    widget.bind(SC.Widget.Events.PLAY, function () {
+      isPlaying = true;
+      playBtn.textContent = '⏸';
+      if (!rafId) rafId = requestAnimationFrame(vizLoop);
+    });
+    widget.bind(SC.Widget.Events.PAUSE, function () {
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      drawViz();
+    });
+    widget.bind(SC.Widget.Events.FINISH, function () {
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      progress = 0;
+      drawViz();
+    });
+    widget.bind(SC.Widget.Events.PLAY_PROGRESS, function (e) {
+      progress = e.relativePosition;
+      lastProgAt = performance.now();
+      if (!isPlaying) drawViz();
+    });
+  }
+
+  function loadScApi(cb) {
+    if (typeof SC !== 'undefined') { cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://w.soundcloud.com/player/api.js';
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  // Inject the hidden SC iframe + API and wire the widget. Idempotent.
+  let audioInit = false;
+  function prepareAudio() {
+    if (audioInit) return;
+    audioInit = true;
+    iframe = document.createElement('iframe');
+    iframe.src = SC_WIDGET_URL;
+    iframe.allow = 'autoplay';
+    iframe.setAttribute('aria-hidden', 'true');
+    Object.assign(iframe.style, {
+      position: 'absolute', left: '-9999px', width: '1px', height: '1px'
+    });
+    document.body.appendChild(iframe);
+    loadScApi(initWidget);
+  }
+
+  // ── Play / Pause ───────────────────────────────────────────────────────────
+  playBtn.addEventListener('click', function () {
+    if (widget) {
+      isPlaying ? widget.pause() : widget.play();
+    } else {
+      pendingPlay = true;     // widget still loading — play as soon as READY
+      prepareAudio();
+    }
+  });
+
+  // ── Waveform scrub — click seeks to the corresponding position ────────────
+  vizCanvas.addEventListener('click', function (e) {
+    const rect = vizCanvas.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    // Optimistic UI: move the playhead immediately regardless of widget state.
+    progress   = frac;
+    lastProgAt = performance.now();
+    drawViz(frac);
+    if (widget && durationMs > 0) {
+      // Seek the real player to the clicked position.
+      widget.seekTo(Math.round(frac * durationMs));
+      // If paused, resume so the click feels like "play from here".
+      if (!isPlaying) {
+        widget.play();
+      }
+    } else {
+      // Widget not ready yet — load it, then seek + play once READY fires.
+      pendingPlay = true;
+      prepareAudio();
+      // Store the target fraction so READY can seek there.
+      pendingSeekFrac = frac;
+    }
+  });
+
+  let pendingSeekFrac = null;  // used when widget isn't loaded yet at click time
+
+  // ── Dismiss ────────────────────────────────────────────────────────────────
+  dismissBtn.addEventListener('click', function () {
+    bar.classList.remove('nr-visible');
+    bar.classList.add('nr-hidden');
+    if (widget && isPlaying) widget.pause();
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  });
+})();
+
+</script>
+</body>
+</html>
