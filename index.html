@@ -28,7 +28,10 @@ html, body {
   background: #000;
   color: #cc3333;
   font-family: "Roboto Mono", "Courier New", monospace;
-  overflow-x: hidden;
+  /* `clip` taglia l'overflow orizzontale senza creare uno scroll container —
+     a differenza di `hidden`, non rompe position:fixed su Firefox (doppia
+     scrollbar, body::after, #nr-player) */
+  overflow-x: clip;
   cursor: var(--cur-arrow), crosshair;
 }
 
