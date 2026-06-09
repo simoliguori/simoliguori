@@ -336,6 +336,9 @@ const BAND_EDGES = [0.0, 0.04, 0.11, 0.26, 0.55, 1.0];
 function setupExtraTrack(id, vol, dest){
   const el = document.getElementById(id); if(!el) return;
   el.volume = vol==null ? 0.7 : vol;
+  // IMPORTANTE: senza questo, cambiare playbackRate NON cambia il pitch (il browser fa time-stretch)
+  // e i cambi rapidi causano dropout. Off = il rate abbassa davvero il tono (stile nastro).
+  el.preservesPitch=false; el.mozPreservesPitch=false; el.webkitPreservesPitch=false;
   try{ const mes = actx.createMediaElementSource(el); mes.connect(dest||analyser); audioKeep.push(mes); }
   catch(e){ /* se già instradato o CORS: l'elemento suona comunque in diretta */ }
   extraEls.push(el);
