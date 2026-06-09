@@ -526,13 +526,13 @@ function mangleTTS(dt){
   const el=document.getElementById('ttsAudio'); if(!el || !ttsGain) return;
   // ---- morph del pitch DOLCE (niente più fase robotica a metà velocità che impasta) ----
   ttsPitchT -= dt;
-  if(ttsPitchT<=0){ ttsPitchTgt = 0.92 + RNG()*0.16; ttsPitchT = 1.8 + RNG()*3; }   // attorno a 1 -> resta comprensibile
+  if(ttsPitchT<=0){ ttsPitchTgt = 0.74 + RNG()*0.12; ttsPitchT = 1.8 + RNG()*3; }   // BASE più GRAVE (0.74-0.86)
   ttsPitch += (ttsPitchTgt - ttsPitch)*0.03;
-  // ---- SHIFT di pitch FREQUENTI ma MITI e SOSTENUTI: il tono scende spesso senza impastare ----
+  // ---- SHIFT di pitch FREQUENTI ma MITI, relativi alla base bassa (dip ulteriori, comprensibili) ----
   pdT -= dt;
-  if(pdT<=0){ pdOn = RNG()<0.6; pdT = pdOn ? rr(0.25,0.9) : rr(0.35,1.1); pdAmt = 0.62 + RNG()*0.2; }   // dip frequenti, miti (0.62-0.82)
+  if(pdT<=0){ pdOn = RNG()<0.6; pdT = pdOn ? rr(0.25,0.9) : rr(0.35,1.1); pdAmt = 0.8 + RNG()*0.13; }   // dip miti dalla base (×0.8-0.93)
   const pr = pdOn ? ttsPitch*pdAmt : ttsPitch;
-  el.playbackRate = Math.max(0.5, pr);   // clamp più alto -> non scende mai così tanto da diventare incomprensibile
+  el.playbackRate = Math.max(0.42, pr);   // floor coerente con la base più bassa
   // ---- BEAT-REPEAT (freeze): MENO frequente e più corto -> la voce resta intelligibile ----
   if(!stDelay) return;
   mngT -= dt;
