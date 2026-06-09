@@ -1,3 +1,14 @@
+# STRUTTURA (aggiornata 2026-06-09)
+
+- **`/egg.html`** (root) = lesperienza live, raggiunta dal Konami di `index.html`.
+- **`/assets/egg/`** = tutti i media: `track.mp3`, `tts.mp3`, `img/img01..87.jpg`, piu `build_images.py` e questo file.
+- Asset egg condivisi (majin, esplosioni, suoni) stanno in `/assets/audio/` e `/assets/img/` (riferiti come `assets/...`).
+- `/egg-old.html` = vecchia pagina easter egg, tenuta per debugging.
+- Test: `python -m http.server` dalla ROOT del repo, poi apri `/egg.html`.
+- (Niente piu cartella `audiovisual/` ne base pura separata: `egg.html` e il single source.)
+
+---
+
 # FEEDBACK — opera audiovisiva audio-reattiva autonoma
 
 > Istruzioni operative e di handoff. Questo file è pensato per essere letto da **Claude Code**
@@ -161,11 +172,11 @@ sync dei salti di playhead con i rilasci; reverse/varispeed dei grani; preset/se
 modalità “embed” con dimensioni del contenitore; rimuovere l'overlay di stato audio quando l'audio è ok.
 
 ## 11. `egg.html` — l'easter egg LIVE del sito (promosso)
-`index.html` (in questa cartella) resta la base "pura" di riferimento. **`audiovisual/egg.html` è l'easter
-egg ATTIVO**: il Konami in `../index.html` ci reindirizza (`window.location.href='audiovisual/egg.html'`).
+`index.html` (in questa cartella) resta la base "pura" di riferimento. **`egg.html` è l'easter
+egg ATTIVO**: il Konami in `../index.html` ci reindirizza (`window.location.href='egg.html'`).
 La vecchia pagina è conservata in `../egg-old.html`. Editare direttamente `egg.html` (single source).
 Differenze rispetto a `index.html`:
-- **Tre tracce nel mix**: `track.mp3` (granulare, grainBus 0.85) + `../assets/audio/majin-sonic-cd.mp3`
+- **Tre tracce nel mix**: `track.mp3` (granulare, grainBus 0.85) + `assets/audio/majin-sonic-cd.mp3`
   (loop egg, **0.85 = stesso volume del granulare**) + `tts.mp3` (voce, `ttsGain` 2.6× + **bitcrusher**).
   Helper `setupExtraTrack(id,vol,dest)`. Catena: grainBus→shaper→**granFilter(lowpass)**→analyser→**limiter**→out.
 - **Grain CLOUD continua** (`scheduleGrains`): densità 24–72, grani sempre sovrapposti (no silenzi), pochi salti.
@@ -187,9 +198,9 @@ Differenze rispetto a `index.html`:
 - **Click**: raffica di immagini **intorno al cursore** (`spawnLayer(idx,px,py)` + `burstBoost`).
 - **Manifesto**: pannello scuro `rgba(0,0,0,.4)` + contorno nero → leggibile (niente più `mix-blend-mode:screen`).
 - **Rimossi** i pulsanti strobo/schermo (`#util`); restano `Spazio` (pausa) e l'effetto strobo attivo di default.
-- **HUD "1 CLICK = 1 DEAD FASCIST"** (`#fascistHud`): contatore + esplosione (`../assets/img/giphy-explosion.gif`)
+- **HUD "1 CLICK = 1 DEAD FASCIST"** (`#fascistHud`): contatore + esplosione (`assets/img/giphy-explosion.gif`)
   + suoni egg; ogni click entra nell'opera (`kick`+`releasePulse`+`spawnLayer`).
-- **Dipende da `../assets/`** (rompe l'autosufficienza della cartella): ok finché vive dentro questo sito.
+- **Dipende da `assets/`** (rompe l'autosufficienza della cartella): ok finché vive dentro questo sito.
   Per promuoverla: rinominare in `../egg.html` o puntarci il redirect Konami, e copiare/aggiustare i path assets.
 - **Verifica**: l'anteprima headless NON anima (rAF non scatta lì) e non sblocca l'audio →
   testare con `python -m http.server` in un browser vero (clic per sbloccare le 3 tracce).

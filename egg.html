@@ -156,8 +156,8 @@
 </div>
 
 <!-- Tracce: nuovo brano (granulare via fetch) + majin dell'egg + voce TTS del manifesto -->
-<audio id="majinAudio" src="../assets/audio/majin-sonic-cd.mp3" loop crossorigin="anonymous" preload="auto"></audio>
-<audio id="ttsAudio" src="tts.mp3" loop crossorigin="anonymous" preload="auto"></audio>
+<audio id="majinAudio" src="assets/audio/majin-sonic-cd.mp3" loop crossorigin="anonymous" preload="auto"></audio>
+<audio id="ttsAudio" src="assets/egg/tts.mp3" loop crossorigin="anonymous" preload="auto"></audio>
 
 <div id="stage">
   <canvas id="c"></canvas>
@@ -189,7 +189,7 @@
 <script>
 "use strict";
 (function(){
-const TRACK = "track.mp3";
+const TRACK = "assets/egg/track.mp3";
 const N_IMG = 87;         // TUTTE le immagini della cartella (normalizzate in img/imgNN.jpg)
 const KEY_D0 = 78, KEY_D1 = 188;  // chroma-key PESANTE: resta solo cio' che e' molto diverso dal colore prevalente
 
@@ -231,7 +231,7 @@ let imgLoaded = 0;   // contatore per la schermata di caricamento (aspetta il re
 for(let i=1;i<=N_IMG;i++){
   const im = new Image(); im.decoding="async";
   im.onload=()=>imgLoaded++; im.onerror=()=>imgLoaded++;
-  im.src = "img/img"+String(i).padStart(2,'0')+".jpg";
+  im.src = "assets/egg/img/img"+String(i).padStart(2,'0')+".jpg";
   images.push(im);
 }
 
@@ -1018,10 +1018,10 @@ document.getElementById('fascistHud').addEventListener('pointerdown', e=>{
   const hud=document.getElementById('fascistHud');
   const ex=document.createElement('div'); ex.className='click-explosion';
   ex.style.left=e.clientX+'px'; ex.style.top=e.clientY+'px';
-  const im=document.createElement('img'); im.src='../assets/img/giphy-explosion.gif'; ex.appendChild(im);
+  const im=document.createElement('img'); im.src='assets/img/giphy-explosion.gif'; ex.appendChild(im);
   hud.appendChild(ex); setTimeout(()=>ex.remove(), 800);
-  playOneShot('../assets/audio/metal-slug-scream.mp3');
-  playOneShot('../assets/audio/roblox-explosion.mp3');
+  playOneShot('assets/audio/metal-slug-scream.mp3');
+  playOneShot('assets/audio/roblox-explosion.mp3');
   // il click pilota l'opera: scossa datamosh + scarico
   kick = Math.max(kick, 0.9); releasePulse = Math.max(releasePulse, 0.8);
   // ESPLOSIONE: un SACCO di immagini raggruppate INTORNO al cursore
