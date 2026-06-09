@@ -45,21 +45,19 @@
   }
   .btn:hover{ border-color:var(--fg); }
   .btn.on{ background:#c9402f; border-color:#c9402f; color:#000; }
-  #meters{ position:fixed; top:.7rem; right:.9rem; z-index:20; display:flex; gap:4px; opacity:0; transition:.4s; }
-  #stage:hover #meters{ opacity:.7; }
-  .meter{ width:6px; height:42px; background:rgba(255,255,255,.07); position:relative; }
-  .meter i{ position:absolute; bottom:0; left:0; right:0; background:#c9402f; height:0%; }
-  #phaseTag{ position:fixed; left:.8rem; bottom:1.9rem; z-index:20; font-size:.58rem; color:#4f4a42; letter-spacing:.18em; opacity:0; transition:.4s; }
-  #stage:hover #phaseTag{ opacity:.8; }
-  /* toggle UI: nascondi/mostra overlay (tasto H o bottoncino in basso a sx, utile su mobile) */
-  #uiToggle{ position:fixed; left:.6rem; bottom:.6rem; z-index:40; cursor:pointer;
+  /* visualizer (#meters) RIMOSSO */
+  /* debug audio: allineato SOTTO l'istruzione h=hide ui, in basso a sinistra */
+  #phaseTag{ position:fixed; left:.65rem; bottom:.5rem; z-index:20; font-size:.52rem; color:#5a544a;
+    letter-spacing:.1em; opacity:.6; max-width:92vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* toggle UI: nascondi/mostra overlay (tasto H o bottoncino, utile su mobile) — sopra il debug */
+  #uiToggle{ position:fixed; left:.6rem; bottom:1.7rem; z-index:40; cursor:pointer;
     background:rgba(0,0,0,.55); color:#ff4a3a; border:1px solid rgba(255,0,0,.4);
     font:bold .66rem/1 "Courier New",ui-monospace,monospace; letter-spacing:.1em; padding:.4rem .55rem; border-radius:3px;
     opacity:.45; transition:opacity .2s; -webkit-tap-highlight-color:transparent; }
   #uiToggle:hover{ opacity:1; }
   #uiToggle .kbd{ display:none; }   /* mobile: solo "hide ui" */
   @media (hover:hover) and (pointer:fine){ #uiToggle .kbd{ display:inline; } }   /* desktop: "h = hide ui" */
-  body.uiHidden #faBanner, body.uiHidden #manifesto, body.uiHidden #phaseTag, body.uiHidden #meters{ display:none !important; }
+  body.uiHidden #faBanner, body.uiHidden #manifesto, body.uiHidden #phaseTag{ display:none !important; }
 
   /* ── HUD "1 CLICK = 1 DEAD FASCIST" sopra il canvas ── */
   #fascistHud{ position:fixed; inset:0; z-index:15; cursor:crosshair; font-family:"Courier New",ui-monospace,monospace; }
@@ -106,7 +104,7 @@
   #clickPrompt.show{ opacity:1; visibility:visible; }
   #clickPrompt span{
     color:#ff1e1e; font:bold clamp(1.1rem,5vw,2.4rem)/1.3 "Courier New",ui-monospace,monospace;
-    letter-spacing:.18em; text-shadow:0 0 14px rgba(255,0,0,.6), -3px 0 #00ffff, 3px 0 #ff00aa;
+    letter-spacing:.18em; text-shadow:0 0 14px rgba(255,0,0,.6), 0 0 4px rgba(255,0,0,.85), 0 0 2px #000;  /* solo rosso, niente ciano/magenta */
     padding:1rem 1.6rem; background:rgba(0,0,0,.6); border:1px solid rgba(255,0,0,.55); border-radius:3px;  /* box nero/rosso trasparente */
     animation: promptPulse 1.1s ease-in-out infinite;
   }
@@ -125,13 +123,18 @@
     background:linear-gradient(90deg,transparent,rgba(255,40,40,.55),transparent);
     box-shadow:0 0 10px rgba(255,0,0,.5); animation:eggTrack 1.2s linear infinite; }
   @keyframes eggGlitch{
-    0%{background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);}
-    16%{background:#001a08;filter:brightness(2) contrast(6) saturate(10) hue-rotate(130deg);}
-    33%{background:#1a1000;filter:brightness(2.5) contrast(6) saturate(9) hue-rotate(30deg);}
-    50%{background:#180018;filter:brightness(2) contrast(5) saturate(9) hue-rotate(260deg);}
-    66%{background:#00181a;filter:brightness(1.5) contrast(7) saturate(8) hue-rotate(185deg);}
-    83%{background:#1a0020;filter:brightness(3) contrast(9) saturate(8) hue-rotate(300deg);}
-    100%{background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);}
+    0%{background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);transform:skewX(-2deg) translateX(-6px);}
+    8%{background:#1a0020;filter:brightness(3) contrast(9) saturate(0);transform:skewX(3deg) translateX(9px);}
+    14%{background:#001a08;filter:brightness(2) contrast(6) saturate(10) hue-rotate(130deg);transform:skewX(-1deg) translateX(-4px);}
+    20%{background:#000;filter:brightness(.5) contrast(8) saturate(0);transform:skewX(2deg) translateX(6px);}
+    26%{background:#1a1000;filter:brightness(2.5) contrast(6) saturate(9) hue-rotate(30deg);transform:translateX(0);}
+    34%{background:#00181a;filter:brightness(1.5) contrast(7) saturate(8) hue-rotate(185deg);transform:skewX(-1.5deg) translateX(-5px);}
+    44%{background:#000;filter:brightness(1) contrast(6) saturate(6) hue-rotate(310deg);transform:skewX(-1deg) translateX(-3px);}
+    54%{background:#180018;filter:brightness(2) contrast(5) saturate(9) hue-rotate(260deg);transform:translateX(4px);}
+    66%{background:#001008;filter:brightness(1.8) contrast(4) saturate(7) hue-rotate(155deg);transform:translateX(-3px);}
+    78%{background:#000;filter:brightness(1.3) contrast(4) saturate(5) hue-rotate(20deg);transform:none;}
+    90%{background:#120012;filter:brightness(1.5) contrast(3) saturate(5) hue-rotate(280deg);transform:none;}
+    100%{background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);transform:skewX(-2deg) translateX(-6px);}
   }
   @keyframes eggTrack{ from{top:-2px;} to{top:100%;} }
   #loadMsg{ font-size:12px; letter-spacing:6px; color:#ff2020; text-shadow:-3px 0 #00ffff,3px 0 #ff00aa;
@@ -161,11 +164,6 @@
 
 <div id="stage">
   <canvas id="c"></canvas>
-  <div id="meters">
-    <div class="meter"><i></i></div><div class="meter"><i></i></div>
-    <div class="meter"><i></i></div><div class="meter"><i></i></div>
-    <div class="meter"><i></i></div>
-  </div>
   <div id="phaseTag">autonoma · seed —</div>
 </div>
 
@@ -549,7 +547,8 @@ function readAudio(){
     beat = 1; beatCooldown = 8;        // impulso visivo (zoom/strobo)
   }
   // ---- rilevamento transienti su tutto lo spettro (spectral flux) ----
-  if(!prevFreq) prevFreq = new Uint8Array(n);
+  // prima volta: inizializza prevFreq col frame CORRENTE -> il primo flux è ~0 (niente lampo all'avvio/primo click)
+  if(!prevFreq){ prevFreq = new Uint8Array(n); prevFreq.set(freq); }
   let flux = 0;
   for(let i=0;i<n;i++){ const d = freq[i]-prevFreq[i]; if(d>0) flux += d; prevFreq[i] = freq[i]; }
   flux /= (n*255);
@@ -893,11 +892,8 @@ function render(){
   ctx.drawImage(ff, 0, 0);
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
-  updateMeters();
 }
 
-const meterEls = [...document.querySelectorAll('#meters i')];
-function updateMeters(){ for(let b=0;b<BANDS;b++) meterEls[b].style.height = Math.round(bandVal[b]*100)+'%'; }
 // glitch del manifesto pilotato dal GAIN del mix: più intensità -> sposta/sfarfalla di più
 const manInner = document.getElementById('manifestoInner');
 function glitchManifesto(){
@@ -920,10 +916,12 @@ function boot(){
   render();                       // SOLO sfondi che sfumano con gli effetti: niente immagini, niente audio
   whenReady();                    // tiene il loading finché il sito è davvero pronto, poi mostra il prompt
 }
-// loading finché immagini caricate (≥85%) + audio decodificato (o timeout 25s di sicurezza)
+// loading finché immagini (≥85%) + audio decodificato, MA almeno MIN_LOAD_MS (o timeout 25s di sicurezza)
+const MIN_LOAD_MS = 4500;   // durata minima della schermata di caricamento (VHS)
 function whenReady(){
+  const elapsed = Date.now()-bootT;
   const ready = (imgLoaded >= N_IMG*0.85) && granReady;
-  if(ready || Date.now()-bootT > 25000){
+  if((ready && elapsed >= MIN_LOAD_MS) || elapsed > 25000){
     const o=document.getElementById('loadOverlay'); if(o){ o.classList.add('done'); setTimeout(()=>o.remove(), 800); }
     const p=document.getElementById('clickPrompt'); if(p) p.classList.add('show');   // compare il prompt e RESTA finché non clicchi
     armStart();
