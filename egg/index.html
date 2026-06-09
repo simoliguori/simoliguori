@@ -440,7 +440,7 @@ function setupAudio(){
   setupExtraTrack('majinAudio', 1.0, majinGain);
   // TTS: bitcrusher -> gain MOLTO alto -> dry + DELAY(feedback) + RIVERBERO -> analyser
   ttsGain = actx.createGain(); ttsGain.gain.value = 6.0;  // TTS ALZATO DI TANTISSIMO
-  const ttsCrushIn = makeBitcrusher(actx, ttsGain);       // bitcrusher sulla voce
+  const ttsCrushIn = makeBitcrusher(actx, ttsGain, 7, 3);  // bitcrusher PIÙ GENTILE sulla voce (resta comprensibile)
   setupExtraTrack('ttsAudio', 1.0, ttsCrushIn);
   // --- BEAT-REPEAT via delay "freeze": congela una fetta della voce e la fa ripetere ---
   const ttsBus = actx.createGain();                       // segnale post-stutter (lo seguono delay+riverbero)
@@ -524,34 +524,29 @@ function scheduleGrains(){
 // Stati: play (normale) · stutter (ripete una fetta = beat-repeat) · gate (chop on/off sincopato) · jump (mangle).
 function mangleTTS(dt){
   const el=document.getElementById('ttsAudio'); if(!el || !ttsGain) return;
-  // ---- morph del pitch (con fasi robotiche low-pitch) ----
+  // ---- morph del pitch DOLCE (niente più fase robotica a metà velocità che impasta) ----
   ttsPitchT -= dt;
-  if(ttsPitchT<=0){
-    if(RNG()<0.35){ ttsPitchTgt=0.5+RNG()*0.16; ttsPitchT=1.2+RNG()*2.2; ttsRobot=true; }
-    else { ttsPitchTgt=0.85+RNG()*0.30; ttsPitchT=1.5+RNG()*3.5; ttsRobot=false; }
-  }
-  if(ttsRobot){ ttsPitch += (ttsPitchTgt-ttsPitch)*0.5; ttsPitch=Math.round(ttsPitch*12)/12; }
-  else ttsPitch += (ttsPitchTgt-ttsPitch)*0.02;
-  // ---- SHIFT di pitch SINCOPATO/GLITCH: ogni tanto il pitch CROLLA a scatti, poi torna ----
+  if(ttsPitchT<=0){ ttsPitchTgt = 0.92 + RNG()*0.16; ttsPitchT = 1.8 + RNG()*3; }   // attorno a 1 -> resta comprensibile
+  ttsPitch += (ttsPitchTgt - ttsPitch)*0.03;
+  // ---- SHIFT di pitch FREQUENTI ma MITI e SOSTENUTI: il tono scende spesso senza impastare ----
   pdT -= dt;
-  if(pdT<=0){ pdOn = RNG()<0.3; pdT = pdOn ? rr(0.15,0.7) : rr(0.6,2.6); pdRate = rr(6,20); pdSeed=(RNG()*1000)|0; pdAmt = rr(0.32,0.7); }
-  let pr = ttsPitch;
-  if(pdOn){ const stp=Math.floor(t*pdRate); if(hash((stp+pdSeed)>>>0) < 0.55) pr = ttsPitch*pdAmt; }   // drop tenuto per step -> sincopato
-  el.playbackRate = Math.max(0.2, pr);
-  // ---- BEAT-REPEAT (freeze) erratico: ogni tanto congela una fetta e la fa ripetere ----
+  if(pdT<=0){ pdOn = RNG()<0.6; pdT = pdOn ? rr(0.25,0.9) : rr(0.35,1.1); pdAmt = 0.62 + RNG()*0.2; }   // dip frequenti, miti (0.62-0.82)
+  const pr = pdOn ? ttsPitch*pdAmt : ttsPitch;
+  el.playbackRate = Math.max(0.5, pr);   // clamp più alto -> non scende mai così tanto da diventare incomprensibile
+  // ---- BEAT-REPEAT (freeze): MENO frequente e più corto -> la voce resta intelligibile ----
   if(!stDelay) return;
   mngT -= dt;
   if(mngT<=0){
-    if(RNG()<0.5){
-      // play normale: voce viva, delay che si ri-alimenta
+    if(RNG()<0.72){
+      // play normale (la maggior parte del tempo): voce viva, delay che si ri-alimenta
       stDry.gain.value=1; stWet.gain.value=0; stFeed.gain.value=1; stFb.gain.value=0;
-      mngT = rr(0.3,1.5);
+      mngT = rr(0.5,2.0);
     } else {
-      // BEAT REPEAT: congela la fetta corrente e la ripete
-      const slice = rr(0.06,0.2);
+      // BEAT REPEAT: fetta corta, poche ripetizioni
+      const slice = rr(0.05,0.14);
       stDelay.delayTime.value=slice;
-      stDry.gain.value=0; stWet.gain.value=1; stFeed.gain.value=0; stFb.gain.value=0.97;
-      mngT = slice*(2+(RNG()*8|0));   // numero di ripetizioni della fetta
+      stDry.gain.value=0; stWet.gain.value=1; stFeed.gain.value=0; stFb.gain.value=0.96;
+      mngT = slice*(2+(RNG()*4|0));   // 2-5 ripetizioni
     }
   }
 }
