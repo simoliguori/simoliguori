@@ -160,9 +160,10 @@ Possibili prossimi passi: bitcrusher via **AudioWorklet** (riportare la distorsi
 sync dei salti di playhead con i rilasci; reverse/varispeed dei grani; preset/seed in querystring;
 modalità “embed” con dimensioni del contenitore; rimuovere l'overlay di stato audio quando l'audio è ok.
 
-## 11. Variante `egg-wip.html` — il NUOVO easter egg (WIP, non distruttiva)
-`index.html` resta la base "pura". `egg-wip.html` è la versione candidata a **sostituire `../egg.html`**
-(deciso: il Konami di `../index.html` punterà qui quando approvata). NON tocca `egg.html` né il redirect.
+## 11. `egg.html` — l'easter egg LIVE del sito (promosso)
+`index.html` (in questa cartella) resta la base "pura" di riferimento. **`audiovisual/egg.html` è l'easter
+egg ATTIVO**: il Konami in `../index.html` ci reindirizza (`window.location.href='audiovisual/egg.html'`).
+La vecchia pagina è conservata in `../egg-old.html`. Editare direttamente `egg.html` (single source).
 Differenze rispetto a `index.html`:
 - **Tre tracce nel mix**: `track.mp3` (granulare, grainBus 0.85) + `../assets/audio/majin-sonic-cd.mp3`
   (loop egg, **0.85 = stesso volume del granulare**) + `tts.mp3` (voce, `ttsGain` 2.6× + **bitcrusher**).
@@ -192,3 +193,12 @@ Differenze rispetto a `index.html`:
   Per promuoverla: rinominare in `../egg.html` o puntarci il redirect Konami, e copiare/aggiustare i path assets.
 - **Verifica**: l'anteprima headless NON anima (rAF non scatta lì) e non sblocca l'audio →
   testare con `python -m http.server` in un browser vero (clic per sbloccare le 3 tracce).
+
+## 12. Performance & COMPRESSIONE ASSET (regola fissa)
+- Lag principale = `buildChannels` (`getImageData` per ogni immagine nuova): ora a **risoluzione ridotta**
+  (`KEY_RES=720`) + **cache 40** (niente thrashing) + **cap immagini `maxOverlap≤16`** + risoluzione
+  interna `maxW=1280`/DPR≤1.25. Se serve più fluidità: abbassa `KEY_RES`/`maxW` o il cap.
+- **REGOLA: comprimere SEMPRE gli asset prima di committarli** (caricamento più rapido). Comandi usati:
+  - Immagini → `python` PIL: ridimensiona ≤1280px, `JPEG quality=72 optimize progressive` (in `img/`).
+  - Audio → `ffmpeg -c:a libmp3lame`: musica **128k stereo**, voce/TTS **48k mono**.
+  - Vale per ogni nuovo asset aggiunto in futuro (immagini, brani, voci).

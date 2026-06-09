@@ -1530,7 +1530,7 @@ button:focus,
   background: rgba(255, 60, 60, 0.28);
   box-shadow: 0 0 10px 2px rgba(255, 60, 60, 0.55);
 }
-/* Konami flash — glitch VHS nero, transizione seamless verso egg.html */
+/* Konami flash — glitch VHS nero, transizione seamless verso audiovisual/egg.html */
 #konamiFlash {
   position: fixed;
   inset: -60px;
@@ -3695,7 +3695,7 @@ function konamiTrigger() {
     wrap.style.transform = 'perspective(1000px) rotateY(720deg) scale(1.15)';
   }
   setTimeout(() => flash?.classList.add('on'), 1500);
-  setTimeout(() => { window.location.href = 'egg.html'; }, 2200);
+  setTimeout(() => { window.location.href = 'audiovisual/egg.html'; }, 2200);
 }
 
 function initSoundboard() {
