@@ -232,6 +232,7 @@ window.addEventListener('resize', resize);
 // (backbuffer) nello shader -> dove c'è MOTO smeara/RGB-shift, altrove mostra il frame nitido.
 const glc = document.getElementById('glc');
 let gl=null, glProg=null, glOK=false, glTried=false, texCur=null, texBack=null, glL={}, glW=0, glH=0;
+let datamoshOn = false;                    // shader GLSL datamosh ON/OFF (tasto G). OFF = motore 2D puro + datamosh 2D
 const GLSCALE = 0.6;                       // PERF: il datamosh gira a risoluzione ridotta (CSS lo scala)
 let glSrc=null, glSx=null;                 // canvas piccolo per fare l'upload di cv già rimpicciolito
 let ptrX=0, ptrY=0, ptrVel=0, ptrPX=0, ptrPY=0;   // cursore/dito: posizione (-0.5..0.5) e velocità
@@ -285,7 +286,9 @@ function glResize(){
   gl.bindTexture(gl.TEXTURE_2D,texBack); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,glW,glH,0,gl.RGB,gl.UNSIGNED_BYTE,null);
 }
 function glPass(){
+  if(!datamoshOn){ if(glc.style.display!=='none') glc.style.display='none'; return; }   // GLSL spento: mostra il 2D puro
   if(!glOK){ if(!glTried){ glTried=true; if(initGL()){ glOK=true; glResize(); glc.style.display='block'; } } if(!glOK) return; }
+  if(glc.style.display==='none') glc.style.display='block';
   try{
     if(glW!==Math.round(W*GLSCALE)||glH!==Math.round(H*GLSCALE)) glResize();
     gl.viewport(0,0,glW,glH);
@@ -954,7 +957,8 @@ function render(){
   ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation='source-over';
 
-  // 2) (datamosh 2D rimosso per performance: ora lo fa lo shader GPU sull'intero frame)
+  // 2) DATAMOSH 2D a bande (solo quando lo shader GLSL è spento)
+  if(!datamoshOn) datamoshTear(intensity);
 
   // 3) SIMMETRIA caleidoscopica -> SFONDO pseudo-frattale (a copertura piena)
   kaleido(sc.kaleido);
@@ -1153,6 +1157,7 @@ window.addEventListener('keydown', e=>{
     if(playing){ actx.suspend(); playing=false; extraEls.forEach(el=>el.pause()); }
     else { actx.resume(); playing=true; nextGrainTime=actx.currentTime; extraEls.forEach(el=>el.play().catch(()=>{})); } }
   else if(e.key==='h'||e.key==='H'){ toggleUI(); }
+  else if(e.key==='g'||e.key==='G'){ datamoshOn = !datamoshOn; }   // datamosh GLSL ON/OFF
 });
 })();
 </script>
