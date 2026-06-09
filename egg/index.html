@@ -314,6 +314,7 @@ let crushAmt=0.12;
 // sintesi granulare + tensione auto-oscillante
 let audioBuf=null, grainBus=null, granReady=false, nextGrainTime=0, phSec=0, fallbackEl=null;
 let granFilter=null, ttsGain=null;   // lowpass risonante (scarichi) + gain/bitcrusher della voce TTS
+let stDelay=null, stFb=null, stDry=null, stWet=null, stFeed=null;   // BEAT-REPEAT (freeze) della voce TTS
 // INTRO/TIMELINE: 10s di soli sfondi -> compare il prompt (resta) -> click -> riser(white noise) -> sub kick -> casino
 let chaos=false, started=false, granOn=false, burstBoost=0;   // started=l'utente ha cliccato il prompt
 const RISER_S   = 5;                 // durata del riser prima del sub-kick/drop
@@ -441,16 +442,27 @@ function setupAudio(){
   ttsGain = actx.createGain(); ttsGain.gain.value = 6.0;  // TTS ALZATO DI TANTISSIMO
   const ttsCrushIn = makeBitcrusher(actx, ttsGain);       // bitcrusher sulla voce
   setupExtraTrack('ttsAudio', 1.0, ttsCrushIn);
-  ttsGain.connect(analyser);                              // DRY
+  // --- BEAT-REPEAT via delay "freeze": congela una fetta della voce e la fa ripetere ---
+  const ttsBus = actx.createGain();                       // segnale post-stutter (lo seguono delay+riverbero)
+  stDelay = actx.createDelay(1.0); stDelay.delayTime.value = 0.12;
+  stFb = actx.createGain(); stFb.gain.value = 0;          // feedback del loop (≈1 = freeze)
+  stDry = actx.createGain(); stDry.gain.value = 1;        // voce viva (0 durante il freeze)
+  stWet = actx.createGain(); stWet.gain.value = 0;        // uscita del loop (1 durante il freeze)
+  stFeed = actx.createGain(); stFeed.gain.value = 1;      // alimenta il delay (0 = congela il buffer)
+  ttsGain.connect(stDry); stDry.connect(ttsBus);
+  ttsGain.connect(stFeed); stFeed.connect(stDelay);
+  stDelay.connect(stFb); stFb.connect(stDelay);
+  stDelay.connect(stWet); stWet.connect(ttsBus);
+  ttsBus.connect(analyser);                               // DRY (post beat-repeat)
   const ttsDelay = actx.createDelay(1.0); ttsDelay.delayTime.value = 0.33;   // DELAY/eco con feedback
   const ttsFb = actx.createGain(); ttsFb.gain.value = 0.42;
   const ttsDelOut = actx.createGain(); ttsDelOut.gain.value = 0.55;
-  ttsGain.connect(ttsDelay); ttsDelay.connect(ttsFb); ttsFb.connect(ttsDelay);
+  ttsBus.connect(ttsDelay); ttsDelay.connect(ttsFb); ttsFb.connect(ttsDelay);
   ttsDelay.connect(ttsDelOut); ttsDelOut.connect(analyser);
   const ttsRev = actx.createConvolver(); ttsRev.buffer = makeIR(actx, 2.8, 2.4);   // RIVERBERO (IR sintetica)
   const ttsRevOut = actx.createGain(); ttsRevOut.gain.value = 0.6;
-  ttsGain.connect(ttsRev); ttsRev.connect(ttsRevOut); ttsRevOut.connect(analyser);
-  audioKeep.push(ttsGain, ttsDelay, ttsFb, ttsDelOut, ttsRev, ttsRevOut);
+  ttsBus.connect(ttsRev); ttsRev.connect(ttsRevOut); ttsRevOut.connect(analyser);
+  audioKeep.push(ttsGain, ttsBus, stDelay, stFb, stDry, stWet, stFeed, ttsDelay, ttsFb, ttsDelOut, ttsRev, ttsRevOut);
   // PRIMARIO: sintesi granulare su buffer decodificato. Se il fetch/decode non e' possibile
   // (es. anteprima sandbox / file://), si passa al FALLBACK con <audio> (suono garantito).
   audioStatus = 'decodifica…';
@@ -526,23 +538,21 @@ function mangleTTS(dt){
   let pr = ttsPitch;
   if(pdOn){ const stp=Math.floor(t*pdRate); if(hash((stp+pdSeed)>>>0) < 0.55) pr = ttsPitch*pdAmt; }   // drop tenuto per step -> sincopato
   el.playbackRate = Math.max(0.2, pr);
-  // ---- macchina a stati del mangling (erratica) ----
+  // ---- BEAT-REPEAT (freeze) erratico: ogni tanto congela una fetta e la fa ripetere ----
+  if(!stDelay) return;
   mngT -= dt;
   if(mngT<=0){
-    const r=RNG();
-    if(r<0.42){ mngState='play'; mngT=rr(0.18,1.1); }                                   // tratto normale
-    else if(r<0.72){ mngState='stutter'; mngSlice=rr(0.05,0.2); mngStart=el.currentTime||0; mngT=mngSlice*(2+(RNG()*9|0)); } // BEAT-REPEAT
-    else if(r<0.9){ mngState='gate'; mngRate=rr(7,24); mngSeed=(RNG()*1000)|0; mngT=rr(0.12,0.7); }   // chop sincopato
-    else { try{ el.currentTime=Math.max(0,(el.duration||300)*RNG()); }catch(e){} mngState='play'; mngT=rr(0.15,0.7); }   // mangle/jump
-  }
-  if(mngState==='stutter'){
-    if(el.currentTime > mngStart+mngSlice || el.currentTime < mngStart-0.02){ try{ el.currentTime=mngStart; }catch(e){} }
-    ttsGain.gain.value = 6.0;
-  } else if(mngState==='gate'){
-    const step=Math.floor(t*mngRate);
-    ttsGain.gain.value = (hash((step+mngSeed)>>>0) < 0.55) ? 6.0 : 0.0;   // on/off "tenuto" per step -> sincopato
-  } else {
-    ttsGain.gain.value = 6.0;
+    if(RNG()<0.5){
+      // play normale: voce viva, delay che si ri-alimenta
+      stDry.gain.value=1; stWet.gain.value=0; stFeed.gain.value=1; stFb.gain.value=0;
+      mngT = rr(0.3,1.5);
+    } else {
+      // BEAT REPEAT: congela la fetta corrente e la ripete
+      const slice = rr(0.06,0.2);
+      stDelay.delayTime.value=slice;
+      stDry.gain.value=0; stWet.gain.value=1; stFeed.gain.value=0; stFb.gain.value=0.97;
+      mngT = slice*(2+(RNG()*8|0));   // numero di ripetizioni della fetta
+    }
   }
 }
 function updateTension(dt){
@@ -823,9 +833,9 @@ function renderForeground(intensity){
   let avx=0, avy=0, n=0;
   for(const L of layers){ avx+=L.vx; avy+=L.vy; n++; }
   if(n){ avx/=n; avy/=n; }
-  // scroll RIDOTTO -> il trail resta ravvicinato: ~un'istanza dell'immagine per frame, poco distanziate
-  const mvx = avx*W*0.012 + Math.sin(t*0.6)*bandVal[1]*2;
-  const mvy = avy*H*0.012 + Math.cos(t*0.5)*bandVal[1]*2;
+  // scroll QUASI NULLO -> il trail resta sul posto: ogni frame lascia un'istanza sovrapposta alla precedente
+  const mvx = avx*W*0.004 + Math.sin(t*0.6)*bandVal[1]*1;
+  const mvy = avy*H*0.004 + Math.cos(t*0.5)*bandVal[1]*1;
   // snapshot del primo piano precedente
   px2.clearRect(0,0,W,H); px2.drawImage(ff,0,0);
   ffx.setTransform(1,0,0,1,0,0); ffx.clearRect(0,0,W,H);
@@ -838,12 +848,12 @@ function renderForeground(intensity){
   let oxBase = Math.round(mvx/q)*q, oyBase = Math.round(mvy/q)*q;
   for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
     let ox=oxBase, oy=oyBase, fx=1, fy=1;
-    // strappi a blocco: SALTA di blocchi interi (genera ripetizioni/tiling) + flip a specchio
-    if(kick>0.10 && RNG() < 0.10 + kick*0.5){
-      ox += (((RNG()*5)|0)-2)*bw;      // salto di N blocchi interi -> pattern geometrico
+    // strappi a blocco RARI (solo su kick forti) e piccoli -> niente più copie distanziate
+    if(kick>0.4 && RNG() < 0.03 + kick*0.12){
+      ox += (((RNG()*3)|0)-1)*bw;      // salto di ±1 blocco (raro)
       oy += (((RNG()*3)|0)-1)*bh;
-      if(RNG()<0.5) fx=-1;             // specchio orizzontale del blocco
-      if(RNG()<0.35) fy=-1;            // specchio verticale -> simmetrie ricorsive
+      if(RNG()<0.4) fx=-1;
+      if(RNG()<0.25) fy=-1;
     }
     const sx=c*bw, sy=r*bh, dx=sx+ox, dy=sy+oy;
     if(fx<0||fy<0){
