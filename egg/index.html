@@ -322,6 +322,7 @@ let firstKickSec=0, realStarted=false;
 const LOOP_TAIL_S = 0.15;            // quanto tagliare prima della fine per il loop (evita il fade-out)
 let ttsPitch=1, ttsPitchTgt=1, ttsPitchT=0, ttsRobot=false;   // morph del pitch + fasi "robotiche" low-pitch
 let mngState='play', mngT=0, mngSlice=0.1, mngStart=0, mngRate=12, mngSeed=0;   // mangling/glitch + beat-repeat sincopato della voce
+let pdOn=false, pdT=0, pdRate=12, pdSeed=0, pdAmt=0.5;   // shift di pitch SINCOPATO/glitch: crolli sporadici del pitch
 let audioStatus='—';
 const audioKeep=[];   // mantiene VIVI i nodi audio (evita che il GC spezzi la catena -> silenzio)
 // TENSIONE PILOTATA DAL GAIN REALE del brano (non più da un timer auto-oscillante):
@@ -516,7 +517,12 @@ function mangleTTS(dt){
   }
   if(ttsRobot){ ttsPitch += (ttsPitchTgt-ttsPitch)*0.5; ttsPitch=Math.round(ttsPitch*12)/12; }
   else ttsPitch += (ttsPitchTgt-ttsPitch)*0.02;
-  el.playbackRate = Math.max(0.25, ttsPitch);
+  // ---- SHIFT di pitch SINCOPATO/GLITCH: ogni tanto il pitch CROLLA a scatti, poi torna ----
+  pdT -= dt;
+  if(pdT<=0){ pdOn = RNG()<0.3; pdT = pdOn ? rr(0.15,0.7) : rr(0.6,2.6); pdRate = rr(6,20); pdSeed=(RNG()*1000)|0; pdAmt = rr(0.32,0.7); }
+  let pr = ttsPitch;
+  if(pdOn){ const stp=Math.floor(t*pdRate); if(hash((stp+pdSeed)>>>0) < 0.55) pr = ttsPitch*pdAmt; }   // drop tenuto per step -> sincopato
+  el.playbackRate = Math.max(0.2, pr);
   // ---- macchina a stati del mangling (erratica) ----
   mngT -= dt;
   if(mngT<=0){
