@@ -207,7 +207,7 @@ const fb = document.createElement('canvas'), fbx = fb.getContext('2d');     // f
 const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // temp per singolo layer
 const post = document.createElement('canvas'), px2 = post.getContext('2d');  // snapshot per kaleido/datamosh
 const ff = document.createElement('canvas'), ffx = ff.getContext('2d');      // feedback DEDICATO al primo piano (scie dei blob)
-let decayFG = 0.985;  // scia di primo piano LUNGHISSIMA: il feedback datamosh quasi riempie lo schermo
+let decayFG = 0.995;  // scia di primo piano AL MASSIMO: persistenza lunghissima -> istanze densissime
 
 function resize(){
   DPR = Math.min(window.devicePixelRatio||1, 1.0);   // PERF: 1 pixel logico = 1 pixel canvas (Firefox)
@@ -668,8 +668,8 @@ function spawnLayer(idx, px, py){
     blend: IMGBLEND[(RNG()*IMGBLEND.length)|0],
     x: atCursor ? px + rr(-0.14,0.14) : rr(-0.45,0.45),    // posizione: cursore (stretta) o casuale
     y: atCursor ? py + rr(-0.14,0.14) : rr(-0.45,0.45),
-    // movimento AGGRESSIVO: i blob viaggiano attraverso lo schermo lungo una traiettoria
-    vx: rr(-0.45,0.45), vy: rr(-0.45,0.45),
+    // movimento più lento -> istanze del trail quasi sovrapposte (tail densissimo)
+    vx: rr(-0.2,0.2), vy: rr(-0.2,0.2),
     scale: rr(0.12,0.55),                                  // immagini PIÙ PICCOLE
     rot: (RNG()<0.4 ? rr(-3.14,3.14) : rr(-0.4,0.4)), spin: rr(-0.9,0.9),
     // parametri LO-FI: passo temporale, griglia di quantizzazione, ampiezza salti, scatto rotazione
@@ -828,9 +828,8 @@ function renderForeground(intensity){
   let avx=0, avy=0, n=0;
   for(const L of layers){ avx+=L.vx; avy+=L.vy; n++; }
   if(n){ avx/=n; avy/=n; }
-  // scroll QUASI NULLO -> il trail resta sul posto: ogni frame lascia un'istanza sovrapposta alla precedente
-  const mvx = avx*W*0.004 + Math.sin(t*0.6)*bandVal[1]*1;
-  const mvy = avy*H*0.004 + Math.cos(t*0.5)*bandVal[1]*1;
+  // scroll ZERO -> la scia resta esattamente sul posto: massima densità di istanze sovrapposte
+  const mvx = 0, mvy = 0;
   // snapshot del primo piano precedente
   px2.clearRect(0,0,W,H); px2.drawImage(ff,0,0);
   ffx.setTransform(1,0,0,1,0,0); ffx.clearRect(0,0,W,H);
