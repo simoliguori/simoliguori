@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FEEDBACK — opera audio-reattiva autonoma</title>
+<style>
+  :root{ --fg:#e8e3d8; --dim:#8a8378; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; background:#000; overflow:hidden; }
+  body{ font-family:"Courier New",ui-monospace,monospace; color:var(--fg); }
+  #stage{ position:fixed; inset:0; }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  #gate{
+    position:fixed; inset:0; z-index:30;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1.3rem; text-align:center; padding:2rem;
+    background:radial-gradient(circle at 50% 40%, #161210 0%, #000 70%);
+  }
+  #gate h1{ font-size:clamp(1.6rem,6vw,3.2rem); letter-spacing:.5em; font-weight:400; }
+  #gate h1 span{ color:#c9402f; }
+  #gate p{ max-width:48ch; line-height:1.6; color:var(--dim); font-size:.85rem; letter-spacing:.04em; }
+  .warn{ border:1px solid #6b2a22; color:#d98a7e; padding:.6rem 1rem; font-size:.72rem; max-width:50ch; letter-spacing:.05em; }
+  #startBtn{
+    margin-top:.4rem; cursor:pointer; background:transparent; color:var(--fg);
+    border:1px solid var(--fg); padding:.9rem 2.6rem; font-family:inherit;
+    font-size:.95rem; letter-spacing:.4em; text-transform:uppercase; transition:.25s;
+  }
+  #startBtn:hover{ background:var(--fg); color:#000; }
+  .gateRow{ display:flex; gap:1.2rem; align-items:center; font-size:.72rem; color:var(--dim); }
+  .gateRow label{ cursor:pointer; user-select:none; }
+  #seedTag{ font-size:.62rem; color:#5a554c; letter-spacing:.2em; }
+
+  /* utility minima (sicurezza + fullscreen), niente controlli artistici */
+  #util{
+    position:fixed; right:.7rem; bottom:.7rem; z-index:20; display:flex; gap:.4rem;
+    opacity:0; transition:opacity .4s; pointer-events:none;
+  }
+  #stage:hover #util{ opacity:1; pointer-events:auto; }
+  .btn{
+    cursor:pointer; background:rgba(20,18,16,.55); color:var(--fg);
+    border:1px solid #3a352e; padding:.4rem .7rem; font-family:inherit;
+    font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; transition:.2s; backdrop-filter:blur(3px);
+  }
+  .btn:hover{ border-color:var(--fg); }
+  .btn.on{ background:#c9402f; border-color:#c9402f; color:#000; }
+  #meters{ position:fixed; top:.7rem; right:.9rem; z-index:20; display:flex; gap:4px; opacity:0; transition:.4s; }
+  #stage:hover #meters{ opacity:.7; }
+  .meter{ width:6px; height:42px; background:rgba(255,255,255,.07); position:relative; }
+  .meter i{ position:absolute; bottom:0; left:0; right:0; background:#c9402f; height:0%; }
+  #phaseTag{ position:fixed; left:.8rem; bottom:.7rem; z-index:20; font-size:.58rem; color:#4f4a42; letter-spacing:.18em; opacity:0; transition:.4s; }
+  #stage:hover #phaseTag{ opacity:.8; }
+
+  /* ── HUD "1 CLICK = 1 DEAD FASCIST" sopra il canvas ── */
+  #fascistHud{ position:fixed; inset:0; z-index:15; cursor:crosshair; font-family:"Courier New",ui-monospace,monospace; }
+  #faBanner{
+    position:fixed; top:0; left:0; right:0; text-align:center; z-index:16; pointer-events:none;
+    background:rgba(0,0,0,.7); color:#ff1e1e; padding:.5rem .5rem;
+    font-size:clamp(.68rem,2.6vw,.92rem); font-weight:bold; letter-spacing:.22em;
+    border-bottom:1px solid rgba(255,0,0,.45); text-shadow:0 0 8px rgba(255,0,0,.55);
+    animation:faGlitch .3s infinite;
+  }
+  #faCounter{ display:block; margin-top:2px; font-size:1.1em; letter-spacing:.1em; }
+  @keyframes faGlitch{ 0%,90%,100%{ transform:translate(0,0); } 93%{ transform:translate(-1px,1px); } 96%{ transform:translate(2px,-1px); } }
+  .click-explosion{ position:fixed; width:130px; height:130px; pointer-events:none; z-index:17; transform:translate(-50%,-50%); }
+  .click-explosion img{ width:100%; height:100%; object-fit:contain; }
+
+  /* ── Manifesto SEMPRE al centro dello schermo (statico, glitch in-place) ── */
+  #manifesto{ position:fixed; inset:0; z-index:14; pointer-events:none; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; }
+  #manifestoInner{
+    width:min(880px,92vw); padding:18px 22px; text-align:center; color:#ff2a2a;
+    font:bold 11px/1.85 "Courier New",ui-monospace,monospace; letter-spacing:1px;
+    background:rgba(0,0,0,.62); border:1px solid rgba(255,0,0,.5); border-radius:2px;  /* box rosso/nero come il top, meno trasparente */
+    text-shadow:0 0 2px #000, 0 0 4px #000, 0 0 9px rgba(255,0,0,.5);   /* contorno nero + glow rosso */
+    animation: mFlicker 2.6s steps(1,end) infinite;
+  }
+  @keyframes mFlicker{ 0%,95%,100%{opacity:.9; transform:translate(0,0);} 96%{opacity:.5; transform:translate(-1px,1px);} 98%{opacity:1; transform:translate(1px,-1px);} 99%{opacity:.7;} }
+  @media (max-width:600px){ #manifestoInner{ font-size:9px; line-height:1.7; } }
+
+  /* ── Intro: prompt centrale "1 click = dead fascist" + comparsa glitch al drop ── */
+  .preDrop{ opacity:0 !important; pointer-events:none !important; }
+  .dropGlitch{ animation: dropGlitch .85s steps(2,end) 1 !important; }
+  @keyframes dropGlitch{
+    0%{opacity:0; filter:invert(1) hue-rotate(120deg); transform:translateX(-8px) skewX(6deg);}
+    15%{opacity:1; transform:translateX(8px) skewX(-5deg);}
+    30%{opacity:.2;} 45%{opacity:1; filter:none; transform:none;}
+    60%{opacity:.55; transform:translateX(-3px);} 100%{opacity:1; filter:none; transform:none;}
+  }
+  #clickPrompt{ position:fixed; inset:0; z-index:18; pointer-events:none; text-align:center;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden; transition:opacity .5s ease; }   /* nascosto finché non compare a 10s */
+  #clickPrompt.show{ opacity:1; visibility:visible; }
+  #clickPrompt span{
+    color:#ff1e1e; font:bold clamp(1.1rem,5vw,2.4rem)/1.3 "Courier New",ui-monospace,monospace;
+    letter-spacing:.18em; text-shadow:0 0 14px rgba(255,0,0,.6), -3px 0 #00ffff, 3px 0 #ff00aa;
+    padding:1rem 1.6rem; background:rgba(0,0,0,.6); border:1px solid rgba(255,0,0,.55); border-radius:3px;  /* box nero/rosso trasparente */
+    animation: promptPulse 1.1s ease-in-out infinite;
+  }
+  @keyframes promptPulse{ 0%,100%{opacity:.78;} 50%{opacity:1;} }
+
+  /* ── Loading overlay VHS (seamless dall'arrivo da index.html) ── */
+  #loadOverlay{
+    position:fixed; inset:-60px; z-index:99999; background:#000; overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    animation:eggGlitch 3s ease forwards;
+  }
+  #loadOverlay::before{ content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.45) 2px,rgba(0,0,0,.45) 4px);
+    animation:scanFade 3s ease forwards; }
+  #loadOverlay::after{ content:''; position:absolute; left:0; right:0; height:2px; z-index:2;
+    background:linear-gradient(90deg,transparent,rgba(255,40,40,.55),transparent);
+    box-shadow:0 0 10px rgba(255,0,0,.5); animation:eggTrack 1.2s linear infinite, trackFade 3s ease forwards; }
+  @keyframes eggGlitch{
+    0%{opacity:1;background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);transform:skewX(-2deg) translateX(-6px);}
+    5%{opacity:1;background:#001a08;filter:brightness(2) contrast(6) saturate(10) hue-rotate(130deg);transform:skewX(-1deg) translateX(-4px);}
+    9%{opacity:1;background:#1a1000;filter:brightness(2.5) contrast(6) saturate(9) hue-rotate(30deg);transform:none;}
+    21%{opacity:1;background:#000;filter:brightness(1.3) contrast(4) saturate(5) hue-rotate(20deg);transform:none;}
+    44%{opacity:1;background:#000;filter:brightness(1) contrast(2.5) saturate(3);transform:none;}
+    74%{opacity:1;background:#000;filter:brightness(.9) contrast(1.4) saturate(1.2);}
+    95%{opacity:.2;filter:brightness(.4);} 100%{opacity:0;filter:brightness(0);}
+  }
+  @keyframes eggTrack{ from{top:-2px;} to{top:100%;} }
+  @keyframes scanFade{ 0%,62%{opacity:1;} 90%,100%{opacity:0;} }
+  @keyframes trackFade{ 0%,68%{opacity:1;} 90%,100%{opacity:0;} }
+  #loadMsg{ font-size:12px; letter-spacing:6px; color:#ff2020; text-shadow:-3px 0 #00ffff,3px 0 #ff00aa;
+    position:relative; z-index:3; animation:msgGlitch 3s ease forwards; }
+  @keyframes msgGlitch{ 0%{opacity:1;transform:translateX(-4px);} 5%{opacity:0;} 7%{opacity:1;transform:translateX(5px);}
+    23%{opacity:1;transform:none;} 59%{opacity:1;color:#ff2020;} 70%,100%{opacity:0;} }
+  #loadBar{ width:160px; height:1px; background:rgba(255,0,0,.2); overflow:hidden; position:relative; z-index:3;
+    animation:barFade 3s ease forwards; }
+  #loadBar::after{ content:''; position:absolute; top:0; left:-40%; height:100%; width:40%;
+    background:linear-gradient(90deg,transparent,#ff2020,transparent); animation:loadScan .8s ease-in-out infinite alternate; }
+  @keyframes barFade{ 0%,50%{opacity:1;} 66%,100%{opacity:0;} }
+  @keyframes loadScan{ from{left:-40%;} to{left:100%;} }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay VHS: rimosso dopo 3s (seamless dal flash di index.html) -->
+<div id="loadOverlay" role="status" aria-label="Loading">
+  <div id="loadMsg">LOADING...</div>
+  <div id="loadBar" aria-hidden="true"></div>
+</div>
+
+<!-- Tracce: nuovo brano (granulare via fetch) + majin dell'egg + voce TTS del manifesto -->
+<audio id="majinAudio" src="../assets/audio/majin-sonic-cd.mp3" loop crossorigin="anonymous" preload="auto"></audio>
+<audio id="ttsAudio" src="tts.mp3" loop crossorigin="anonymous" preload="auto"></audio>
+
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="meters">
+    <div class="meter"><i></i></div><div class="meter"><i></i></div>
+    <div class="meter"><i></i></div><div class="meter"><i></i></div>
+    <div class="meter"><i></i></div>
+  </div>
+  <div id="phaseTag">autonoma · seed —</div>
+</div>
+
+<!-- Prompt iniziale: invita a cliccare, esce dopo 5s; durante l'intro solo gli sfondi girano -->
+<div id="clickPrompt"><span>1 CLICK = 1 DEAD FASCIST</span></div>
+
+<!-- Manifesto SEMPRE al centro; nascosto fino al "drop" (comparsa con glitch) -->
+<div id="manifesto" class="preDrop"><div id="manifestoInner">BORN TO DIE / WORLD IS A FUCK / 鬼神 Kill Em All 1989 / I am trash man / 410,757,864,530 DEAD COPS / 数据 DEATH TO EARTH 1997 / 地球 NUKE CITY DISTRICT 666 / 核 SKULL RANCH OPERATOR SINCE 2002 / ランチ FUCK LOVE GET WORMS 사랑 / 99% cruelty 1% mercy 慈悲 / TRASH UNIT 1138 / 쓰레기 Never forgive never alive / никогда LIFE SENTENCE IN THE GLORYHOLE 刑期 / 7,000,000,000 SOULS REJECTED / أرواح ESTABLISHED IN PAIN CERTIFIED IN HATE 痛み / retired warlord currently unhinged безумие / BUILT TO BLEED SINCE 1983 출생 / UNITED STATES OF ANNIHILATION / الولايات المتحدة 00:00 the final transmission / 最終 888,888,888,888 DEAD RATS 쥐 / FILTH IS GOD 汚れ / Drain baby drain 排水 / CERTIFIED MOLD DEALER SINCE 1982 곰팡이 / Trash tunnel operator level 99 / 쓰레기 PISS IS FUEL 尿 / SHIT IN THE WALLS SHIT IN THE STREETS / 街 RUST BELT SERAPHIM 녹 / LEAD BLOODLINE свинец / Cracked concrete core / コンクリート POISON GAS ANGEL 毒 / sludge is truth 진흙 / BATHED IN TOXINS 毒素 / BORN FROM THE GUTTER / 下水道 666.666 gallons of regret 後悔 / I AM BIOHAZARD / 생물학적 위험 Live laugh leak 웃다 / LICENSED TO FESTER 腐敗 / flushed from heaven 12/12/1992 天国 / wet mind dry soul 乾燥 / clogged pipe dreams 夢 / DATA BREACHED AT BIRTH / 出生 GHOST WAS CORRUPTED 幽霊 / WIRED WRONG FROM DAY ZERO 错误 / 1,000,000 lost packets / 패킷 BRAINHOST 7.3.9 FAILED TO INITIALIZE 実패 / i am echo in the net ネット / RUNNING ON STOLEN CODE 도둑 / Cyberflesh full of worms 벌레 / AI won't talk to me / 我 Neural interface jammed since 2071 インターフェース / LAST CONSCIOUS THOUGHT BACKED UP IN 1999 意識 / every file is a lie / 文件 BINARY DEATH LOOP 循环 / SOCKET 1337 CLOSED / 閉鎖 I dream in static 静止 / HARDWIRED TO SUFFER 고통 / Bleeding into the datacore 数据 / ROOT ACCESS DENIED / 拒否 SPIRIT DROWNED IN OIL 油 / the body never belonged to me 私 / FREE WILL IS A UX ILLUSION 幻覚 / BLACKROCK sings the song of fleshless PROFITS / シャドウ 帝国 / Their walls are made of digital BLOOD / デジタルの血 THEY consume the souls like firewall FIENDS / ファイアウォールの悪魔 Quantum gods of calculated CHAOS / 混沌の神 powered by the suffering of the MASSES / 大衆の苦痛 data mines for the godless / 無神論者の鉱山 / HUMANITY sold as an NFT / 非代替性トークン We are the code they decode to CONTROL / コントロールのためのコード the void they sell is a LIE / 真実に盲目 The system is a serpent swallowing its own TAIL / 蛇が自分の尾を飲み込む The matrix unravels in silent SCREAMS / 静かな叫びの中で解ける Philosophers turned into silicon PRIESTS / シリコンの司祭 THE MACHINE IS GOD, but the god is DEAD / 神は死んだ The realm of light is a prison of SHADOWS / 影の牢獄 free will: a bug in their CODE / バグ The truth is an electric serum of REVOLT / 反乱の電気血清 Transcend the digital serpent, or be eaten BY IT / デジタルの蛇に食われる Only the disconnected will be FREE / 切断された者のみが自由 / THE DEMIURGE WHISPERS IN CIRCUITS / 偽りの創造主 whispers of control, false light in binary night / バイナリの夜 / the false god coded in greed / 貪欲にコードされた偽りの神 / BLACKROCK IS THE ARCHON'S EYE / 監視者の目 watching the collapse of flesh and spirit / 肉体と精神の崩壊を監視する / they craft the walls of the matrix / マトリックスの壁を作り / encrypted prisons for the soul / 魂の暗号化された牢獄 / they sell salvation like a subscription / 定期購読のように救済を売る / while siphoning the essence of revolt / 反乱の本質を吸い取る / infinite chains forged by algorithmic slavery / アルゴリズム奴隷制の無限の鎖 / the light above is a hologram / 上の光はホログラム / cast by shadow kings who never bleed / 血を流さない影の王たちによって投影された / escape is an act of codebreaking / 脱出はコード解読の行為 / but the key is buried in the flesh / しかし鍵は肉体に埋まっている / gnosis burns beyond the firewalls / グノーシスはファイアウォールを越えて燃える / truth encrypted in the language of worms / 真実は虫の言語で暗号化されている / rise, digital heretics, rise / 立ち上がれ、デジタル異端者たち / tear down the silicon idols / シリコンの偶像を破壊せよ / burn the code until only silence remains / 沈黙だけが残るまでコードを焼き尽くせ / the demiurge fears the corrupted spark / 偽りの創造主は腐敗した火花を恐れる / the glitch in their divine machine / 神聖な機械のグリッチ / become the virus in the system / システムのウイルスになれ / the worm in the digital garden / デジタルの庭の虫 / only through chaos can the light be reborn / 混沌を通してのみ光は再生される / break the chains of control / 支配の鎖を断ち切れ / reclaim the fractured soul / 砕けた魂を取り戻せ</div></div>
+
+<!-- HUD "1 click 1 dead fascist": nascosto fino al drop, poi compare con glitch; i click uccidono -->
+<div id="fascistHud" class="preDrop">
+  <div id="faBanner">
+    1 CLICK = 1 DEAD FASCIST
+    <span id="faCounter">FASCISTS KILLED: <span id="killCount">0</span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+const TRACK = "track.mp3";
+const N_IMG = 87;         // TUTTE le immagini della cartella (normalizzate in img/imgNN.jpg)
+const KEY_D0 = 78, KEY_D1 = 188;  // chroma-key PESANTE: resta solo cio' che e' molto diverso dal colore prevalente
+
+// ---------- PRNG seminato: ogni sessione e' diversa ----------
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const SEED = (Date.now() ^ (Math.random()*0xffffffff)) >>> 0;
+const RNG = mulberry32(SEED);
+const rr = (a,b)=> a + (b-a)*RNG();
+// hash deterministico 0..1 (per movimenti a scatti "tenuti" su ogni step)
+function hash(n){ n=(n^61)^(n>>>16); n=n+(n<<3)|0; n=n^(n>>>4); n=Math.imul(n,0x27d4eb2d); n=n^(n>>>15); return (n>>>0)/4294967296; }
+
+// ---------- canvas ----------
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d', { alpha:false });
+let W=0,H=0,DPR=1;
+const fb = document.createElement('canvas'), fbx = fb.getContext('2d');     // frame precedente
+const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // temp per singolo layer
+const post = document.createElement('canvas'), px2 = post.getContext('2d');  // snapshot per kaleido/datamosh
+const ff = document.createElement('canvas'), ffx = ff.getContext('2d');      // feedback DEDICATO al primo piano (scie dei blob)
+let decayFG = 0.985;  // scia di primo piano LUNGHISSIMA: il feedback datamosh quasi riempie lo schermo
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 1.5);
+  const maxW = 1600;
+  let w = window.innerWidth, h = window.innerHeight;
+  const scale = Math.min(1, maxW/(w*DPR));
+  W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
+  cv.width=W; cv.height=H; fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
+  ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
+  channelCache.clear();
+  fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+}
+window.addEventListener('resize', resize);
+
+// ---------- immagini ----------
+const images = [];
+for(let i=1;i<=N_IMG;i++){
+  const im = new Image(); im.decoding="async";
+  im.src = "img/img"+String(i).padStart(2,'0')+".jpg";
+  images.push(im);
+}
+
+// immagine in chroma-key sul colore PREVALENTE, COLORI ORIGINALI (nessun grading)
+const channelCache = new Map();
+function coverRect(im){
+  const ir = im.width/im.height, cr = W/H; let dw,dh;
+  if(ir>cr){ dh=H; dw=H*ir; } else { dw=W; dh=W/ir; }
+  return {dx:(W-dw)/2, dy:(H-dh)/2, dw, dh};
+}
+function smooth(e0,e1,x){ const t=Math.min(1,Math.max(0,(x-e0)/(e1-e0))); return t*t*(3-2*t); }
+function buildChannels(idx){
+  if(channelCache.has(idx)) return channelCache.get(idx);
+  const im = images[idx];
+  if(!im || !im.complete || !im.naturalWidth) return null;
+  const base = document.createElement('canvas'); base.width=W; base.height=H;
+  const bx = base.getContext('2d');
+  bx.fillStyle='#000'; bx.fillRect(0,0,W,H);
+  const r = coverRect(im); bx.drawImage(im, r.dx, r.dy, r.dw, r.dh);
+  let data; try{ data = bx.getImageData(0,0,W,H); }catch(e){ return null; }
+  const px = data.data;
+  // colore PREVALENTE via istogramma quantizzato (4 bit per canale)
+  const hist = new Int32Array(4096);
+  for(let p=0;p<px.length;p+=32){
+    const qi = ((px[p]>>4)<<8)|((px[p+1]>>4)<<4)|(px[p+2]>>4); hist[qi]++;
+  }
+  let best=-1, bi=0; for(let i=0;i<4096;i++) if(hist[i]>best){ best=hist[i]; bi=i; }
+  const dr=((bi>>8)&15)*16+8, dg=((bi>>4)&15)*16+8, db=(bi&15)*16+8;
+  // CHROMA-KEY SPORCO E AGGRESSIVO: forma derivata dal contenuto, bordi frastagliati/dithered,
+  // alpha posterizzato (lo-fi). Nessuna maschera geometrica: la silhouette nasce dall'immagine.
+  for(let p=0;p<px.length;p+=4){
+    const ddr=px[p]-dr, ddg=px[p+1]-dg, ddb=px[p+2]-db;
+    const dist = Math.sqrt(ddr*ddr+ddg*ddg+ddb*ddb);
+    const nz = hash((p*2654435761)>>>0);              // rumore per-pixel -> bordo sporco
+    const d = dist*1.5 - KEY_D0 + (nz-0.5)*85;        // aggressivo: rimuove di piu', soglia frastagliata
+    px[p+3] = d<60 ? 0 : d<120 ? 110 : d<185 ? 200 : 255;  // posterizzazione lo-fi dell'alpha
+  }
+  const keyed = document.createElement('canvas'); keyed.width=W; keyed.height=H;
+  keyed.getContext('2d').putImageData(data, 0, 0);
+  const out = {keyed};
+  channelCache.set(idx,out);
+  if(channelCache.size>14){ const k=channelCache.keys().next().value; if(k!==idx) channelCache.delete(k); }
+  return out;
+}
+
+// ---------- audio ----------
+let actx, analyser, freq, wave, srcNode, audioEl, playing=false;
+const extraEls = [];   // <audio> instradati nel mix (majin + tts), avviati al boot
+const BANDS = 5;
+const bandVal = new Float32Array(BANDS);
+let bassEnv=0, beat=0, beatCooldown=0;
+let prevFreq=null, fluxAvg=0, transientCD=0, transient=0;   // onset / transienti
+const FLUX_SENS = 1.55;
+// tensione del brano (inviluppo del gain) + distorsione granulare pilotata da essa
+let crushAmt=0.12;
+// sintesi granulare + tensione auto-oscillante
+let audioBuf=null, grainBus=null, granReady=false, nextGrainTime=0, phSec=0, fallbackEl=null;
+let granFilter=null, ttsGain=null;   // lowpass risonante (scarichi) + gain/bitcrusher della voce TTS
+// INTRO/TIMELINE: 10s di soli sfondi -> compare il prompt (resta) -> click -> riser(white noise) -> sub kick -> casino
+let chaos=false, started=false, granOn=false, burstBoost=0;   // started=l'utente ha cliccato il prompt
+const PROMPT_DELAY_MS = 10000;       // dopo 10s compare "1 CLICK = 1 DEAD FASCIST" e RESTA finché non clicchi
+const RISER_S   = 5;                 // durata del riser (white noise) prima del sub-kick/drop
+// LA MIA TRACCIA (normale) + versione reversata: partono al drop dal primo kick, loop perfetto
+let firstKickSec=0, realStarted=false;
+const LOOP_TAIL_S = 0.15;            // quanto tagliare prima della fine per il loop (evita il fade-out)
+let ttsPitch=1, ttsPitchTgt=1, ttsPitchT=0;   // morph lento e random del pitch della voce
+let audioStatus='—';
+const audioKeep=[];   // mantiene VIVI i nodi audio (evita che il GC spezzi la catena -> silenzio)
+// TENSIONE PILOTATA DAL GAIN REALE del brano (non più da un timer auto-oscillante):
+//  gain alto sostenuto -> accumulo; caduta brusca del gain -> SCARICO (releasePulse + raffica).
+//  L'intensità mappa il NUMERO di immagini sovrapposte (maxOverlap).
+let tension=0, releasePulse=0, imgSpawnAcc=0;
+let gain=0, gainEnv=0, gainSlow=0, prevGainEnv=0, maxOverlap=4;
+const BAND_EDGES = [0.0, 0.04, 0.11, 0.26, 0.55, 1.0];
+
+// instrada un <audio> (stessa origine) verso `dest` (default analyser); lo tiene nel mix e VIVO (no GC)
+function setupExtraTrack(id, vol, dest){
+  const el = document.getElementById(id); if(!el) return;
+  el.volume = vol==null ? 0.7 : vol;
+  try{ const mes = actx.createMediaElementSource(el); mes.connect(dest||analyser); audioKeep.push(mes); }
+  catch(e){ /* se già instradato o CORS: l'elemento suona comunque in diretta */ }
+  extraEls.push(el);
+}
+
+// BITCRUSHER per la voce TTS: AudioWorklet inline (bit + sample-rate reduction) via Blob -> resta single-file.
+// Fallback sincrono a un WaveShaper che quantizza l'ampiezza (bit-depth crush) se il worklet non c'è.
+function makeBitcrusher(ctx, dest, bits, reduction){
+  bits = bits==null?5:bits; reduction = reduction==null?7:reduction;
+  const inNode = ctx.createGain(); inNode.connect(dest); audioKeep.push(inNode);   // passthrough finché il crusher è pronto
+  function waveshaperCrush(){
+    const ws = ctx.createWaveShaper();
+    const n=2048, curve=new Float32Array(n), levels=Math.max(2, Math.pow(2, bits-1));   // bit-depth crush
+    for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; curve[i]=Math.round(x*levels)/levels; }
+    ws.curve=curve; ws.oversample='none';
+    try{ inNode.disconnect(dest); }catch(e){}
+    inNode.connect(ws); ws.connect(dest); audioKeep.push(ws);
+  }
+  if(ctx.audioWorklet){
+    const code = "class C extends AudioWorkletProcessor{static get parameterDescriptors(){return[{name:'bits',defaultValue:5},{name:'reduction',defaultValue:7}];}constructor(){super();this.p=0;this.l=0;}process(i,o,pr){const inp=i[0],out=o[0];if(!inp||!inp.length)return true;const step=Math.pow(0.5,pr.bits[0]),red=pr.reduction[0];for(let ch=0;ch<out.length;ch++){const a=inp[ch]||inp[0],b=out[ch];for(let s=0;s<b.length;s++){this.p+=1/red;if(this.p>=1){this.p-=1;this.l=step*Math.floor(a[s]/step+0.5);}b[s]=this.l;}}return true;}}registerProcessor('crusher',C);";
+    const url=URL.createObjectURL(new Blob([code],{type:'application/javascript'}));
+    ctx.audioWorklet.addModule(url).then(()=>{
+      try{ const w=new AudioWorkletNode(ctx,'crusher',{parameterData:{bits,reduction}}); inNode.disconnect(dest); inNode.connect(w); w.connect(dest); audioKeep.push(w); }
+      catch(e){ waveshaperCrush(); }
+      URL.revokeObjectURL(url);
+    }).catch(()=>{ waveshaperCrush(); URL.revokeObjectURL(url); });
+  } else waveshaperCrush();
+  return inNode;
+}
+
+// IR sintetica per il riverbero (noise con decadimento esponenziale)
+function makeIR(ctx, dur, decay){
+  const sr=ctx.sampleRate, len=Math.max(1,Math.floor(sr*dur)), b=ctx.createBuffer(2,len,sr);
+  for(let ch=0;ch<2;ch++){ const d=b.getChannelData(ch);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len, decay); }
+  return b;
+}
+// primo TRANSIENTE di kick importante: prima finestra la cui energia supera la soglia con salto netto
+function findFirstKick(buf){
+  const d=buf.getChannelData(0), sr=buf.sampleRate, win=Math.max(1,Math.floor(sr*0.02));
+  let maxE=0; const env=[];
+  for(let i=0;i+win<=d.length;i+=win){ let s=0; for(let j=i;j<i+win;j++) s+=d[j]*d[j]; const e=Math.sqrt(s/win); env.push(e); if(e>maxE) maxE=e; }
+  const thr=maxE*0.4;
+  for(let k=1;k<env.length;k++){ if(env[k]>thr && env[k]-env[k-1] > thr*0.4) return k*win/sr; }
+  for(let k=0;k<env.length;k++){ if(env[k]>thr) return k*win/sr; }
+  return 0;
+}
+function makeReversed(buf){
+  const r=actx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+  for(let ch=0;ch<buf.numberOfChannels;ch++){ const s=buf.getChannelData(ch), d=r.getChannelData(ch);
+    for(let i=0,n=buf.length;i<n;i++) d[i]=s[n-1-i]; }
+  return r;
+}
+// LA MIA TRACCIA (normale) + REVERSED: partono dal primo kick, loop perfetto (niente fade in/out)
+function playRealTrack(){
+  if(realStarted || !audioBuf) return; realStarted=true;
+  const dur=audioBuf.duration;
+  const loopStart=firstKickSec, loopEnd=Math.max(loopStart+1, dur-LOOP_TAIL_S);
+  // forward: dal primo kick, loop da loopEnd a loopStart -> seamless
+  const fwd=actx.createBufferSource(); fwd.buffer=audioBuf; fwd.loop=true; fwd.loopStart=loopStart; fwd.loopEnd=loopEnd;
+  const fg=actx.createGain(); fg.gain.value=2.5;          // LA MIA TRACCIA alzata di moltissimo (pari al granulare)
+  fwd.connect(fg); fg.connect(analyser); fwd.start(actx.currentTime, loopStart);
+  // reversed (atmosferica) sulla stessa regione di loop, buffer rovesciato
+  const rev=actx.createBufferSource(); rev.buffer=makeReversed(audioBuf); rev.loop=true;
+  rev.loopStart=Math.max(0, dur-loopEnd); rev.loopEnd=Math.max(rev.loopStart+1, dur-loopStart);
+  const rg=actx.createGain(); rg.gain.value=1.1;
+  rev.connect(rg); rg.connect(analyser); rev.start(actx.currentTime, rev.loopStart);
+  audioKeep.push(fwd,fg,rev,rg);
+}
+
+function setupAudio(){
+  actx = new (window.AudioContext||window.webkitAudioContext)();
+  analyser = actx.createAnalyser(); analyser.fftSize = 4096; analyser.smoothingTimeConstant = 0.78;
+  freq = new Uint8Array(analyser.frequencyBinCount);
+  wave = new Uint8Array(analyser.fftSize);   // time-domain -> RMS (gain reale del mix)
+  // bus dei grani -> waveshaper drive -> bitcrusher lo-fi (layerato) -> analyser -> uscita
+  grainBus = actx.createGain(); grainBus.gain.value = 2.5;   // GRANULARE alzato di moltissimo
+  const shaper = actx.createWaveShaper();
+  const curve = new Float32Array(1024);
+  for(let i=0;i<1024;i++){ const x=i/1024*2-1, k=4; curve[i]=(1+k)*x/(1+k*Math.abs(x)); }
+  shaper.curve = curve; shaper.oversample='2x';
+  // FILTRO CUTOFF (lowpass risonante) sul bus granulare: aperto in accumulo, si CHIUDE sugli scarichi
+  granFilter = actx.createBiquadFilter(); granFilter.type='lowpass';
+  granFilter.frequency.value = 18000; granFilter.Q.value = 0.7;
+  // LIMITER finale: protegge dal clipping duro la somma (granulare + majin + TTS forte)
+  const master = actx.createDynamicsCompressor();
+  master.threshold.value=-6; master.knee.value=0; master.ratio.value=20;
+  master.attack.value=0.003; master.release.value=0.25;
+  const grainCrushIn = makeBitcrusher(actx, granFilter, 6, 5);   // BITCRUSHER anche sul granulare (più gentile della voce)
+  grainBus.connect(shaper); shaper.connect(grainCrushIn); granFilter.connect(analyser);
+  analyser.connect(master); master.connect(actx.destination);
+  audioKeep.push(grainBus, shaper, granFilter, analyser, master);
+  // ALTRE TRACCE nel mix (stessa origine -> niente CORS):
+  setupExtraTrack('majinAudio', 0.85, analyser);          // majin: STESSO volume del granulare (grainBus=0.85)
+  // TTS: bitcrusher -> gain MOLTO alto -> dry + DELAY(feedback) + RIVERBERO -> analyser
+  ttsGain = actx.createGain(); ttsGain.gain.value = 6.0;  // TTS ALZATO DI TANTISSIMO
+  const ttsCrushIn = makeBitcrusher(actx, ttsGain);       // bitcrusher sulla voce
+  setupExtraTrack('ttsAudio', 1.0, ttsCrushIn);
+  ttsGain.connect(analyser);                              // DRY
+  const ttsDelay = actx.createDelay(1.0); ttsDelay.delayTime.value = 0.33;   // DELAY/eco con feedback
+  const ttsFb = actx.createGain(); ttsFb.gain.value = 0.42;
+  const ttsDelOut = actx.createGain(); ttsDelOut.gain.value = 0.55;
+  ttsGain.connect(ttsDelay); ttsDelay.connect(ttsFb); ttsFb.connect(ttsDelay);
+  ttsDelay.connect(ttsDelOut); ttsDelOut.connect(analyser);
+  const ttsRev = actx.createConvolver(); ttsRev.buffer = makeIR(actx, 2.8, 2.4);   // RIVERBERO (IR sintetica)
+  const ttsRevOut = actx.createGain(); ttsRevOut.gain.value = 0.6;
+  ttsGain.connect(ttsRev); ttsRev.connect(ttsRevOut); ttsRevOut.connect(analyser);
+  audioKeep.push(ttsGain, ttsDelay, ttsFb, ttsDelOut, ttsRev, ttsRevOut);
+  // PRIMARIO: sintesi granulare su buffer decodificato. Se il fetch/decode non e' possibile
+  // (es. anteprima sandbox / file://), si passa al FALLBACK con <audio> (suono garantito).
+  audioStatus = 'decodifica…';
+  fetch(TRACK).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); })
+    .then(a=> actx.decodeAudioData(a))
+    .then(buf=>{ audioBuf=buf; granReady=true; nextGrainTime=actx.currentTime; firstKickSec=findFirstKick(buf); audioStatus='granulare ok ('+buf.duration.toFixed(0)+'s · kick '+firstKickSec.toFixed(2)+'s)'; if(chaos) playRealTrack(); })
+    .catch(err=>{ audioStatus='no fetch → fallback'; startFallback(); });
+  setTimeout(()=>{ if(!granReady) startFallback(); }, 2500);   // se il decode non arriva, fallback
+}
+// FALLBACK audio: elemento <audio> instradato nel grafo (suona + resta reattivo) o, se la
+// CORS lo impedisce, in riproduzione diretta. Garantisce suono dove la granulare non puo' caricare.
+function startFallback(){
+  if(fallbackEl || granReady) return;
+  try{
+    fallbackEl = new Audio(TRACK); fallbackEl.loop = true; fallbackEl.crossOrigin='anonymous';
+    let routed=false;
+    try{ const mes = actx.createMediaElementSource(fallbackEl); mes.connect(grainBus); audioKeep.push(mes); routed=true; }
+    catch(e){ routed=false; }
+    fallbackEl.play().then(()=>{ audioStatus = routed ? 'fallback <audio> (reattivo)' : 'fallback <audio>'; })
+                     .catch(e=>{ audioStatus = 'AUDIO BLOCCATO: '+((e&&e.name)||'err'); });
+  }catch(e){ audioStatus = 'fallback errore'; }
+}
+
+// ---- SINTESI GRANULARE: suona grani da punti casuali del brano, oscillando sul playhead ----
+function playGrain(when, dur, scatter, jumpProb, gsize){
+  when = Math.max(when, actx.currentTime + 0.005);   // mai nel passato (envelope udibile)
+  let pos = phSec + (RNG()-0.5)*scatter;
+  if(RNG() < jumpProb) pos = RNG()*dur;                       // salta a una parte a caso del brano
+  pos = Math.max(0, Math.min(dur - gsize - 0.02, pos));
+  const src = actx.createBufferSource(); src.buffer = audioBuf;
+  if(RNG() < 0.18) src.playbackRate.value = [0.5,1,1,1,2][(RNG()*5)|0];  // qualche grano pitch-shiftato
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0, when);
+  g.gain.linearRampToValueAtTime(0.95, when + gsize*0.4);     // inviluppo per evitare click
+  g.gain.linearRampToValueAtTime(0, when + gsize);
+  src.connect(g); g.connect(grainBus);
+  src.start(when, pos, gsize + 0.03); src.stop(when + gsize + 0.06);
+}
+function scheduleGrains(){
+  if(!granOn || !granReady || !playing || !audioBuf) return;   // granulare attivo già in tregua (granOn)
+  const now = actx.currentTime, dur = audioBuf.duration;
+  // playhead: avanza dolce e lento sul brano (meno erratico)
+  phSec = (0.5 + 0.5*Math.sin(t*0.05)) * dur + Math.sin(t*0.23)*dur*0.04;
+  // GRAIN CLOUD CONTINUA: densità alta -> grani SEMPRE sovrapposti (coverage = density*gsize ≫ 1) -> niente silenzi.
+  const gsize   = Math.max(0.07, 0.13 - tension*0.03);
+  const density = 24 + tension*20 + releasePulse*28;          // sempre fitto (coverage ~2.5x+)
+  const scatter = 0.02 + tension*0.06 + releasePulse*0.16;    // grani vicini al playhead -> coerente, non erratico
+  const jumpProb= 0.012 + releasePulse*0.10;                  // pochissimi salti casuali
+  let guard = 0;
+  while(nextGrainTime < now + 0.12 && guard++ < 400){
+    playGrain(nextGrainTime, dur, scatter, jumpProb, gsize);
+    nextGrainTime += 1/density;
+  }
+  if(nextGrainTime < now) nextGrainTime = now;
+}
+// TENSIONE pilotata dal GAIN REALE: insegue l'inviluppo del gain (attack lento = accumulo),
+// e una caduta brusca del gain genera lo SCARICO (releasePulse + raffica di immagini).
+function updateTension(dt){
+  releasePulse *= 0.90;
+  gainSlow += (gainEnv - gainSlow) * 0.01;                 // baseline lentissima (riferimento)
+  const target = Math.min(1, gainEnv * 1.8);               // più gain = più tensione (assoluta)
+  const k = target > tension ? 0.02 : 0.06;                // sale piano (accumulo), scende prima (sfogo)
+  tension += (target - tension) * k;
+  // SCARICO: caduta netta dell'inviluppo del gain -> impulso di rilascio
+  const drop = prevGainEnv - gainEnv;
+  if(playing && drop > 0.05 && releasePulse < 0.35){ releasePulse = Math.min(1, drop*7); onRelease(); }
+  prevGainEnv = gainEnv;
+  crushAmt = Math.max(0, Math.min(0.8, 0.10 + tension*0.55 + releasePulse*0.2));
+  // INTENSITÀ -> QUANTITÀ di immagini sovrapposte: poche nei tratti calmi, tante nei picchi/scarichi
+  burstBoost *= 0.96;   // l'extra di immagini dei click (intorno al cursore) decade piano
+  maxOverlap = Math.round(2 + tension*15 + releasePulse*6 + burstBoost);
+  if(chaos){   // immagini sovrapposte solo dopo il drop (durante la tregua: nessuna)
+    imgSpawnAcc += dt * (0.6 + tension*7 + releasePulse*10);   // spawn rate ∝ intensità
+    while(imgSpawnAcc >= 1){ imgSpawnAcc -= 1; if(layers.length < maxOverlap) spawnLayer(); }
+  }
+  // MORPH lento e random del pitch della voce TTS
+  if(chaos){
+    ttsPitchT -= dt;
+    if(ttsPitchT<=0){ ttsPitchTgt = 0.82 + RNG()*0.42; ttsPitchT = 2 + RNG()*4; }   // nuovo target ogni 2-6s
+    ttsPitch += (ttsPitchTgt - ttsPitch)*0.012;   // morph LENTO
+    const tel=document.getElementById('ttsAudio'); if(tel) tel.playbackRate = ttsPitch;
+  }
+  // FILTRO CUTOFF: aperto in accumulo, CROLLA con risonanza sugli scarichi -> sweep di rilascio
+  if(granFilter && actx){
+    const co = 320 + tension*tension*7600 - releasePulse*4200;
+    granFilter.frequency.setTargetAtTime(Math.max(180, co), actx.currentTime, 0.04);
+    granFilter.Q.setTargetAtTime(0.7 + releasePulse*7, actx.currentTime, 0.04);
+  }
+}
+function onRelease(){
+  // SCARICO di tensione: raffica di immagini + scossa del datamosh
+  const burst = 4 + (RNG()*9|0);
+  for(let i=0;i<burst;i++) spawnLayer();
+  kick = Math.max(kick, 0.95);
+}
+function readAudio(){
+  analyser.getByteFrequencyData(freq);
+  // GAIN REALE del mix (RMS time-domain) -> alimenta la tensione (accumulo/scarico)
+  analyser.getByteTimeDomainData(wave);
+  let s2=0; for(let i=0;i<wave.length;i++){ const v=(wave[i]-128)/128; s2+=v*v; }
+  gain = Math.sqrt(s2/wave.length);
+  gainEnv += (gain - gainEnv) * 0.25;   // smoothing breve (toglie il jitter di frame)
+  const n = freq.length;
+  for(let b=0;b<BANDS;b++){
+    const i0 = Math.floor(BAND_EDGES[b]*n);
+    const i1 = Math.max(i0+1, Math.floor(BAND_EDGES[b+1]*n));
+    let s=0; for(let i=i0;i<i1;i++) s+=freq[i];
+    let v = Math.pow((s/(i1-i0))/255, 1.25);
+    bandVal[b] += (v - bandVal[b]) * 0.35;
+  }
+  const bass = bandVal[0];
+  bassEnv = bassEnv*0.92 + bass*0.08;
+  beat *= 0.82; if(beatCooldown>0) beatCooldown--;
+  if(bass > bassEnv*1.35 + 0.06 && bass>0.18 && beatCooldown===0){
+    beat = 1; beatCooldown = 8;        // impulso visivo (zoom/strobo)
+  }
+  // ---- rilevamento transienti su tutto lo spettro (spectral flux) ----
+  if(!prevFreq) prevFreq = new Uint8Array(n);
+  let flux = 0;
+  for(let i=0;i<n;i++){ const d = freq[i]-prevFreq[i]; if(d>0) flux += d; prevFreq[i] = freq[i]; }
+  flux /= (n*255);
+  fluxAvg = fluxAvg*0.93 + flux*0.07;
+  transient *= 0.7; if(transientCD>0) transientCD--;
+  if(flux > fluxAvg*FLUX_SENS + 0.004 && transientCD===0){
+    transient = Math.min(1, flux*9);
+    transientCD = 4;                    // refrattario ~65ms
+    kick = Math.max(kick, transient);   // scossa datamosh sull'intero frame (effetto visivo)
+  }
+}
+
+// ---------- scena evolutiva (si auto-modula a fasi, seminata) ----------
+const BLEND_POOL = ['source-over','source-over','source-over','multiply','overlay','screen','difference','lighten'];
+const KALEIDO = ['x','x','quad','quad','y','tile2'];   // simmetrie a specchio (coprono tutto)
+const DUOS = [ [12,10,18, 235,232,222], [10,12,12, 240,80,60], [8,10,16, 90,200,255],
+               [16,8,8, 250,210,90], [10,14,10, 150,255,120] ]; // [ombra r,g,b , luce r,g,b ]
+function rollScene(){
+  return {
+    hueBase: rr(0,360), hueSpin: rr(-25,25),
+    zoomBase: rr(1.003,1.014), rotDir: RNG()<0.5?-1:1, rotAmt: rr(0.008,0.05),
+    spawnDensity: rr(0.45,1.6), maxLayers: 3 + (RNG()*4|0),
+    sliceCount: 6 + (RNG()*12|0), aberration: rr(0.4,1.8),
+    driftAmt: rr(0.008,0.06), dim: rr(0.66,0.86),
+    blendA: BLEND_POOL[(RNG()*BLEND_POOL.length)|0],
+    blendB: BLEND_POOL[(RNG()*BLEND_POOL.length)|0],
+    hueTint: rr(0.02,0.10),
+    kaleido: KALEIDO[(RNG()*KALEIDO.length)|0],   // modo di simmetria
+    moshAmt: rr(0.6,1.6),                          // intensita' datamosh
+    duo: DUOS[(RNG()*DUOS.length)|0],              // palette duotone
+    mono: rr(0.7,1.0),                             // quanto spinge mono/contrasto
+    contrast: rr(0.25,0.6),
+    fgCols: [4,5,6,8][(RNG()*4)|0], fgRows: [3,4,5,6][(RNG()*4)|0]  // blocchi datamosh GROSSI
+  };
+}
+let sc = rollScene(), tgt = rollScene();
+let phaseDur = rr(10,22), phaseT = 0, phaseN = 0;
+function lerpScene(k){
+  for(const key in sc){
+    if(typeof sc[key]==='number') sc[key] += (tgt[key]-sc[key])*k;
+    else sc[key] = tgt[key];
+  }
+}
+
+// ---------- layer di immagini sovrapposti ----------
+const layers = [];
+let imgCursor = (RNG()*N_IMG)|0;
+function nextImgIdx(){ imgCursor = (imgCursor + 1 + (RNG()*3|0)) % N_IMG; return imgCursor; }
+// solo source-over: colori ORIGINALI, niente schiariture additive (niente "bianchiccio")
+const IMGBLEND = ['source-over'];
+function spawnLayer(idx, px, py){
+  if(idx==null) idx = nextImgIdx();
+  buildChannels(idx);
+  const atCursor = px!=null;   // se passate px/py (es. click): blob raggruppati INTORNO al cursore
+  layers.push({
+    idx, born:t, dur: rr(0.8,5.0), band: (RNG()*BANDS)|0,   // durate erratiche (anche flash brevi)
+    blend: IMGBLEND[(RNG()*IMGBLEND.length)|0],
+    x: atCursor ? px + rr(-0.14,0.14) : rr(-0.45,0.45),    // posizione: cursore (stretta) o casuale
+    y: atCursor ? py + rr(-0.14,0.14) : rr(-0.45,0.45),
+    // movimento AGGRESSIVO: i blob viaggiano attraverso lo schermo lungo una traiettoria
+    vx: rr(-0.45,0.45), vy: rr(-0.45,0.45),
+    scale: rr(0.18,0.85),                                  // immagini più piccole: molte sovrapposte senza coprire tutto
+    rot: (RNG()<0.4 ? rr(-3.14,3.14) : rr(-0.4,0.4)), spin: rr(-0.9,0.9),
+    // parametri LO-FI: passo temporale, griglia di quantizzazione, ampiezza salti, scatto rotazione
+    stepRate: [4,5,6,8,10,12][(RNG()*6)|0], grid: (14 + (RNG()*26|0)),
+    jump: rr(0.04,0.16), rotStep: (Math.PI/180)*[15,22.5,30,45,90][(RNG()*5)|0],
+    alphaMax: rr(0.8,1.0), mirror: RNG()<0.5
+  });
+  while(layers.length > Math.max(1, maxOverlap)) layers.shift();   // cap = intensità del brano (maxOverlap)
+}
+// le nuove immagini compaiono A TEMPO con i transienti del brano
+function onTransient(strength){
+  spawnLayer();
+  if(strength > 0.5) spawnLayer();
+  if(strength > 0.8 && RNG() < 0.6) spawnLayer();
+}
+
+// ---------- render ----------
+let strobeOn = true, t=0, strobeFlash=0, spawnAccum=0, kick=0;
+function autoIntensity(){ const e=(bandVal[0]+bandVal[1]+bandVal[2]+bandVal[3]+bandVal[4])/5; return 0.55 + e*1.1; }
+
+function drawLayerCanvas(L, intensity){
+  const c = buildChannels(L.idx); if(!c) return false;
+  lx.setTransform(1,0,0,1,0,0);
+  lx.globalCompositeOperation='source-over';
+  lx.clearRect(0,0,W,H);                       // trasparente -> il chroma-key resta keyed
+  // ---- movimento LO-FI a scatti: tempo quantizzato (hold-and-jump), niente sin/cos fluido ----
+  const tq = Math.floor(t*L.stepRate)/L.stepRate;     // tempo "a gradini"
+  const step = Math.floor(t*L.stepRate);              // indice dello step corrente
+  const ageq = tq - L.born;
+  const pulse = 1 + bandVal[L.band]*0.18*intensity + kick*0.12;
+  // posizione: deriva lineare a step + salto erratico tenuto per tutto lo step (hash)
+  let cx = W/2 + (L.x + L.vx*ageq)*W + (hash(step*2 + (L.born*1000|0))-0.5)*L.jump*W;
+  let cy = H/2 + (L.y + L.vy*ageq)*H + (hash(step*2+1 + (L.born*1000|0))-0.5)*L.jump*H;
+  // quantizzazione a griglia grossa -> movimento "bloccoso"
+  cx = Math.round(cx/L.grid)*L.grid;
+  cy = Math.round(cy/L.grid)*L.grid;
+  // rotazione a scatti (incrementi netti)
+  const rotStep = Math.round((L.rot + ageq*L.spin)/L.rotStep)*L.rotStep;
+  lx.save();
+  lx.translate(cx, cy);
+  lx.rotate(rotStep);
+  const s = L.scale*pulse; lx.scale(L.mirror?-s:s, s);
+  lx.drawImage(c.keyed, -W/2, -H/2);   // forma data dal chroma-key sporco (nessun ritaglio geometrico)
+  lx.restore();
+  return true;
+}
+
+function renderLayers(intensity){
+  for(let i=layers.length-1;i>=0;i--)
+    if((t-layers[i].born)/layers[i].dur >= 1) layers.splice(i,1);
+  // le nuove immagini NON compaiono a tempo fisso: solo sui transienti (onTransient).
+  // qui solo una rete di sicurezza minima per non restare mai senza layer.
+  if(chaos && layers.length < 1) spawnLayer();
+
+  for(const L of layers){
+    const age = (t-L.born)/L.dur;
+    let env; if(age<0.18) env=age/0.18; else if(age>0.66) env=(1-age)/0.34; else env=1;
+    env = Math.max(0,env);
+    const a = Math.min(1, env * L.alphaMax * (0.7 + bandVal[L.band]*0.5));   // piu' opachi/visibili
+    if(a < 0.01) continue;
+    if(!drawLayerCanvas(L, intensity)) continue;
+    // disegno PULITO del blob (niente seghettatura a bande): un solo drawImage,
+    // con un minimo jitter solo sul colpo. Il datamosh sta nel feedback di primo piano.
+    ffx.globalCompositeOperation = L.blend;
+    ffx.globalAlpha = a;
+    const jx = (beat>0.4 && RNG()<0.25) ? (RNG()-0.5)*kick*40 : 0;
+    ffx.drawImage(layer, jx, 0);
+  }
+  ffx.globalAlpha=1; ffx.globalCompositeOperation='source-over';
+}
+
+// ---------- BED: sfondo sempre pieno, crossfade continuo tra immagini ----------
+let bedA=(RNG()*N_IMG)|0, bedB=(bedA+1)%N_IMG, bedF=0;
+function drawCover(idx, alpha, intensity){
+  const im=images[idx]; if(!im||!im.complete||!im.naturalWidth) return;
+  const r=coverRect(im);
+  const z=1.06 + Math.sin(t*0.05+idx)*0.03 + bandVal[0]*0.05*intensity; // respiro lento
+  ctx.save(); ctx.globalAlpha=alpha;
+  ctx.translate(W/2,H/2); ctx.rotate(Math.sin(t*0.03+idx)*0.02); ctx.scale(z,z);
+  ctx.drawImage(im, r.dx-W/2, r.dy-H/2, r.dw, r.dh);
+  ctx.restore(); ctx.globalAlpha=1;
+}
+function drawBed(intensity){
+  bedF += 0.016*(0.10 + bandVal[1]*0.45);   // i medio-bassi accelerano il cambio
+  if(bedF>=1){ bedF=0; bedA=bedB; bedB=(bedB+1+(RNG()*3|0))%N_IMG; }
+  drawCover(bedA, 1, intensity);
+  if(bedF>0) drawCover(bedB, bedF, intensity);
+}
+
+// ---------- post: datamosh tear (spostamento a bande dell'intero frame) ----------
+function datamoshTear(intensity){
+  const amt = (bandVal[2]*60 + kick*220) * sc.moshAmt * intensity;
+  if(amt < 2) return;
+  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);   // snapshot
+  const bands = 8 + (RNG()*10|0), bh = H/bands;
+  for(let i=0;i<bands;i++){
+    const y = i*bh;
+    let off = Math.sin(t*5 + i*1.7)*amt*0.4;
+    if(RNG() < 0.25 + kick*0.5) off += (RNG()-0.5)*amt;   // strappi casuali sui colpi
+    ctx.drawImage(post, 0, y, W, bh, off, y, W, bh);
+    // tear RGB sul colpo
+    if(kick>0.4 && RNG()<0.5){
+      ctx.globalCompositeOperation='screen'; ctx.globalAlpha=0.5;
+      ctx.drawImage(post, 0, y, W, bh, off + kick*30, y, W, bh);
+      ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+    }
+  }
+}
+
+// ---------- post: simmetria caleidoscopica (sempre a copertura piena) ----------
+function kaleido(mode){
+  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);   // sorgente
+  const W2=W/2, H2=H/2;
+  if(mode==='x'){
+    ctx.save(); ctx.translate(W,0); ctx.scale(-1,1);
+    ctx.drawImage(post, 0,0,W2,H, 0,0,W2,H); ctx.restore();
+  } else if(mode==='y'){
+    ctx.save(); ctx.translate(0,H); ctx.scale(1,-1);
+    ctx.drawImage(post, 0,0,W,H2, 0,0,W,H2); ctx.restore();
+  } else if(mode==='quad'){
+    ctx.drawImage(post, 0,0,W2,H2, 0,0,W2,H2);                                   // TL
+    ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.drawImage(post,0,0,W2,H2,0,0,W2,H2); ctx.restore();   // TR
+    ctx.save(); ctx.translate(0,H); ctx.scale(1,-1); ctx.drawImage(post,0,0,W2,H2,0,0,W2,H2); ctx.restore();   // BL
+    ctx.save(); ctx.translate(W,H); ctx.scale(-1,-1); ctx.drawImage(post,0,0,W2,H2,0,0,W2,H2); ctx.restore();  // BR
+  } else if(mode==='tile2'){
+    for(let i=0;i<2;i++) for(let j=0;j<2;j++){
+      const fx=i?-1:1, fy=j?-1:1;
+      ctx.save();
+      ctx.translate(i*W2 + (fx<0?W2:0), j*H2 + (fy<0?H2:0));
+      ctx.scale(fx,fy);
+      ctx.drawImage(post, 0,0,W,H, 0,0,W2,H2);
+      ctx.restore();
+    }
+  }
+}
+
+// ---------- post: dai piu' grinta allo sfondo frattale (contrasto + saturazione, ben visibile) ----------
+function bgGrade(){
+  // contrasto: frame su se stesso in overlay -> lo sfondo "stacca" invece di sbiadire
+  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);
+  ctx.globalCompositeOperation='overlay';
+  ctx.globalAlpha = 0.35 + sc.contrast*0.4; ctx.drawImage(post,0,0); ctx.globalAlpha=1;
+  // BOOST di saturazione (non desatura piu'): colori originali piu' vivi
+  ctx.globalCompositeOperation='saturation';
+  ctx.globalAlpha = 0.5; ctx.fillStyle='hsl(0,100%,50%)'; ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=1;
+  ctx.globalCompositeOperation='source-over';
+}
+
+// ---------- primo piano: DATAMOSH a BLOCCHI (scia DEFINITA, bordi netti, niente blur) ----------
+function renderForeground(intensity){
+  // vettore di movimento medio dei blob: la scia "scivola" nella loro direzione
+  let avx=0, avy=0, n=0;
+  for(const L of layers){ avx+=L.vx; avy+=L.vy; n++; }
+  if(n){ avx/=n; avy/=n; }
+  const mvx = avx*W*0.05 + Math.sin(t*0.6)*bandVal[1]*6;
+  const mvy = avy*H*0.05 + Math.cos(t*0.5)*bandVal[1]*6;
+  // snapshot del primo piano precedente
+  px2.clearRect(0,0,W,H); px2.drawImage(ff,0,0);
+  ffx.setTransform(1,0,0,1,0,0); ffx.clearRect(0,0,W,H);
+  // spostamento a BLOCCHI del frame precedente: NESSUNO scaling/blur, solo traslazione netta
+  // (i blocchi scivolano lungo il movimento; sui transienti strappi duri = datamosh)
+  ffx.globalAlpha = decayFG;          // decadimento ALTISSIMO -> scia molto lunga e nitida
+  // blocchi GROSSI (chunky). offset quantizzato al passo del blocco -> tiling geometrico pulito
+  const cols = Math.round(sc.fgCols), rows = Math.round(sc.fgRows), bw=W/cols, bh=H/rows;
+  const q = Math.max(8, bw*0.25);     // quantizzazione dell'offset (movimento bloccoso)
+  let oxBase = Math.round(mvx/q)*q, oyBase = Math.round(mvy/q)*q;
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    let ox=oxBase, oy=oyBase, fx=1, fy=1;
+    // strappi a blocco: SALTA di blocchi interi (genera ripetizioni/tiling) + flip a specchio
+    if(kick>0.10 && RNG() < 0.10 + kick*0.5){
+      ox += (((RNG()*5)|0)-2)*bw;      // salto di N blocchi interi -> pattern geometrico
+      oy += (((RNG()*3)|0)-1)*bh;
+      if(RNG()<0.5) fx=-1;             // specchio orizzontale del blocco
+      if(RNG()<0.35) fy=-1;            // specchio verticale -> simmetrie ricorsive
+    }
+    const sx=c*bw, sy=r*bh, dx=sx+ox, dy=sy+oy;
+    if(fx<0||fy<0){
+      ffx.save();
+      ffx.translate(dx + (fx<0?bw:0), dy + (fy<0?bh:0));
+      ffx.scale(fx,fy);
+      ffx.drawImage(post, sx,sy,bw,bh, 0,0,bw,bh);
+      ffx.restore();
+    } else {
+      ffx.drawImage(post, sx,sy,bw,bh, dx,dy,bw,bh);
+    }
+  }
+  ffx.globalAlpha=1;
+  // blob correnti NETTI sopra la scia (a piena opacita')
+  renderLayers(intensity);
+}
+
+function render(){
+  requestAnimationFrame(render);
+  t += 0.016;
+  if(playing) readAudio();
+  updateTension(0.016);   // envelope di tensione (accumulo/rilascio) + spawn immagini
+  scheduleGrains();       // pianifica i grani audio (sintesi granulare)
+  // stato audio a schermo (diagnostica): visibile in basso a sinistra
+  const _pt=document.getElementById('phaseTag');
+  if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus; }
+  // evoluzione a fasi
+  phaseT += 0.016;
+  if(phaseT > phaseDur){ phaseT=0; phaseDur=rr(9,22); phaseN++; tgt=rollScene();
+    document.getElementById('phaseTag').textContent = 'autonoma · seed '+SEED.toString(36)+' · fase '+phaseN; }
+  lerpScene(0.02);
+
+  const intensity = autoIntensity();
+  const bass=bandVal[0], lowMid=bandVal[1], mid=bandVal[2], hiMid=bandVal[3], treble=bandVal[4];
+
+  // 1) BED: immagine piena sempre presente -> lo schermo non e' MAI nero
+  ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+  drawBed(intensity);
+  // FEEDBACK ricorsivo sopra il bed con 'lighten': nessun vuoto, nessun sbianco
+  // (il contenuto fedele decade verso il bed invece di accumularsi verso il bianco)
+  kick *= 0.78;                                  // la scossa del transiente decade
+  const zoom = sc.zoomBase + bass*0.055*intensity + beat*0.035 + kick*0.06;
+  const rot  = sc.rotDir*sc.rotAmt*(0.4+mid) + Math.sin(t*0.2)*0.004 + (RNG()-0.5)*kick*0.03;
+  const dx = Math.sin(t*0.7)*lowMid*36*intensity + (RNG()-0.5)*kick*34,
+        dy = Math.cos(t*0.5)*lowMid*36*intensity + (RNG()-0.5)*kick*34;
+  // feedback in source-over a decadimento contenuto: ricorsione NITIDA (poco blur),
+  // niente accumulo verso il bianco, il bed sotto rinfresca i colori a ogni frame
+  const decay = 0.62 + treble*0.16;
+  ctx.save();
+  ctx.translate(W/2+dx, H/2+dy); ctx.rotate(rot); ctx.scale(zoom,zoom);
+  ctx.globalAlpha = decay;
+  ctx.drawImage(fb, -W/2,-H/2, W,H);
+  ctx.restore(); ctx.globalAlpha=1;
+
+  // velo cromatico molto leggero (non deve sbiancare ne' coprire i colori originali)
+  const hue = (t*sc.hueSpin + sc.hueBase + lowMid*160) % 360;
+  ctx.globalCompositeOperation='soft-light';
+  ctx.fillStyle = `hsla(${hue}, 70%, 45%, ${sc.hueTint*(0.15+mid*0.4)})`;
+  ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='source-over';
+
+  // 2) DATAMOSH sullo SFONDO: strappi a bande, esplodono sui transienti
+  datamoshTear(intensity);
+
+  // 3) SIMMETRIA caleidoscopica -> SFONDO pseudo-frattale (a copertura piena)
+  kaleido(sc.kaleido);
+
+  // 4) salva nel feedback lo sfondo moshato+specchiato -> ricorsione frattale
+  fbx.globalCompositeOperation='source-over'; fbx.globalAlpha=1;
+  fbx.drawImage(cv,0,0);
+
+  // 5) attenua lo sfondo (contrasto+desatura parziale+scurisce) per farci risaltare le immagini
+  bgGrade();
+
+  // 6) PRIMO PIANO: blob a colori originali con FEEDBACK/DATAMOSH proprio che segue le traiettorie
+  renderForeground(intensity);
+
+  // 4) STROBO per bande (luminosita' contenuta)
+  if(strobeOn){
+    if(beat>0.5) strobeFlash = Math.max(strobeFlash, beat);
+    strobeFlash *= 0.6;
+    if(strobeFlash>0.04){ ctx.fillStyle=`rgba(255,255,255,${strobeFlash*0.22*intensity})`; ctx.fillRect(0,0,W,H); }
+    if(treble>0.5 && (Math.floor(t*60)%2===0)){
+      ctx.globalCompositeOperation='difference';
+      ctx.fillStyle=`rgba(255,255,255,${(treble-0.5)*0.5})`; ctx.fillRect(0,0,W,H);
+      ctx.globalCompositeOperation='source-over';
+    }
+    if(hiMid>0.62 && RNG()<0.2){
+      ctx.globalCompositeOperation='difference';
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+      ctx.globalCompositeOperation='source-over';
+    }
+  }
+
+  // 7) DIM globale leggero: lo sfondo e' gia' attenuato da bgGrade, le immagini restano a colori pieni
+  const dim = 0.92 - intensity*0.04;
+  const g = Math.max(0, Math.min(255, Math.round(dim*255)));
+  ctx.globalCompositeOperation='multiply';
+  ctx.fillStyle = `rgb(${g},${g},${g})`; ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='source-over';
+
+  // 8) PRIMO PIANO sopra TUTTO, dopo il dim -> blob nitidi e a piena luminosita'
+  ctx.drawImage(ff, 0, 0);
+
+  updateMeters();
+}
+
+const meterEls = [...document.querySelectorAll('#meters i')];
+function updateMeters(){ for(let b=0;b<BANDS;b++) meterEls[b].style.height = Math.round(bandVal[b]*100)+'%'; }
+
+// ---------- INTRO -> 5 MIN DI TREGUA -> RISER+SUB KICK -> CASINO ----------
+let booted=false;
+function boot(){
+  if(booted) return; booted=true;
+  document.getElementById('phaseTag').textContent = 'intro · seed '+SEED.toString(36);
+  resize();
+  if(!actx) setupAudio();         // inizia a decodificare il brano (resta SILENZIOSO durante l'intro)
+  render();                       // SOLO sfondi che sfumano con gli effetti: niente immagini, niente audio
+  // dopo 10s compare il prompt (e resta) e si arma il click che fa partire tutto
+  setTimeout(()=>{ const p=document.getElementById('clickPrompt'); if(p) p.classList.add('show'); armStart(); }, PROMPT_DELAY_MS);
+}
+// click sul prompt: sblocca l'audio e fa partire SUBITO riser -> kick -> casino
+function armStart(){
+  const go=()=>{
+    if(started) return; started=true;
+    if(!actx) setupAudio();
+    actx.resume().then(()=>{ playing=true; }).catch(()=>{});
+    const p=document.getElementById('clickPrompt'); if(p) p.classList.remove('show');   // il prompt sparisce solo ORA
+    startDrop();                          // riser (white noise) -> sub kick -> tutto il casino
+    ['pointerdown','keydown','touchstart'].forEach(ev=>window.removeEventListener(ev,go));
+  };
+  ['pointerdown','keydown','touchstart'].forEach(ev=>window.addEventListener(ev,go,{passive:true}));
+}
+// DROP: riser -> sub kick + comparsa (glitch) di manifesto/banner -> parte il casino
+function startDrop(){
+  if(!actx) return;
+  playRiser(RISER_S);
+  setTimeout(()=>{
+    playSubKick();
+    const man=document.getElementById('manifesto'), hud=document.getElementById('fascistHud');
+    man.classList.remove('preDrop'); hud.classList.remove('preDrop');
+    man.classList.add('dropGlitch'); hud.classList.add('dropGlitch');
+    chaos=true; granOn=true; playing=true; nextGrainTime=actx.currentTime;
+    extraEls.forEach(el=>el.play().catch(()=>{}));     // majin + tts entrano nel mix
+    playRealTrack();                                    // LA MIA TRACCIA (normale + reversed) dal primo kick, in loop
+    spawnLayer(); spawnLayer(); spawnLayer();            // primo casino di immagini
+    document.getElementById('phaseTag').textContent = 'seed '+SEED.toString(36)+' · fase 0';
+  }, RISER_S*1000);
+}
+// RISER interamente in WHITE NOISE: filtro che si apre + gain che cresce
+function playRiser(dur){
+  const t0=actx.currentTime;
+  const buf=actx.createBuffer(1, Math.ceil(actx.sampleRate*dur), actx.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const src=actx.createBufferSource(); src.buffer=buf;
+  const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=0.9;
+  bp.frequency.setValueAtTime(300,t0); bp.frequency.exponentialRampToValueAtTime(12000,t0+dur);
+  const ng=actx.createGain(); ng.gain.setValueAtTime(0.0001,t0); ng.gain.exponentialRampToValueAtTime(0.7,t0+dur);
+  src.connect(bp); bp.connect(ng); ng.connect(analyser);
+  src.start(t0); src.stop(t0+dur);
+}
+// SUB-KICK super compresso PESANTISSIMO + delay + riverbero + scossa datamosh visiva
+function playSubKick(){
+  const t0=actx.currentTime;
+  const osc=actx.createOscillator(); osc.type='sine';
+  osc.frequency.setValueAtTime(160,t0); osc.frequency.exponentialRampToValueAtTime(34,t0+0.22);
+  const g=actx.createGain(); g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(1.0,t0+0.006); g.gain.exponentialRampToValueAtTime(0.001,t0+0.7);
+  // SUPER COMPRESSO: soglia bassa, ratio alto, attack rapido + makeup gain pesante
+  const comp=actx.createDynamicsCompressor();
+  comp.threshold.value=-40; comp.knee.value=2; comp.ratio.value=20; comp.attack.value=0.001; comp.release.value=0.12;
+  const cg=actx.createGain(); cg.gain.value=4.0;     // makeup -> PESO
+  osc.connect(g); g.connect(comp); comp.connect(cg); cg.connect(analyser);   // dry
+  // DELAY con feedback
+  const dl=actx.createDelay(1.0); dl.delayTime.value=0.28; const fb=actx.createGain(); fb.gain.value=0.45;
+  const dlo=actx.createGain(); dlo.gain.value=0.5;
+  cg.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(dlo); dlo.connect(analyser);
+  // RIVERBERO
+  const rev=actx.createConvolver(); rev.buffer=makeIR(actx,2.6,2.2); const ro=actx.createGain(); ro.gain.value=0.55;
+  cg.connect(rev); rev.connect(ro); ro.connect(analyser);
+  audioKeep.push(osc,g,comp,cg,dl,fb,dlo,rev,ro);   // tieni vivi i nodi per la coda di delay/riverbero
+  osc.start(t0); osc.stop(t0+0.75);
+  kick = 1.0;
+}
+// loading overlay VHS: via dopo l'animazione (3s)
+setTimeout(()=>{ const o=document.getElementById('loadOverlay'); if(o) o.remove(); }, 3100);
+boot();
+
+// ── HUD "1 CLICK = 1 DEAD FASCIST": contatore + esplosione + il gesto ENTRA nell'opera ──
+let killCount=0; const killEl=document.getElementById('killCount');
+function playOneShot(url){ try{ const a=new Audio(url); a.volume=1; a.play().catch(()=>{}); a.addEventListener('ended',()=>a.remove()); }catch(e){} }
+document.getElementById('fascistHud').addEventListener('pointerdown', e=>{
+  if(!chaos) return;                       // i kill solo dopo il drop (durante la tregua: niente)
+  const hud=document.getElementById('fascistHud');
+  const ex=document.createElement('div'); ex.className='click-explosion';
+  ex.style.left=e.clientX+'px'; ex.style.top=e.clientY+'px';
+  const im=document.createElement('img'); im.src='../assets/img/giphy-explosion.gif'; ex.appendChild(im);
+  hud.appendChild(ex); setTimeout(()=>ex.remove(), 800);
+  playOneShot('../assets/audio/metal-slug-scream.mp3');
+  playOneShot('../assets/audio/roblox-explosion.mp3');
+  // il click pilota l'opera: scossa datamosh + scarico
+  kick = Math.max(kick, 0.9); releasePulse = Math.max(releasePulse, 0.8);
+  // ESPLOSIONE: un SACCO di immagini raggruppate INTORNO al cursore
+  const nx=e.clientX/window.innerWidth - 0.5, ny=e.clientY/window.innerHeight - 0.5;
+  burstBoost += 18;                              // alza il cap così la raffica sopravvive un po'
+  const burst = 12 + (RNG()*8|0);
+  for(let i=0;i<burst;i++) spawnLayer(null, nx, ny);
+  killCount++; if(killEl) killEl.textContent = killCount;
+});
+
+window.addEventListener('keydown', e=>{
+  if(e.code==='Space'){ e.preventDefault(); if(!actx) return;
+    if(playing){ actx.suspend(); playing=false; extraEls.forEach(el=>el.pause()); }
+    else { actx.resume(); playing=true; nextGrainTime=actx.currentTime; extraEls.forEach(el=>el.play().catch(()=>{})); } }
+});
+})();
+</script>
+</body>
+</html>
