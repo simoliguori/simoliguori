@@ -214,14 +214,14 @@ const ff = document.createElement('canvas'), ffx = ff.getContext('2d');      // 
 let decayFG = 0.985;  // scia di primo piano LUNGHISSIMA: il feedback datamosh quasi riempie lo schermo
 
 function resize(){
-  DPR = Math.min(window.devicePixelRatio||1, 1.15);   // PERF: meno pixel (Firefox soffre il datamosh GPU)
-  const maxW = 1100;
+  DPR = Math.min(window.devicePixelRatio||1, 1.0);   // PERF: 1 pixel logico = 1 pixel canvas (Firefox)
+  const maxW = 900;
   let w = window.innerWidth, h = window.innerHeight;
   const scale = Math.min(1, maxW/(w*DPR));
   W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
   cv.width=W; cv.height=H; fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
   ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
-  channelCache.clear();
+  channelCache.clear(); prewarmIdx=0;   // ricostruisci i chroma-key alla nuova risoluzione
   fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
   ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
 }
@@ -232,7 +232,7 @@ window.addEventListener('resize', resize);
 // (backbuffer) nello shader -> dove c'è MOTO smeara/RGB-shift, altrove mostra il frame nitido.
 const glc = document.getElementById('glc');
 let gl=null, glProg=null, glOK=false, glTried=false, texCur=null, texBack=null, glL={}, glW=0, glH=0;
-const GLSCALE = 0.7;                       // PERF: il datamosh gira a risoluzione ridotta (CSS lo scala)
+const GLSCALE = 0.6;                       // PERF: il datamosh gira a risoluzione ridotta (CSS lo scala)
 let glSrc=null, glSx=null;                 // canvas piccolo per fare l'upload di cv già rimpicciolito
 let ptrX=0, ptrY=0, ptrVel=0, ptrPX=0, ptrPY=0;   // cursore/dito: posizione (-0.5..0.5) e velocità
 const GL_VERT = "attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.0,1.0); }";
@@ -261,7 +261,7 @@ const GL_FRAG = "precision highp float;\n"+
 " gl_FragColor=newColor; }";
 function glComp(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){ console.warn('GL shader:',gl.getShaderInfoLog(s)); return null; } return s; }
 function initGL(){
-  try{ gl = glc.getContext('webgl',{alpha:false,preserveDrawingBuffer:true}) || glc.getContext('experimental-webgl',{alpha:false,preserveDrawingBuffer:true}); }catch(e){ gl=null; }
+  try{ gl = glc.getContext('webgl',{alpha:false,preserveDrawingBuffer:false,antialias:false,depth:false,stencil:false}) || glc.getContext('experimental-webgl',{alpha:false,preserveDrawingBuffer:false}); }catch(e){ gl=null; }
   if(!gl) return false;
   const vs=glComp(gl.VERTEX_SHADER,GL_VERT), fs=glComp(gl.FRAGMENT_SHADER,GL_FRAG); if(!vs||!fs) return false;
   glProg=gl.createProgram(); gl.attachShader(glProg,vs); gl.attachShader(glProg,fs); gl.linkProgram(glProg);
@@ -307,13 +307,13 @@ function glPass(){
     gl.uniform1i(glL.USE_RGB_SHIFT,1); gl.uniform1i(glL.USE_HUE_SHIFT,1);
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     gl.drawArrays(gl.TRIANGLES,0,6);
-    gl.bindTexture(gl.TEXTURE_2D,texBack); gl.copyTexImage2D(gl.TEXTURE_2D,0,gl.RGB,0,0,glW,glH,0);   // output -> backbuffer
+    gl.bindTexture(gl.TEXTURE_2D,texBack); gl.copyTexSubImage2D(gl.TEXTURE_2D,0,0,0,0,0,glW,glH);   // output -> backbuffer (no realloc)
   }catch(e){ glOK=false; glc.style.display='none'; console.warn('GL pass disabled:',e); }
 }
 
 // ---------- immagini ----------
 const images = [];
-let imgLoaded = 0;   // contatore per la schermata di caricamento (aspetta il rendering reale)
+let imgLoaded = 0, prewarmIdx = 0;   // contatore caricamento + indice di pre-costruzione chroma-key
 for(let i=1;i<=N_IMG;i++){
   const im = new Image(); im.decoding="async";
   im.onload=()=>imgLoaded++; im.onerror=()=>imgLoaded++;
@@ -336,7 +336,7 @@ function buildChannels(idx){
   if(!im || !im.complete || !im.naturalWidth) return null;
   const kw = Math.max(1, Math.min(W, KEY_RES)), kh = Math.max(1, Math.round(kw * H / W));
   const base = document.createElement('canvas'); base.width=kw; base.height=kh;
-  const bx = base.getContext('2d');
+  const bx = base.getContext('2d',{willReadFrequently:true});   // PERF: getImageData su backing CPU
   bx.fillStyle='#000'; bx.fillRect(0,0,kw,kh);
   // cover su kw×kh (non sul canvas pieno -> molto meno lavoro)
   const ir=im.width/im.height, cr=kw/kh; let dw,dh;
@@ -377,7 +377,7 @@ function buildChannels(idx){
   keyed.getContext('2d').putImageData(data, 0, 0);
   const out = {keyed, kw, kh};
   channelCache.set(idx,out);
-  if(channelCache.size>40){ const k=channelCache.keys().next().value; if(k!==idx) channelCache.delete(k); }   // cache ampia -> niente thrashing
+  if(channelCache.size>N_IMG+2){ const k=channelCache.keys().next().value; if(k!==idx) channelCache.delete(k); }   // tiene TUTTE le immagini -> getImageData una volta sola
   return out;
 }
 
@@ -597,7 +597,7 @@ function updateTension(dt){
   // INTENSITÀ -> QUANTITÀ di immagini sovrapposte: poche nei tratti calmi, tante nei picchi/scarichi
   burstBoost *= 0.95;   // l'extra di immagini dei click (intorno al cursore) decade piano
   // PERF: cap DURO sul numero di immagini (il vero costo è buildChannels/getImageData per ogni nuova)
-  maxOverlap = Math.min(18, Math.round(4 + tension*7 + releasePulse*4 + burstBoost));
+  maxOverlap = Math.min(12, Math.round(3 + tension*6 + releasePulse*4 + burstBoost));   // meno simultanee = meno lag (ricambio resta rapido)
   if(chaos){   // immagini sovrapposte solo dopo il drop (durante la tregua: nessuna)
     imgSpawnAcc += dt * (1.6 + tension*6 + releasePulse*9);   // comparsa RAPIDA/erratica
     while(imgSpawnAcc >= 1){ imgSpawnAcc -= 1; if(layers.length < maxOverlap) spawnLayer(); }
@@ -911,6 +911,8 @@ function render(){
   requestAnimationFrame(render);
   t += 0.016;
   ptrVel *= 0.9;   // la velocità del cursore decade (pilota datamosh + reattività)
+  // PREWARM: pre-costruisci i chroma-key (2/frame) -> niente getImageData a runtime durante il casino
+  if(prewarmIdx < N_IMG){ for(let k=0;k<2 && prewarmIdx<N_IMG;k++){ if(buildChannels(prewarmIdx)) prewarmIdx++; else break; } }
   if(playing) readAudio();
   updateTension(0.016);   // envelope di tensione (accumulo/rilascio) + spawn immagini
   scheduleGrains();       // pianifica i grani audio (sintesi granulare)
@@ -952,8 +954,7 @@ function render(){
   ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation='source-over';
 
-  // 2) DATAMOSH sullo SFONDO: strappi a bande, esplodono sui transienti
-  datamoshTear(intensity);
+  // 2) (datamosh 2D rimosso per performance: ora lo fa lo shader GPU sull'intero frame)
 
   // 3) SIMMETRIA caleidoscopica -> SFONDO pseudo-frattale (a copertura piena)
   kaleido(sc.kaleido);
