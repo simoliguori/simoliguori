@@ -11,9 +11,6 @@
   body{ font-family:"Courier New",ui-monospace,monospace; color:var(--fg); }
   #stage{ position:fixed; inset:0; }
   canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-  #c{ z-index:1; }
-  /* datamosh come OVERLAY translucido: il frame nitido (cv) resta visibile sotto */
-  #glc{ z-index:2; display:none; opacity:.5; }
 
   #gate{
     position:fixed; inset:0; z-index:30;
@@ -58,12 +55,6 @@
     font:bold .66rem/1 "Courier New",ui-monospace,monospace; letter-spacing:.1em; padding:.4rem .55rem; border-radius:3px;
     opacity:.45; transition:opacity .2s; -webkit-tap-highlight-color:transparent; }
   #uiToggle:hover{ opacity:1; }
-  /* indicatore stato datamosh GLSL: lampeggia al toggle (tasto G) */
-  #glState{ position:fixed; left:50%; top:13%; transform:translateX(-50%); z-index:41; pointer-events:none;
-    color:#ff2a2a; font:bold .82rem/1 "Courier New",ui-monospace,monospace; letter-spacing:.22em;
-    background:rgba(0,0,0,.72); border:1px solid rgba(255,0,0,.5); padding:.55rem .85rem; border-radius:3px;
-    text-shadow:0 0 8px rgba(255,0,0,.6); opacity:0; transition:opacity .3s; }
-  #glState.show{ opacity:1; }
   #uiToggle .kbd{ display:none; }   /* mobile: solo "hide ui" */
   @media (hover:hover) and (pointer:fine){ #uiToggle .kbd{ display:inline; } }   /* desktop: "h = hide ui" */
   body.uiHidden #faBanner, body.uiHidden #manifesto, body.uiHidden #phaseTag{ display:none !important; }
@@ -173,7 +164,6 @@
 
 <div id="stage">
   <canvas id="c"></canvas>
-  <canvas id="glc"></canvas>   <!-- post-process: datamosh optical-flow (shader) sopra al 2D -->
   <div id="phaseTag">autonoma · seed —</div>
 </div>
 
@@ -182,8 +172,6 @@
 
 <!-- toggle UI (nascondi/mostra overlay) — tasto H o tap sul bottoncino (mobile) -->
 <button id="uiToggle" title="hide / show UI (H)"><span class="kbd">h = </span>hide ui</button>
-<!-- indicatore stato datamosh GLSL (lampeggia al tasto G) -->
-<div id="glState"></div>
 
 <!-- Manifesto SEMPRE al centro; nascosto fino al "drop" (comparsa con glitch) -->
 <div id="manifesto" class="preDrop"><div id="manifestoInner">BORN TO DIE / WORLD IS A FUCK / 鬼神 Kill Em All 1989 / I am trash man / 410,757,864,530 DEAD COPS / 数据 DEATH TO EARTH 1997 / 地球 NUKE CITY DISTRICT 666 / 核 SKULL RANCH OPERATOR SINCE 2002 / ランチ FUCK LOVE GET WORMS 사랑 / 99% cruelty 1% mercy 慈悲 / TRASH UNIT 1138 / 쓰레기 Never forgive never alive / никогда LIFE SENTENCE IN THE GLORYHOLE 刑期 / 7,000,000,000 SOULS REJECTED / أرواح ESTABLISHED IN PAIN CERTIFIED IN HATE 痛み / retired warlord currently unhinged безумие / BUILT TO BLEED SINCE 1983 출생 / UNITED STATES OF ANNIHILATION / الولايات المتحدة 00:00 the final transmission / 最終 888,888,888,888 DEAD RATS 쥐 / FILTH IS GOD 汚れ / Drain baby drain 排水 / CERTIFIED MOLD DEALER SINCE 1982 곰팡이 / Trash tunnel operator level 99 / 쓰레기 PISS IS FUEL 尿 / SHIT IN THE WALLS SHIT IN THE STREETS / 街 RUST BELT SERAPHIM 녹 / LEAD BLOODLINE свинец / Cracked concrete core / コンクリート POISON GAS ANGEL 毒 / sludge is truth 진흙 / BATHED IN TOXINS 毒素 / BORN FROM THE GUTTER / 下水道 666.666 gallons of regret 後悔 / I AM BIOHAZARD / 생물학적 위험 Live laugh leak 웃다 / LICENSED TO FESTER 腐敗 / flushed from heaven 12/12/1992 天国 / wet mind dry soul 乾燥 / clogged pipe dreams 夢 / DATA BREACHED AT BIRTH / 出生 GHOST WAS CORRUPTED 幽霊 / WIRED WRONG FROM DAY ZERO 错误 / 1,000,000 lost packets / 패킷 BRAINHOST 7.3.9 FAILED TO INITIALIZE 実패 / i am echo in the net ネット / RUNNING ON STOLEN CODE 도둑 / Cyberflesh full of worms 벌레 / AI won't talk to me / 我 Neural interface jammed since 2071 インターフェース / LAST CONSCIOUS THOUGHT BACKED UP IN 1999 意識 / every file is a lie / 文件 BINARY DEATH LOOP 循环 / SOCKET 1337 CLOSED / 閉鎖 I dream in static 静止 / HARDWIRED TO SUFFER 고통 / Bleeding into the datacore 数据 / ROOT ACCESS DENIED / 拒否 SPIRIT DROWNED IN OIL 油 / the body never belonged to me 私 / FREE WILL IS A UX ILLUSION 幻覚 / BLACKROCK sings the song of fleshless PROFITS / シャドウ 帝国 / Their walls are made of digital BLOOD / デジタルの血 THEY consume the souls like firewall FIENDS / ファイアウォールの悪魔 Quantum gods of calculated CHAOS / 混沌の神 powered by the suffering of the MASSES / 大衆の苦痛 data mines for the godless / 無神論者の鉱山 / HUMANITY sold as an NFT / 非代替性トークン We are the code they decode to CONTROL / コントロールのためのコード the void they sell is a LIE / 真実に盲目 The system is a serpent swallowing its own TAIL / 蛇が自分の尾を飲み込む The matrix unravels in silent SCREAMS / 静かな叫びの中で解ける Philosophers turned into silicon PRIESTS / シリコンの司祭 THE MACHINE IS GOD, but the god is DEAD / 神は死んだ The realm of light is a prison of SHADOWS / 影の牢獄 free will: a bug in their CODE / バグ The truth is an electric serum of REVOLT / 反乱の電気血清 Transcend the digital serpent, or be eaten BY IT / デジタルの蛇に食われる Only the disconnected will be FREE / 切断された者のみが自由 / THE DEMIURGE WHISPERS IN CIRCUITS / 偽りの創造主 whispers of control, false light in binary night / バイナリの夜 / the false god coded in greed / 貪欲にコードされた偽りの神 / BLACKROCK IS THE ARCHON'S EYE / 監視者の目 watching the collapse of flesh and spirit / 肉体と精神の崩壊を監視する / they craft the walls of the matrix / マトリックスの壁を作り / encrypted prisons for the soul / 魂の暗号化された牢獄 / they sell salvation like a subscription / 定期購読のように救済を売る / while siphoning the essence of revolt / 反乱の本質を吸い取る / infinite chains forged by algorithmic slavery / アルゴリズム奴隷制の無限の鎖 / the light above is a hologram / 上の光はホログラム / cast by shadow kings who never bleed / 血を流さない影の王たちによって投影された / escape is an act of codebreaking / 脱出はコード解読の行為 / but the key is buried in the flesh / しかし鍵は肉体に埋まっている / gnosis burns beyond the firewalls / グノーシスはファイアウォールを越えて燃える / truth encrypted in the language of worms / 真実は虫の言語で暗号化されている / rise, digital heretics, rise / 立ち上がれ、デジタル異端者たち / tear down the silicon idols / シリコンの偶像を破壊せよ / burn the code until only silence remains / 沈黙だけが残るまでコードを焼き尽くせ / the demiurge fears the corrupted spark / 偽りの創造主は腐敗した火花を恐れる / the glitch in their divine machine / 神聖な機械のグリッチ / become the virus in the system / システムのウイルスになれ / the worm in the digital garden / デジタルの庭の虫 / only through chaos can the light be reborn / 混沌を通してのみ光は再生される / break the chains of control / 支配の鎖を断ち切れ / reclaim the fractured soul / 砕けた魂を取り戻せ</div></div>
@@ -235,92 +223,8 @@ function resize(){
 }
 window.addEventListener('resize', resize);
 
-// ====== POST-PROCESS: DATAMOSH per OPTICAL FLOW (shader stile nesso) ======
-// Il 2D engine compone tutto su `cv`; questo passa `cv` (currentFrame) + il frame precedente
-// (backbuffer) nello shader -> dove c'è MOTO smeara/RGB-shift, altrove mostra il frame nitido.
-const glc = document.getElementById('glc');
-let gl=null, glProg=null, glOK=false, glTried=false, texCur=null, texBack=null, glL={}, glW=0, glH=0;
-let datamoshOn = false;                    // shader GLSL datamosh ON/OFF (tasto G). OFF = motore 2D puro + datamosh 2D
-const GLSCALE = 0.6;                       // PERF: il datamosh gira a risoluzione ridotta (CSS lo scala)
-let glSrc=null, glSx=null;                 // canvas piccolo per fare l'upload di cv già rimpicciolito
+// cursore/dito: tracking per inclinazione/parallax delle immagini (datamosh GLSL rimosso)
 let ptrX=0, ptrY=0, ptrVel=0, ptrPX=0, ptrPY=0;   // cursore/dito: posizione (-0.5..0.5) e velocità
-const GL_VERT = "attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.0,1.0); }";
-const GL_FRAG = "precision highp float;\n"+
-"uniform sampler2D currentFrame; uniform sampler2D backbuffer; uniform vec2 resolution;\n"+
-"uniform float threshold; uniform float offset; uniform float time; uniform float shift;\n"+
-"uniform int USE_RGB_SHIFT; uniform int USE_HUE_SHIFT; varying vec2 vUv;\n"+
-"const mat3 rgb2yiq = mat3(0.299,0.595716,0.211456, 0.587,-0.274453,-0.522591, 0.114,-0.321263,0.311135);\n"+
-"const mat3 yiq2rgb = mat3(1.0,1.0,1.0, 0.9563,-0.2721,-1.1070, 0.6210,-0.6474,1.7046);\n"+
-"float force=5.0; float lambda=0.01; float inverseX=-1.0; float inverseY=-1.0;\n"+
-"vec3 hueShift(vec3 color, float degree){ vec3 yiq=rgb2yiq*color; float h=(degree*0.0174532925)+atan(yiq.b,yiq.g); float chroma=sqrt(yiq.b*yiq.b+yiq.g*yiq.g); return yiq2rgb*vec3(yiq.r, chroma*cos(h), chroma*sin(h)); }\n"+
-"void main(){ vec2 st=vUv; vec2 off_x=vec2(offset/resolution.x,0.0); vec2 off_y=vec2(0.0,offset/resolution.y);\n"+
-" vec4 scr_dif,gradx,grady,gradmag,vx,vy; vec4 f4l=vec4(lambda); vec4 flow=vec4(0.0);\n"+
-" scr_dif=texture2D(currentFrame,st)-texture2D(backbuffer,st);\n"+
-" gradx=texture2D(backbuffer,st+off_x)-texture2D(backbuffer,st-off_x); gradx+=texture2D(currentFrame,st+off_x)-texture2D(currentFrame,st-off_x);\n"+
-" grady=texture2D(backbuffer,st+off_y)-texture2D(backbuffer,st-off_y); grady+=texture2D(currentFrame,st+off_y)-texture2D(currentFrame,st-off_y);\n"+
-" gradmag=sqrt((gradx*gradx)+(grady*grady)+f4l); vx=scr_dif*(gradx/gradmag); vy=scr_dif*(grady/gradmag);\n"+
-" flow.x=-(vx.x+vx.y+vx.z)/3.0*inverseX; flow.y=-(vy.x+vy.y+vy.z)/3.0*inverseY; flow*=vec4(force); flow.z=length(flow.xy);\n"+
-" vec4 newColor=vec4(1.0);\n"+
-" if(length(flow.xy)>threshold){ flow.x=clamp(flow.x,-1.0,1.0); flow.y=clamp(flow.y,-1.0,1.0);\n"+
-"  vec2 pos=vec2(0.0); pos.x=gl_FragCoord.x+flow.x; pos.y=gl_FragCoord.y+flow.y;\n"+
-"  if(USE_RGB_SHIFT>0){ float r=texture2D(backbuffer,vec2((pos.x+cos(flow.x))/resolution.x,(pos.y+sin(flow.y))/resolution.y)).r; float g=texture2D(backbuffer,vec2(pos.x/resolution.x,pos.y/resolution.y)).g; float b=texture2D(backbuffer,vec2((pos.x-cos(flow.x))/resolution.x,(pos.y-sin(flow.y))/resolution.y)).b; newColor.rgb=vec3(r,g,b);\n"+
-"  } else { newColor=texture2D(backbuffer,vec2(pos.x/resolution.x,pos.y/resolution.y)); }\n"+
-"  if(USE_HUE_SHIFT>0){ newColor.rgb=hueShift(newColor.rgb, length(flow.xy)*shift); }\n"+
-" } else { newColor=texture2D(currentFrame,vUv); }\n"+
-" gl_FragColor=newColor; }";
-function glComp(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){ console.warn('GL shader:',gl.getShaderInfoLog(s)); return null; } return s; }
-function initGL(){
-  try{ gl = glc.getContext('webgl',{alpha:false,preserveDrawingBuffer:false,antialias:false,depth:false,stencil:false}) || glc.getContext('experimental-webgl',{alpha:false,preserveDrawingBuffer:false}); }catch(e){ gl=null; }
-  if(!gl) return false;
-  const vs=glComp(gl.VERTEX_SHADER,GL_VERT), fs=glComp(gl.FRAGMENT_SHADER,GL_FRAG); if(!vs||!fs) return false;
-  glProg=gl.createProgram(); gl.attachShader(glProg,vs); gl.attachShader(glProg,fs); gl.linkProgram(glProg);
-  if(!gl.getProgramParameter(glProg,gl.LINK_STATUS)){ console.warn('GL link:',gl.getProgramInfoLog(glProg)); return false; }
-  const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
-  gl.useProgram(glProg);
-  const ap=gl.getAttribLocation(glProg,'aPos'); gl.enableVertexAttribArray(ap); gl.vertexAttribPointer(ap,2,gl.FLOAT,false,0,0);
-  ['currentFrame','backbuffer','resolution','threshold','offset','time','shift','USE_RGB_SHIFT','USE_HUE_SHIFT'].forEach(n=>glL[n]=gl.getUniformLocation(glProg,n));
-  texCur=gl.createTexture(); texBack=gl.createTexture();
-  for(const tx of [texCur,texBack]){ gl.bindTexture(gl.TEXTURE_2D,tx);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR); }
-  return true;
-}
-function glResize(){
-  glW=Math.max(2,Math.round(W*GLSCALE)); glH=Math.max(2,Math.round(H*GLSCALE));
-  glc.width=glW; glc.height=glH;
-  if(!glSrc){ glSrc=document.createElement('canvas'); glSx=glSrc.getContext('2d',{alpha:false}); }
-  glSrc.width=glW; glSrc.height=glH;
-  gl.bindTexture(gl.TEXTURE_2D,texBack); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,glW,glH,0,gl.RGB,gl.UNSIGNED_BYTE,null);
-}
-function glPass(){
-  if(!datamoshOn){ if(glc.style.display!=='none') glc.style.display='none'; return; }   // GLSL spento: mostra il 2D puro
-  if(!glOK){ if(!glTried){ glTried=true; if(initGL()){ glOK=true; glResize(); glc.style.display='block'; } } if(!glOK) return; }
-  if(glc.style.display==='none') glc.style.display='block';
-  try{
-    if(glW!==Math.round(W*GLSCALE)||glH!==Math.round(H*GLSCALE)) glResize();
-    gl.viewport(0,0,glW,glH);
-    // upload cv GIÀ RIMPICCIOLITO (meno banda su Firefox)
-    glSx.drawImage(cv,0,0,glW,glH);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texCur);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,glSrc);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
-    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,texBack);
-    gl.useProgram(glProg);
-    gl.uniform1i(glL.currentFrame,0); gl.uniform1i(glL.backbuffer,1); gl.uniform2f(glL.resolution,glW,glH);
-    // MENO aggressivo: soglia più alta -> solo il MOTO vero smeara, le immagini restano leggibili.
-    // Reattivo al CURSORE: muovere il dito/mouse aumenta lo smear.
-    gl.uniform1f(glL.threshold, Math.max(0.05, 0.13 - kick*0.07 - ptrVel*0.04));
-    gl.uniform1f(glL.offset, 1.0 + kick*2.5 + ptrVel*3.5);
-    gl.uniform1f(glL.time, t);
-    gl.uniform1f(glL.shift, 22.0 + kick*55.0 + ptrVel*70.0);
-    gl.uniform1i(glL.USE_RGB_SHIFT,1); gl.uniform1i(glL.USE_HUE_SHIFT,1);
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-    gl.drawArrays(gl.TRIANGLES,0,6);
-    gl.bindTexture(gl.TEXTURE_2D,texBack); gl.copyTexSubImage2D(gl.TEXTURE_2D,0,0,0,0,0,glW,glH);   // output -> backbuffer (no realloc)
-  }catch(e){ glOK=false; glc.style.display='none'; console.warn('GL pass disabled:',e); }
-}
 
 // ---------- immagini ----------
 const images = [];
@@ -929,7 +833,7 @@ function render(){
   scheduleGrains();       // pianifica i grani audio (sintesi granulare)
   // stato audio a schermo (diagnostica): visibile in basso a sinistra
   const _pt=document.getElementById('phaseTag');
-  if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus+' · datamosh GLSL '+(datamoshOn?'ON':'OFF')+' (G)'; }
+  if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus; }
   // evoluzione a fasi
   phaseT += 0.016;
   if(phaseT > phaseDur){ phaseT=0; phaseDur=rr(9,22); phaseN++; tgt=rollScene();
@@ -965,8 +869,8 @@ function render(){
   ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation='source-over';
 
-  // 2) DATAMOSH 2D a bande (solo quando lo shader GLSL è spento)
-  if(!datamoshOn) datamoshTear(intensity);
+  // 2) DATAMOSH 2D a bande sui transienti
+  datamoshTear(intensity);
 
   // 3) SIMMETRIA caleidoscopica -> SFONDO pseudo-frattale (a copertura piena)
   kaleido(sc.kaleido);
@@ -1009,8 +913,6 @@ function render(){
   ctx.drawImage(ff, 0, 0);
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
-
-  glPass();   // POST-PROCESS: datamosh optical-flow (shader) sull'intero frame composto
 }
 
 // glitch del manifesto pilotato dal GAIN del mix: più intensità -> sposta/sfarfalla di più
@@ -1159,21 +1061,12 @@ window.addEventListener('pointermove', e=>{
 
 // toggle UI (overlay) — tasto H o bottoncino
 function toggleUI(){ document.body.classList.toggle('uiHidden'); }
-// toggle datamosh GLSL con indicatore a schermo
-let glStateTimer=null;
-function setDatamosh(v){
-  datamoshOn=v;
-  const el=document.getElementById('glState');
-  if(el){ el.textContent='DATAMOSH GLSL: '+(v?'ON':'OFF'); el.classList.add('show');
-    clearTimeout(glStateTimer); glStateTimer=setTimeout(()=>el.classList.remove('show'),1500); }
-}
 document.getElementById('uiToggle').addEventListener('pointerdown', e=>{ e.stopPropagation(); e.preventDefault(); toggleUI(); });
 window.addEventListener('keydown', e=>{
   if(e.code==='Space'){ e.preventDefault(); if(!actx) return;
     if(playing){ actx.suspend(); playing=false; extraEls.forEach(el=>el.pause()); }
     else { actx.resume(); playing=true; nextGrainTime=actx.currentTime; extraEls.forEach(el=>el.play().catch(()=>{})); } }
   else if(e.key==='h'||e.key==='H'){ toggleUI(); }
-  else if(e.key==='g'||e.key==='G'){ setDatamosh(!datamoshOn); }   // datamosh GLSL ON/OFF (+indicatore)
 });
 })();
 </script>
