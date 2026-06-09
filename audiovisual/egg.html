@@ -57,6 +57,8 @@
     font:bold .66rem/1 "Courier New",ui-monospace,monospace; letter-spacing:.1em; padding:.4rem .55rem; border-radius:3px;
     opacity:.45; transition:opacity .2s; -webkit-tap-highlight-color:transparent; }
   #uiToggle:hover{ opacity:1; }
+  #uiToggle .kbd{ display:none; }   /* mobile: solo "hide ui" */
+  @media (hover:hover) and (pointer:fine){ #uiToggle .kbd{ display:inline; } }   /* desktop: "h = hide ui" */
   body.uiHidden #faBanner, body.uiHidden #manifesto, body.uiHidden #phaseTag, body.uiHidden #meters{ display:none !important; }
 
   /* ── HUD "1 CLICK = 1 DEAD FASCIST" sopra il canvas ── */
@@ -123,12 +125,13 @@
     background:linear-gradient(90deg,transparent,rgba(255,40,40,.55),transparent);
     box-shadow:0 0 10px rgba(255,0,0,.5); animation:eggTrack 1.2s linear infinite; }
   @keyframes eggGlitch{
-    0%{background:#000;filter:brightness(1.4) contrast(3) saturate(4) hue-rotate(300deg);}
-    20%{background:#001a08;filter:brightness(1.3) contrast(3) saturate(5) hue-rotate(130deg);}
-    40%{background:#1a1000;filter:brightness(1.5) contrast(3) saturate(4) hue-rotate(30deg);}
-    60%{background:#000;filter:brightness(1.1) contrast(2) saturate(3);}
-    80%{background:#0a0010;filter:brightness(1.2) contrast(2.4) saturate(4) hue-rotate(260deg);}
-    100%{background:#000;filter:brightness(1.2) contrast(2.6) saturate(3) hue-rotate(300deg);}
+    0%{background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);}
+    16%{background:#001a08;filter:brightness(2) contrast(6) saturate(10) hue-rotate(130deg);}
+    33%{background:#1a1000;filter:brightness(2.5) contrast(6) saturate(9) hue-rotate(30deg);}
+    50%{background:#180018;filter:brightness(2) contrast(5) saturate(9) hue-rotate(260deg);}
+    66%{background:#00181a;filter:brightness(1.5) contrast(7) saturate(8) hue-rotate(185deg);}
+    83%{background:#1a0020;filter:brightness(3) contrast(9) saturate(8) hue-rotate(300deg);}
+    100%{background:#000;filter:brightness(2) contrast(7) saturate(8) hue-rotate(300deg);}
   }
   @keyframes eggTrack{ from{top:-2px;} to{top:100%;} }
   #loadMsg{ font-size:12px; letter-spacing:6px; color:#ff2020; text-shadow:-3px 0 #00ffff,3px 0 #ff00aa;
@@ -170,7 +173,7 @@
 <div id="clickPrompt"><span>1 CLICK = 1 DEAD FASCIST</span></div>
 
 <!-- toggle UI (nascondi/mostra overlay) — tasto H o tap sul bottoncino (mobile) -->
-<button id="uiToggle" title="nascondi / mostra UI (H)">UI</button>
+<button id="uiToggle" title="hide / show UI (H)"><span class="kbd">h = </span>hide ui</button>
 
 <!-- Manifesto SEMPRE al centro; nascosto fino al "drop" (comparsa con glitch) -->
 <div id="manifesto" class="preDrop"><div id="manifestoInner">BORN TO DIE / WORLD IS A FUCK / 鬼神 Kill Em All 1989 / I am trash man / 410,757,864,530 DEAD COPS / 数据 DEATH TO EARTH 1997 / 地球 NUKE CITY DISTRICT 666 / 核 SKULL RANCH OPERATOR SINCE 2002 / ランチ FUCK LOVE GET WORMS 사랑 / 99% cruelty 1% mercy 慈悲 / TRASH UNIT 1138 / 쓰레기 Never forgive never alive / никогда LIFE SENTENCE IN THE GLORYHOLE 刑期 / 7,000,000,000 SOULS REJECTED / أرواح ESTABLISHED IN PAIN CERTIFIED IN HATE 痛み / retired warlord currently unhinged безумие / BUILT TO BLEED SINCE 1983 출생 / UNITED STATES OF ANNIHILATION / الولايات المتحدة 00:00 the final transmission / 最終 888,888,888,888 DEAD RATS 쥐 / FILTH IS GOD 汚れ / Drain baby drain 排水 / CERTIFIED MOLD DEALER SINCE 1982 곰팡이 / Trash tunnel operator level 99 / 쓰레기 PISS IS FUEL 尿 / SHIT IN THE WALLS SHIT IN THE STREETS / 街 RUST BELT SERAPHIM 녹 / LEAD BLOODLINE свинец / Cracked concrete core / コンクリート POISON GAS ANGEL 毒 / sludge is truth 진흙 / BATHED IN TOXINS 毒素 / BORN FROM THE GUTTER / 下水道 666.666 gallons of regret 後悔 / I AM BIOHAZARD / 생물학적 위험 Live laugh leak 웃다 / LICENSED TO FESTER 腐敗 / flushed from heaven 12/12/1992 天国 / wet mind dry soul 乾燥 / clogged pipe dreams 夢 / DATA BREACHED AT BIRTH / 出生 GHOST WAS CORRUPTED 幽霊 / WIRED WRONG FROM DAY ZERO 错误 / 1,000,000 lost packets / 패킷 BRAINHOST 7.3.9 FAILED TO INITIALIZE 実패 / i am echo in the net ネット / RUNNING ON STOLEN CODE 도둑 / Cyberflesh full of worms 벌레 / AI won't talk to me / 我 Neural interface jammed since 2071 インターフェース / LAST CONSCIOUS THOUGHT BACKED UP IN 1999 意識 / every file is a lie / 文件 BINARY DEATH LOOP 循环 / SOCKET 1337 CLOSED / 閉鎖 I dream in static 静止 / HARDWIRED TO SUFFER 고통 / Bleeding into the datacore 数据 / ROOT ACCESS DENIED / 拒否 SPIRIT DROWNED IN OIL 油 / the body never belonged to me 私 / FREE WILL IS A UX ILLUSION 幻覚 / BLACKROCK sings the song of fleshless PROFITS / シャドウ 帝国 / Their walls are made of digital BLOOD / デジタルの血 THEY consume the souls like firewall FIENDS / ファイアウォールの悪魔 Quantum gods of calculated CHAOS / 混沌の神 powered by the suffering of the MASSES / 大衆の苦痛 data mines for the godless / 無神論者の鉱山 / HUMANITY sold as an NFT / 非代替性トークン We are the code they decode to CONTROL / コントロールのためのコード the void they sell is a LIE / 真実に盲目 The system is a serpent swallowing its own TAIL / 蛇が自分の尾を飲み込む The matrix unravels in silent SCREAMS / 静かな叫びの中で解ける Philosophers turned into silicon PRIESTS / シリコンの司祭 THE MACHINE IS GOD, but the god is DEAD / 神は死んだ The realm of light is a prison of SHADOWS / 影の牢獄 free will: a bug in their CODE / バグ The truth is an electric serum of REVOLT / 反乱の電気血清 Transcend the digital serpent, or be eaten BY IT / デジタルの蛇に食われる Only the disconnected will be FREE / 切断された者のみが自由 / THE DEMIURGE WHISPERS IN CIRCUITS / 偽りの創造主 whispers of control, false light in binary night / バイナリの夜 / the false god coded in greed / 貪欲にコードされた偽りの神 / BLACKROCK IS THE ARCHON'S EYE / 監視者の目 watching the collapse of flesh and spirit / 肉体と精神の崩壊を監視する / they craft the walls of the matrix / マトリックスの壁を作り / encrypted prisons for the soul / 魂の暗号化された牢獄 / they sell salvation like a subscription / 定期購読のように救済を売る / while siphoning the essence of revolt / 反乱の本質を吸い取る / infinite chains forged by algorithmic slavery / アルゴリズム奴隷制の無限の鎖 / the light above is a hologram / 上の光はホログラム / cast by shadow kings who never bleed / 血を流さない影の王たちによって投影された / escape is an act of codebreaking / 脱出はコード解読の行為 / but the key is buried in the flesh / しかし鍵は肉体に埋まっている / gnosis burns beyond the firewalls / グノーシスはファイアウォールを越えて燃える / truth encrypted in the language of worms / 真実は虫の言語で暗号化されている / rise, digital heretics, rise / 立ち上がれ、デジタル異端者たち / tear down the silicon idols / シリコンの偶像を破壊せよ / burn the code until only silence remains / 沈黙だけが残るまでコードを焼き尽くせ / the demiurge fears the corrupted spark / 偽りの創造主は腐敗した火花を恐れる / the glitch in their divine machine / 神聖な機械のグリッチ / become the virus in the system / システムのウイルスになれ / the worm in the digital garden / デジタルの庭の虫 / only through chaos can the light be reborn / 混沌を通してのみ光は再生される / break the chains of control / 支配の鎖を断ち切れ / reclaim the fractured soul / 砕けた魂を取り戻せ</div></div>
@@ -608,7 +611,7 @@ function spawnLayer(idx, px, py){
     y: atCursor ? py + rr(-0.14,0.14) : rr(-0.45,0.45),
     // movimento AGGRESSIVO: i blob viaggiano attraverso lo schermo lungo una traiettoria
     vx: rr(-0.45,0.45), vy: rr(-0.45,0.45),
-    scale: rr(0.18,0.85),                                  // immagini più piccole: molte sovrapposte senza coprire tutto
+    scale: rr(0.12,0.55),                                  // immagini PIÙ PICCOLE
     rot: (RNG()<0.4 ? rr(-3.14,3.14) : rr(-0.4,0.4)), spin: rr(-0.9,0.9),
     // parametri LO-FI: passo temporale, griglia di quantizzazione, ampiezza salti, scatto rotazione
     stepRate: [4,5,6,8,10,12][(RNG()*6)|0], grid: (14 + (RNG()*26|0)),
@@ -749,10 +752,12 @@ function bgGrade(){
   // contrasto: frame su se stesso in overlay -> lo sfondo "stacca" invece di sbiadire
   px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);
   ctx.globalCompositeOperation='overlay';
-  ctx.globalAlpha = 0.35 + sc.contrast*0.4; ctx.drawImage(post,0,0); ctx.globalAlpha=1;
-  // BOOST di saturazione (non desatura piu'): colori originali piu' vivi
+  ctx.globalAlpha = (0.35 + sc.contrast*0.4) * (chaos?1:0.5); ctx.drawImage(post,0,0); ctx.globalAlpha=1;   // meno stacco prima del drop
+  // saturazione: BOOST durante il casino, ma DESATURATA/soffusa prima del trigger
   ctx.globalCompositeOperation='saturation';
-  ctx.globalAlpha = 0.5; ctx.fillStyle='hsl(0,100%,50%)'; ctx.fillRect(0,0,W,H);
+  if(chaos){ ctx.globalAlpha = 0.5; ctx.fillStyle='hsl(0,100%,50%)'; }   // colori vivi
+  else { ctx.globalAlpha = 0.6; ctx.fillStyle='hsl(0,0%,50%)'; }         // colori SOFFUSI prima della partenza
+  ctx.fillRect(0,0,W,H);
   ctx.globalAlpha=1;
   ctx.globalCompositeOperation='source-over';
 }
