@@ -12,7 +12,8 @@
   #stage{ position:fixed; inset:0; }
   canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   #c{ z-index:1; }
-  #glc{ z-index:2; display:none; }   /* mostrato solo se WebGL inizializza (post-process datamosh) */
+  /* datamosh come OVERLAY translucido: il frame nitido (cv) resta visibile sotto */
+  #glc{ z-index:2; display:none; opacity:.5; }
 
   #gate{
     position:fixed; inset:0; z-index:30;
@@ -213,8 +214,8 @@ const ff = document.createElement('canvas'), ffx = ff.getContext('2d');      // 
 let decayFG = 0.985;  // scia di primo piano LUNGHISSIMA: il feedback datamosh quasi riempie lo schermo
 
 function resize(){
-  DPR = Math.min(window.devicePixelRatio||1, 1.25);   // PERF: meno pixel da processare ogni frame
-  const maxW = 1280;
+  DPR = Math.min(window.devicePixelRatio||1, 1.15);   // PERF: meno pixel (Firefox soffre il datamosh GPU)
+  const maxW = 1100;
   let w = window.innerWidth, h = window.innerHeight;
   const scale = Math.min(1, maxW/(w*DPR));
   W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
@@ -231,6 +232,9 @@ window.addEventListener('resize', resize);
 // (backbuffer) nello shader -> dove c'è MOTO smeara/RGB-shift, altrove mostra il frame nitido.
 const glc = document.getElementById('glc');
 let gl=null, glProg=null, glOK=false, glTried=false, texCur=null, texBack=null, glL={}, glW=0, glH=0;
+const GLSCALE = 0.7;                       // PERF: il datamosh gira a risoluzione ridotta (CSS lo scala)
+let glSrc=null, glSx=null;                 // canvas piccolo per fare l'upload di cv già rimpicciolito
+let ptrX=0, ptrY=0, ptrVel=0, ptrPX=0, ptrPY=0;   // cursore/dito: posizione (-0.5..0.5) e velocità
 const GL_VERT = "attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.0,1.0); }";
 const GL_FRAG = "precision highp float;\n"+
 "uniform sampler2D currentFrame; uniform sampler2D backbuffer; uniform vec2 resolution;\n"+
@@ -273,27 +277,37 @@ function initGL(){
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR); }
   return true;
 }
-function glResize(){ glc.width=W; glc.height=H; glW=W; glH=H; gl.bindTexture(gl.TEXTURE_2D,texBack); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,W,H,0,gl.RGB,gl.UNSIGNED_BYTE,null); }
+function glResize(){
+  glW=Math.max(2,Math.round(W*GLSCALE)); glH=Math.max(2,Math.round(H*GLSCALE));
+  glc.width=glW; glc.height=glH;
+  if(!glSrc){ glSrc=document.createElement('canvas'); glSx=glSrc.getContext('2d',{alpha:false}); }
+  glSrc.width=glW; glSrc.height=glH;
+  gl.bindTexture(gl.TEXTURE_2D,texBack); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,glW,glH,0,gl.RGB,gl.UNSIGNED_BYTE,null);
+}
 function glPass(){
   if(!glOK){ if(!glTried){ glTried=true; if(initGL()){ glOK=true; glResize(); glc.style.display='block'; } } if(!glOK) return; }
   try{
-    if(glW!==W||glH!==H) glResize();
-    gl.viewport(0,0,W,H);
+    if(glW!==Math.round(W*GLSCALE)||glH!==Math.round(H*GLSCALE)) glResize();
+    gl.viewport(0,0,glW,glH);
+    // upload cv GIÀ RIMPICCIOLITO (meno banda su Firefox)
+    glSx.drawImage(cv,0,0,glW,glH);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texCur);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,cv);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,glSrc);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,texBack);
     gl.useProgram(glProg);
-    gl.uniform1i(glL.currentFrame,0); gl.uniform1i(glL.backbuffer,1); gl.uniform2f(glL.resolution,W,H);
-    gl.uniform1f(glL.threshold, Math.max(0.015, 0.06 - kick*0.045));   // su kick: soglia più bassa = più smear
-    gl.uniform1f(glL.offset, 1.0 + kick*3.0);
+    gl.uniform1i(glL.currentFrame,0); gl.uniform1i(glL.backbuffer,1); gl.uniform2f(glL.resolution,glW,glH);
+    // MENO aggressivo: soglia più alta -> solo il MOTO vero smeara, le immagini restano leggibili.
+    // Reattivo al CURSORE: muovere il dito/mouse aumenta lo smear.
+    gl.uniform1f(glL.threshold, Math.max(0.05, 0.13 - kick*0.07 - ptrVel*0.04));
+    gl.uniform1f(glL.offset, 1.0 + kick*2.5 + ptrVel*3.5);
     gl.uniform1f(glL.time, t);
-    gl.uniform1f(glL.shift, 25.0 + kick*60.0);
+    gl.uniform1f(glL.shift, 22.0 + kick*55.0 + ptrVel*70.0);
     gl.uniform1i(glL.USE_RGB_SHIFT,1); gl.uniform1i(glL.USE_HUE_SHIFT,1);
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);
     gl.drawArrays(gl.TRIANGLES,0,6);
-    gl.bindTexture(gl.TEXTURE_2D,texBack); gl.copyTexImage2D(gl.TEXTURE_2D,0,gl.RGB,0,0,W,H,0);   // output -> backbuffer
+    gl.bindTexture(gl.TEXTURE_2D,texBack); gl.copyTexImage2D(gl.TEXTURE_2D,0,gl.RGB,0,0,glW,glH,0);   // output -> backbuffer
   }catch(e){ glOK=false; glc.style.display='none'; console.warn('GL pass disabled:',e); }
 }
 
@@ -583,9 +597,9 @@ function updateTension(dt){
   // INTENSITÀ -> QUANTITÀ di immagini sovrapposte: poche nei tratti calmi, tante nei picchi/scarichi
   burstBoost *= 0.95;   // l'extra di immagini dei click (intorno al cursore) decade piano
   // PERF: cap DURO sul numero di immagini (il vero costo è buildChannels/getImageData per ogni nuova)
-  maxOverlap = Math.min(16, Math.round(3 + tension*5 + releasePulse*3 + burstBoost));
+  maxOverlap = Math.min(18, Math.round(4 + tension*7 + releasePulse*4 + burstBoost));
   if(chaos){   // immagini sovrapposte solo dopo il drop (durante la tregua: nessuna)
-    imgSpawnAcc += dt * (0.5 + tension*2.5 + releasePulse*4);   // spawn più gentile (meno churn di chroma-key)
+    imgSpawnAcc += dt * (1.6 + tension*6 + releasePulse*9);   // comparsa RAPIDA/erratica
     while(imgSpawnAcc >= 1){ imgSpawnAcc -= 1; if(layers.length < maxOverlap) spawnLayer(); }
   }
   // MORPH lento e random del pitch della voce TTS
@@ -691,7 +705,8 @@ function spawnLayer(idx, px, py){
   buildChannels(idx);
   const atCursor = px!=null;   // se passate px/py (es. click): blob raggruppati INTORNO al cursore
   layers.push({
-    idx, born:t, dur: rr(0.8,5.0), band: (RNG()*BANDS)|0,   // durate erratiche (anche flash brevi)
+    idx, born:t, dur: rr(0.45,2.8), band: (RNG()*BANDS)|0,   // durate corte/erratiche -> ricambio rapido
+    depth: rr(0.4,1.3),                                     // profondità per parallax/tilt al cursore
     blend: IMGBLEND[(RNG()*IMGBLEND.length)|0],
     x: atCursor ? px + rr(-0.14,0.14) : rr(-0.45,0.45),    // posizione: cursore (stretta) o casuale
     y: atCursor ? py + rr(-0.14,0.14) : rr(-0.45,0.45),
@@ -733,8 +748,9 @@ function drawLayerCanvas(L, intensity){
   // quantizzazione a griglia grossa -> movimento "bloccoso"
   cx = Math.round(cx/L.grid)*L.grid;
   cy = Math.round(cy/L.grid)*L.grid;
-  // rotazione a scatti (incrementi netti)
-  const rotStep = Math.round((L.rot + ageq*L.spin)/L.rotStep)*L.rotStep;
+  // INTERATTIVITÀ CURSORE: parallax (cambio posizione) + inclinazione in base al cursore
+  cx += ptrX*W*0.07*L.depth; cy += ptrY*H*0.07*L.depth;
+  const rotStep = Math.round((L.rot + ageq*L.spin)/L.rotStep)*L.rotStep + ptrX*0.5*L.depth - ptrY*0.25*L.depth;
   lx.save();
   lx.translate(cx, cy);
   lx.rotate(rotStep);
@@ -894,6 +910,7 @@ function renderForeground(intensity){
 function render(){
   requestAnimationFrame(render);
   t += 0.016;
+  ptrVel *= 0.9;   // la velocità del cursore decade (pilota datamosh + reattività)
   if(playing) readAudio();
   updateTension(0.016);   // envelope di tensione (accumulo/rilascio) + spawn immagini
   scheduleGrains();       // pianifica i grani audio (sintesi granulare)
@@ -1012,8 +1029,8 @@ function whenReady(){
   const ready = (imgLoaded >= N_IMG*0.85) && granReady;
   if((ready && elapsed >= MIN_LOAD_MS) || elapsed > 25000){
     const o=document.getElementById('loadOverlay'); if(o){ o.classList.add('done'); setTimeout(()=>o.remove(), 800); }
-    const p=document.getElementById('clickPrompt'); if(p) p.classList.add('show');   // compare il prompt e RESTA finché non clicchi
-    armStart();
+    // 5s di SOLO sfondo che blenda e fa le sue cose, POI compare il prompt e SOLO allora è cliccabile/triggerabile
+    setTimeout(()=>{ const p=document.getElementById('clickPrompt'); if(p) p.classList.add('show'); armStart(); }, 5000);
   } else setTimeout(whenReady, 200);
 }
 // click sul prompt: sblocca l'audio e fa partire SUBITO riser -> kick -> casino
@@ -1118,6 +1135,14 @@ document.getElementById('fascistHud').addEventListener('pointerdown', e=>{
   for(let i=0;i<burst;i++) spawnLayer(null, nx, ny);
   killCount++; if(killEl) killEl.textContent = killCount;
 });
+
+// cursore/dito: aggiorna posizione (-0.5..0.5) e velocità (pilota tilt immagini + datamosh)
+window.addEventListener('pointermove', e=>{
+  const nx=e.clientX/window.innerWidth-0.5, ny=e.clientY/window.innerHeight-0.5;
+  ptrVel = Math.min(1.5, ptrVel + Math.hypot(nx-ptrPX, ny-ptrPY)*7);
+  ptrX += (nx-ptrX)*0.25; ptrY += (ny-ptrY)*0.25;   // posizione smussata (per tilt/parallax)
+  ptrPX=nx; ptrPY=ny;
+}, {passive:true});
 
 // toggle UI (overlay) — tasto H o bottoncino
 function toggleUI(){ document.body.classList.toggle('uiHidden'); }
