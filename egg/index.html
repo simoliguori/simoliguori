@@ -321,6 +321,7 @@ const RISER_S   = 5;                 // durata del riser prima del sub-kick/drop
 let firstKickSec=0, realStarted=false;
 const LOOP_TAIL_S = 0.15;            // quanto tagliare prima della fine per il loop (evita il fade-out)
 let ttsPitch=1, ttsPitchTgt=1, ttsPitchT=0, ttsRobot=false;   // morph del pitch + fasi "robotiche" low-pitch
+let mngState='play', mngT=0, mngSlice=0.1, mngStart=0, mngRate=12, mngSeed=0;   // mangling/glitch + beat-repeat sincopato della voce
 let audioStatus='—';
 const audioKeep=[];   // mantiene VIVI i nodi audio (evita che il GC spezzi la catena -> silenzio)
 // TENSIONE PILOTATA DAL GAIN REALE del brano (non più da un timer auto-oscillante):
@@ -503,6 +504,38 @@ function scheduleGrains(){
 }
 // TENSIONE pilotata dal GAIN REALE: insegue l'inviluppo del gain (attack lento = accumulo),
 // e una caduta brusca del gain genera lo SCARICO (releasePulse + raffica di immagini).
+// VOCE TTS — morph del pitch + GLITCH/MANGLING sporadico + BEAT-REPEAT, stra sincopato ed erratico.
+// Stati: play (normale) · stutter (ripete una fetta = beat-repeat) · gate (chop on/off sincopato) · jump (mangle).
+function mangleTTS(dt){
+  const el=document.getElementById('ttsAudio'); if(!el || !ttsGain) return;
+  // ---- morph del pitch (con fasi robotiche low-pitch) ----
+  ttsPitchT -= dt;
+  if(ttsPitchT<=0){
+    if(RNG()<0.35){ ttsPitchTgt=0.5+RNG()*0.16; ttsPitchT=1.2+RNG()*2.2; ttsRobot=true; }
+    else { ttsPitchTgt=0.85+RNG()*0.30; ttsPitchT=1.5+RNG()*3.5; ttsRobot=false; }
+  }
+  if(ttsRobot){ ttsPitch += (ttsPitchTgt-ttsPitch)*0.5; ttsPitch=Math.round(ttsPitch*12)/12; }
+  else ttsPitch += (ttsPitchTgt-ttsPitch)*0.02;
+  el.playbackRate = Math.max(0.25, ttsPitch);
+  // ---- macchina a stati del mangling (erratica) ----
+  mngT -= dt;
+  if(mngT<=0){
+    const r=RNG();
+    if(r<0.42){ mngState='play'; mngT=rr(0.18,1.1); }                                   // tratto normale
+    else if(r<0.72){ mngState='stutter'; mngSlice=rr(0.05,0.2); mngStart=el.currentTime||0; mngT=mngSlice*(2+(RNG()*9|0)); } // BEAT-REPEAT
+    else if(r<0.9){ mngState='gate'; mngRate=rr(7,24); mngSeed=(RNG()*1000)|0; mngT=rr(0.12,0.7); }   // chop sincopato
+    else { try{ el.currentTime=Math.max(0,(el.duration||300)*RNG()); }catch(e){} mngState='play'; mngT=rr(0.15,0.7); }   // mangle/jump
+  }
+  if(mngState==='stutter'){
+    if(el.currentTime > mngStart+mngSlice || el.currentTime < mngStart-0.02){ try{ el.currentTime=mngStart; }catch(e){} }
+    ttsGain.gain.value = 6.0;
+  } else if(mngState==='gate'){
+    const step=Math.floor(t*mngRate);
+    ttsGain.gain.value = (hash((step+mngSeed)>>>0) < 0.55) ? 6.0 : 0.0;   // on/off "tenuto" per step -> sincopato
+  } else {
+    ttsGain.gain.value = 6.0;
+  }
+}
 function updateTension(dt){
   releasePulse *= 0.90;
   gainSlow += (gainEnv - gainSlow) * 0.01;                 // baseline lentissima (riferimento)
@@ -522,17 +555,8 @@ function updateTension(dt){
     imgSpawnAcc += dt * (1.6 + tension*6 + releasePulse*9);   // comparsa RAPIDA/erratica
     while(imgSpawnAcc >= 1){ imgSpawnAcc -= 1; if(layers.length < maxOverlap) spawnLayer(); }
   }
-  // MORPH lento e random del pitch della voce TTS
-  if(chaos){
-    ttsPitchT -= dt;
-    if(ttsPitchT<=0){
-      if(RNG()<0.35){ ttsPitchTgt = 0.5 + RNG()*0.16; ttsPitchT = 1.5 + RNG()*2.5; ttsRobot=true; }   // A TRATTI: super low + robotico
-      else { ttsPitchTgt = 0.85 + RNG()*0.30; ttsPitchT = 2 + RNG()*4; ttsRobot=false; }
-    }
-    if(ttsRobot){ ttsPitch += (ttsPitchTgt-ttsPitch)*0.5; ttsPitch = Math.round(ttsPitch*12)/12; }   // movimento a gradini -> robotico
-    else ttsPitch += (ttsPitchTgt-ttsPitch)*0.012;                                                    // morph lento
-    const tel=document.getElementById('ttsAudio'); if(tel) tel.playbackRate = Math.max(0.25, ttsPitch);
-  }
+  // VOCE TTS: morph del pitch + mangling/glitch sporadico + BEAT-REPEAT (stra sincopato/erratico)
+  if(chaos) mangleTTS(dt);
   // FILTRO CUTOFF: aperto in accumulo, CROLLA con risonanza sugli scarichi -> sweep di rilascio
   if(granFilter && actx){
     const co = 320 + tension*tension*7600 - releasePulse*4200;
@@ -997,9 +1021,10 @@ function playRiser(dur){
   const osc=actx.createOscillator(); osc.type='sawtooth';
   osc.frequency.setValueAtTime(32,t0); osc.frequency.exponentialRampToValueAtTime(480,t0+dur);
   const og=actx.createGain(); og.gain.setValueAtTime(0.0001,t0); og.gain.exponentialRampToValueAtTime(0.6,t0+dur);
+  const trim=actx.createGain(); trim.gain.value=0.3;   // il waveshaper clippa a ±1: questo trim abbassa il riser vs la musica
   src.connect(bp); bp.connect(ng); ng.connect(ws);
   osc.connect(og); og.connect(ws);
-  ws.connect(analyser);
+  ws.connect(trim); trim.connect(analyser);
   src.start(t0); src.stop(t0+dur); osc.start(t0); osc.stop(t0+dur);
 }
 // SUB-KICK super compresso PESANTISSIMO + delay + riverbero + scossa datamosh visiva

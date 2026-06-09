@@ -1496,6 +1496,22 @@ button:focus,
   pointer-events: auto;
   transition: opacity 1.4s ease, transform 1.4s ease, visibility 0s linear 0s;
 }
+/* hint nascosto sopra il controller: nero su nero, si rivela solo evidenziando il testo */
+.konami-hint {
+  color: #000;
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  letter-spacing: 0.45em;
+  text-align: center;
+  margin: 0 auto 20px;
+  width: max-content;
+  max-width: 90%;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: default;
+}
+.konami-hint::selection { background: #ff2020; color: #000; }
+.konami-hint::-moz-selection { background: #ff2020; color: #000; }
 .snes-wrap {
   position: relative;
   display: inline-block;
@@ -2360,6 +2376,8 @@ button:focus,
 
   <!-- ═══ SECRET SOUNDBOARD — easter egg, revealed only after the hidden message finishes typing ═══ -->
   <div id="soundboard" aria-hidden="true">
+    <!-- easter egg nell'easter egg: nero su nero, visibile solo selezionando il testo -->
+    <div class="konami-hint" aria-hidden="true">KONAMI CODE</div>
     <div class="snes-wrap">
       <img src="assets/img/Snes-PNG-Photo.png" alt="" draggable="false">
       <!-- Coordinates calibrated via pixel-scan of the 589×258 source PNG. -->
