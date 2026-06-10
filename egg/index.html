@@ -58,6 +58,9 @@
   #uiToggle .kbd{ display:none; }   /* mobile: solo "hide ui" */
   @media (hover:hover) and (pointer:fine){ #uiToggle .kbd{ display:inline; } }   /* desktop: "h = hide ui" */
   body.uiHidden #faBanner, body.uiHidden #manifesto, body.uiHidden #phaseTag{ display:none !important; }
+  /* "h = hide ui" sparisce quando l'UI è nascosta, ma resta cliccabile (ritocca l'angolo per riattivarla) */
+  body.uiHidden #uiToggle{ opacity:0; }
+  body.uiHidden #uiToggle:hover{ opacity:.3; }
 
   /* ── HUD "1 CLICK = 1 DEAD FASCIST" sopra il canvas ── */
   #fascistHud{ position:fixed; inset:0; z-index:15; cursor:crosshair; font-family:"Courier New",ui-monospace,monospace; }
