@@ -11,8 +11,6 @@
   body{ font-family:"Courier New",ui-monospace,monospace; color:var(--fg); }
   #stage{ position:fixed; inset:0; }
   canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-  /* canvas FX (vetro rotto dei click): sopra a tutto, non intercetta i click */
-  #fxc{ position:fixed; inset:0; width:100%; height:100%; z-index:19; pointer-events:none; }
 
   #gate{
     position:fixed; inset:0; z-index:30;
@@ -189,9 +187,6 @@
   </div>
 </div>
 
-<!-- canvas FX SOPRA TUTTO (anche al manifesto): ci disegno il vetro rotto dei click -->
-<canvas id="fxc"></canvas>
-
 <script>
 "use strict";
 (function(){
@@ -210,14 +205,12 @@ function hash(n){ n=(n^61)^(n>>>16); n=n+(n<<3)|0; n=n^(n>>>4); n=Math.imul(n,0x
 // ---------- canvas ----------
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d', { alpha:false });
-const fxc = document.getElementById('fxc'), fxctx = fxc.getContext('2d');   // canvas FX trasparente sopra tutto
 let W=0,H=0,DPR=1;
 const fb = document.createElement('canvas'), fbx = fb.getContext('2d');     // frame precedente
 const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // temp per singolo layer
 const post = document.createElement('canvas'), px2 = post.getContext('2d');  // snapshot per kaleido/datamosh
 const ff = document.createElement('canvas'), ffx = ff.getContext('2d');      // feedback DEDICATO al primo piano (scie dei blob)
 let decayFG = 0.995;  // scia di primo piano AL MASSIMO: persistenza lunghissima -> istanze densissime
-const shatters = [], TAU = Math.PI*2;   // vetro rotto dei click (canvas FX, sopra tutto)
 let explBlob = null;                     // gif esplosione precaricata in blob -> object-URL istantaneo per click
 fetch('/assets/img/giphy-explosion.gif').then(r=>r.blob()).then(b=>{ explBlob=b; }).catch(()=>{});
 
@@ -228,7 +221,6 @@ function resize(){
   const scale = Math.min(1, maxW/(w*DPR));
   W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
   cv.width=W; cv.height=H; fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
-  fxc.width=W; fxc.height=H;
   ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
   channelCache.clear(); prewarmIdx=0;   // ricostruisci i chroma-key alla nuova risoluzione
   fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
@@ -971,9 +963,6 @@ function render(){
   ctx.drawImage(ff, 0, 0);
   ctx.filter = 'none';
 
-  // 9) VETRO ROTTO dei click: disegnato SOPRA TUTTO, con fade (~0.6s)
-  drawShatters();
-
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
 }
 
@@ -1016,10 +1005,6 @@ function armStart(){
     if(started) return; started=true;
     if(!actx) setupAudio();
     actx.resume().then(()=>{ playing=true; }).catch(()=>{});
-    // VETRO ROTTO (visual + suono) anche sul PRIMO click, sulla schermata "1 CLICK = 1 DEAD FASCIST"
-    playOneShot(RNG()<0.5 ? '/assets/egg/dragon-studio-glass-breaking-504033.mp3' : '/assets/egg/universfield-glass-bottle-breaking-351297.mp3');
-    const ex=(e&&e.clientX!=null)?e.clientX:innerWidth/2, ey=(e&&e.clientY!=null)?e.clientY:innerHeight/2;
-    crystalShatter(ex/innerWidth*W, ey/innerHeight*H);
     const p=document.getElementById('clickPrompt'); if(p) p.classList.remove('show');   // il prompt sparisce solo ORA
     startDrop();                          // riser (white noise) -> sub kick -> tutto il casino
     ['pointerdown','keydown','touchstart'].forEach(ev=>window.removeEventListener(ev,go));
@@ -1096,76 +1081,6 @@ function playSubKick(){
 }
 boot();   // il loading overlay è gestito da whenReady (resta finché il sito è pronto)
 
-// VETRO ROTTO sotto il cursore. Il click MEMORIZZA la geometria (schegge/cricche); il disegno avviene
-// in `drawShatters()` SOPRA TUTTO nel render loop, per ~0.6s con fade -> garantito visibile.
-// Renderizza lo shatter UNA SOLA volta su un canvas offscreen (al click). Ogni frame -> 1 solo drawImage.
-function crystalShatter(cx, cy){
-  if(!px2) return;
-  const R = Math.min(W,H) * rr(0.17,0.30);
-  const HS = Math.ceil(R*1.45), SZ = HS*2, lcx=HS, lcy=HS;   // canvas locale centrato sul cursore
-  const oc = document.createElement('canvas'); oc.width=SZ; oc.height=SZ;
-  const o = oc.getContext('2d');
-  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);             // snapshot dello sfondo per la rifrazione
-  function cstroke(path,lw,al,ao,ay){                        // stroke con aberrazione cromatica
-    o.save(); o.lineWidth=lw; o.lineCap='round'; o.lineJoin='round'; o.globalCompositeOperation='lighter';
-    o.save(); o.translate(ao,ay);   o.strokeStyle='rgba(255,20,60,'+al+')';  o.stroke(path); o.restore();
-    o.save(); o.translate(-ao,-ay); o.strokeStyle='rgba(20,220,255,'+al+')'; o.stroke(path); o.restore();
-    o.strokeStyle='rgba(255,255,255,'+al+')'; o.stroke(path); o.restore();
-  }
-  // SCHEGGE: partizione angolare IRREGOLARE + tinta satura iridescente (in coord locali)
-  const wn=7+(RNG()*5|0), partw=[]; let acc=0; for(let i=0;i<wn;i++){ const w=rr(0.45,1.7); partw.push(w); acc+=w; }
-  const baseHue=RNG()*360; let a=RNG()*TAU;
-  for(let i=0;i<wn;i++){
-    const a0=a, a1=a+partw[i]/acc*TAU; a=a1; const mid=(a0+a1)/2;
-    const r0=R*rr(0,0.12), r1a=R*rr(0.7,1.3), r1b=R*rr(0.7,1.3);
-    const apx=lcx+Math.cos(mid)*r0, apy=lcy+Math.sin(mid)*r0;
-    const e0x=lcx+Math.cos(a0)*r1a, e0y=lcy+Math.sin(a0)*r1a, e1x=lcx+Math.cos(a1)*r1b, e1y=lcy+Math.sin(a1)*r1b;
-    const clip=new Path2D(); clip.moveTo(apx,apy); clip.lineTo(e0x,e0y); clip.lineTo(e1x,e1y); clip.closePath();
-    const edge=new Path2D(); edge.moveTo(e0x,e0y); edge.lineTo(apx,apy); edge.lineTo(e1x,e1y);
-    const displ=R*rr(0.35,0.8)*(RNG()<0.5?1:-1), hue=((baseHue+rr(-60,60)+i*40)%360)|0, tint=rr(0.4,0.7), ao=rr(2.5,6);
-    // rifrazione (sfondo distorto)
-    o.save(); o.clip(clip);
-    o.translate(lcx+Math.cos(mid)*displ, lcy+Math.sin(mid)*displ); o.scale(rr(0.72,1.45),rr(0.72,1.45)); o.rotate(rr(-0.45,0.45));
-    o.drawImage(px2.canvas, -cx, -cy);   // mappa cv(cx,cy) -> origine locale (centro scheggia)
-    o.restore();
-    // tinta satura iridescente (clippata)
-    o.save(); o.clip(clip);
-    o.globalCompositeOperation='overlay'; o.fillStyle='hsla('+hue+',100%,55%,'+tint.toFixed(2)+')'; o.fillRect(0,0,SZ,SZ);
-    o.globalCompositeOperation='lighter'; o.fillStyle='hsla('+hue+',100%,62%,0.2)'; o.fillRect(0,0,SZ,SZ);
-    o.restore();
-    cstroke(edge, rr(1.6,3.6), rr(0.7,1).toFixed(2), ao, ao*rr(-0.7,0.7));
-  }
-  // VENATURE ORGANICHE: random-walk con rami (in coord locali)
-  function grow(x,y,ang,len,lw,depth){
-    const cp=new Path2D(); cp.moveTo(x,y); let px=x,py=y,aa=ang; const segs=Math.max(4,(len/(R*0.13))|0), st=len/segs;
-    for(let s=0;s<segs;s++){ aa+=rr(-0.5,0.5)+Math.sin(s*0.7)*0.15; px+=Math.cos(aa)*st; py+=Math.sin(aa)*st; cp.lineTo(px,py);
-      if(depth<2 && RNG()<0.4 && s>0) grow(px,py, aa+rr(-1.3,1.3), len*rr(0.35,0.65), lw*0.62, depth+1); }
-    cstroke(cp, lw, rr(0.65,1).toFixed(2), rr(2.5,6), rr(-4,4));
-  }
-  const primary=5+(RNG()*4|0);
-  for(let i=0;i<primary;i++) grow(lcx,lcy, RNG()*TAU, R*rr(0.7,1.5), rr(1.8,3.6), 0);
-  // FLASH + schegge brillanti
-  o.save(); o.globalCompositeOperation='lighter';
-  const g=o.createRadialGradient(lcx,lcy,0, lcx,lcy,R*1.05);
-  g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.32,'rgba(190,225,255,0.5)'); g.addColorStop(1,'rgba(0,0,0,0)');
-  o.fillStyle=g; o.beginPath(); o.arc(lcx,lcy,R*1.05,0,TAU); o.fill();
-  o.fillStyle='rgba(255,255,255,0.95)';
-  for(let i=0;i<9;i++){ o.beginPath(); o.arc(lcx+rr(-R*0.4,R*0.4), lcy+rr(-R*0.4,R*0.4), rr(0.9,3), 0, TAU); o.fill(); }
-  o.restore();
-  shatters.push({canvas:oc, x:cx, y:cy, hs:HS, born:t});
-  if(shatters.length>14) shatters.shift();
-  kick = Math.max(kick, 0.9);
-}
-function drawShatters(){
-  fxctx.clearRect(0,0,W,H);
-  for(let i=shatters.length-1;i>=0;i--){
-    const s=shatters[i], age=(t-s.born)/0.6;            // vita ~0.6s
-    if(age>=1){ shatters.splice(i,1); continue; }
-    fxctx.globalAlpha=Math.max(0,1-age);
-    fxctx.drawImage(s.canvas, s.x-s.hs, s.y-s.hs);       // UN solo drawImage per shatter -> leggerissimo
-  }
-  fxctx.globalAlpha=1;
-}
 
 // ── HUD "1 CLICK = 1 DEAD FASCIST": contatore + esplosione + il gesto ENTRA nell'opera ──
 let killCount=0; const killEl=document.getElementById('killCount');
@@ -1189,7 +1104,6 @@ document.getElementById('fascistHud').addEventListener('pointerdown', e=>{
   burstBoost += 18;                              // alza il cap così la raffica sopravvive un po'
   const burst = 12 + (RNG()*8|0);
   for(let i=0;i<burst;i++) spawnLayer(null, nx, ny);
-  crystalShatter(e.clientX/window.innerWidth*W, e.clientY/window.innerHeight*H);   // cristalli liquidi rotti sotto il cursore
   killCount++; if(killEl) killEl.textContent = killCount;
 });
 
