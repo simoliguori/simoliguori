@@ -211,6 +211,7 @@ const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // 
 const post = document.createElement('canvas'), px2 = post.getContext('2d');  // snapshot per kaleido/datamosh
 const ff = document.createElement('canvas'), ffx = ff.getContext('2d');      // feedback DEDICATO al primo piano (scie dei blob)
 let decayFG = 0.995;  // scia di primo piano AL MASSIMO: persistenza lunghissima -> istanze densissime
+const shatters = [], TAU = Math.PI*2;   // vetro rotto dei click (disegnato sopra tutto nel render)
 
 function resize(){
   DPR = Math.min(window.devicePixelRatio||1, 1.0);   // PERF: 1 pixel logico = 1 pixel canvas (Firefox)
@@ -1086,8 +1087,6 @@ boot();   // il loading overlay è gestito da whenReady (resta finché il sito �
 
 // VETRO ROTTO sotto il cursore. Il click MEMORIZZA la geometria (schegge/cricche); il disegno avviene
 // in `drawShatters()` SOPRA TUTTO nel render loop, per ~0.6s con fade -> garantito visibile.
-const shatters = [];
-const TAU = Math.PI*2;
 function crystalShatter(cx, cy){
   const R = Math.min(W,H) * rr(0.16,0.28);
   const wn = 9 + (RNG()*8|0), base = RNG()*TAU, wedges=[];
