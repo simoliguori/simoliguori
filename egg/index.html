@@ -1081,33 +1081,34 @@ boot();   // il loading overlay è gestito da whenReady (resta finché il sito �
 
 // CRISTALLI LIQUIDI ROTTI sotto il cursore: schegge angolari iridescenti (RGB-split) disegnate nel
 // feedback di primo piano (ff) -> persistono con la scia (decayFG) e si fondono con le immagini.
+// LENTE a SCHEGGE sotto il cursore: scatta lo sfondo e lo ridisegna distorto a spicchi (ogni
+// scheggia mostra lo sfondo spostato/ruotato/scalato) -> distorce ciò che c'è dietro. Disegnato in
+// ff -> persiste con la scia (decayFG) e si fonde col resto. Localizzato, NON un overlay a tappeto.
 function crystalShatter(cx, cy){
-  if(!ffx) return;
-  const baseR = Math.min(W,H) * rr(0.07,0.17);
-  const shards = 16 + (RNG()*20|0);
-  ffx.save();
-  ffx.globalCompositeOperation = 'lighten';        // vetroso/additivo -> si fonde col resto
-  for(let i=0;i<shards;i++){
-    const ang = RNG()*Math.PI*2, spread = rr(0.08,0.5);
-    const r1 = baseR*rr(0.45,1.25);
-    const a0=ang-spread*0.5, a1=ang+spread*0.5;
-    const x1=cx+Math.cos(a0)*r1, y1=cy+Math.sin(a0)*r1;
-    const x2=cx+Math.cos(a1)*r1, y2=cy+Math.sin(a1)*r1;
-    const al = rr(0.12,0.4);
-    // 3 copie sfalsate nei canali R/G/B -> rifrazione "cristallo liquido"
-    const cols=['rgba(255,40,90,','rgba(60,255,160,','rgba(90,130,255,'];
-    for(let k=0;k<3;k++){
-      const off=(k-1)*baseR*0.07;
-      ffx.fillStyle = cols[k] + al.toFixed(2) + ')';
-      ffx.beginPath(); ffx.moveTo(cx+off,cy); ffx.lineTo(x1+off,y1); ffx.lineTo(x2+off,y2); ffx.closePath(); ffx.fill();
-    }
+  if(!ffx || !px2) return;
+  const R = Math.min(W,H) * rr(0.10,0.18);
+  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);     // snapshot dello sfondo corrente
+  const wedges = 8 + (RNG()*8|0), base = RNG()*Math.PI*2;
+  for(let i=0;i<wedges;i++){
+    const a0 = base + (i/wedges)*Math.PI*2, a1 = base + ((i+1)/wedges)*Math.PI*2;
+    const r0 = R*rr(0,0.18), r1 = R*rr(0.85,1.2);
+    ffx.save();
+    // clip alla scheggia (spicchio triangolare)
+    ffx.beginPath();
+    ffx.moveTo(cx + Math.cos((a0+a1)/2)*r0, cy + Math.sin((a0+a1)/2)*r0);
+    ffx.lineTo(cx + Math.cos(a0)*r1, cy + Math.sin(a0)*r1);
+    ffx.lineTo(cx + Math.cos(a1)*r1, cy + Math.sin(a1)*r1);
+    ffx.closePath(); ffx.clip();
+    // displacement/rifrazione: sfondo spostato lungo la scheggia + scala/rotazione minime
+    const mid=(a0+a1)/2, displ=R*rr(0.12,0.4)*(RNG()<0.5?1:-1);
+    const dx=Math.cos(mid)*displ, dy=Math.sin(mid)*displ, sc=rr(0.85,1.25);
+    ffx.globalAlpha = rr(0.7,1.0);
+    ffx.translate(cx+dx, cy+dy); ffx.scale(sc,sc); ffx.rotate(rr(-0.2,0.2));
+    ffx.drawImage(px2.canvas, -cx, -cy);
+    ffx.restore();
   }
-  // nucleo brillante al centro
-  ffx.fillStyle='rgba(255,255,255,0.5)';
-  ffx.beginPath(); ffx.arc(cx,cy, baseR*0.12, 0, Math.PI*2); ffx.fill();
-  ffx.restore();
-  ffx.globalCompositeOperation='source-over';
-  kick = Math.max(kick, 0.8);                       // piccola scossa datamosh che lo "rompe" nel mix
+  ffx.globalAlpha=1;
+  kick = Math.max(kick, 0.6);                        // piccola scossa che "rompe" nel mix
 }
 
 // ── HUD "1 CLICK = 1 DEAD FASCIST": contatore + esplosione + il gesto ENTRA nell'opera ──
