@@ -11,6 +11,8 @@
   body{ font-family:"Courier New",ui-monospace,monospace; color:var(--fg); }
   #stage{ position:fixed; inset:0; }
   canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  /* canvas FX (vetro rotto dei click): sopra a tutto, non intercetta i click */
+  #fxc{ position:fixed; inset:0; width:100%; height:100%; z-index:19; pointer-events:none; }
 
   #gate{
     position:fixed; inset:0; z-index:30;
@@ -187,6 +189,9 @@
   </div>
 </div>
 
+<!-- canvas FX SOPRA TUTTO (anche al manifesto): ci disegno il vetro rotto dei click -->
+<canvas id="fxc"></canvas>
+
 <script>
 "use strict";
 (function(){
@@ -205,6 +210,7 @@ function hash(n){ n=(n^61)^(n>>>16); n=n+(n<<3)|0; n=n^(n>>>4); n=Math.imul(n,0x
 // ---------- canvas ----------
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d', { alpha:false });
+const fxc = document.getElementById('fxc'), fxctx = fxc.getContext('2d');   // canvas FX trasparente sopra tutto
 let W=0,H=0,DPR=1;
 const fb = document.createElement('canvas'), fbx = fb.getContext('2d');     // frame precedente
 const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // temp per singolo layer
@@ -220,6 +226,7 @@ function resize(){
   const scale = Math.min(1, maxW/(w*DPR));
   W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
   cv.width=W; cv.height=H; fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
+  fxc.width=W; fxc.height=H;
   ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
   channelCache.clear(); prewarmIdx=0;   // ricostruisci i chroma-key alla nuova risoluzione
   fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
@@ -1114,39 +1121,40 @@ function crystalShatter(cx, cy){
   kick = Math.max(kick, 0.85);
 }
 function chromaStrokeCtx(path, lw, al, ao, ay){       // stroke con aberrazione (R + ciano sfalsate, screen) + bianco
-  ctx.save(); ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.globalCompositeOperation='screen';
-  ctx.save(); ctx.translate(ao,ay);   ctx.strokeStyle='rgba(255,20,60,'+al+')';  ctx.stroke(path); ctx.restore();
-  ctx.save(); ctx.translate(-ao,-ay); ctx.strokeStyle='rgba(20,220,255,'+al+')'; ctx.stroke(path); ctx.restore();
-  ctx.strokeStyle='rgba(255,255,255,'+al+')'; ctx.stroke(path);
-  ctx.restore();
+  fxctx.save(); fxctx.lineWidth=lw; fxctx.lineCap='round'; fxctx.lineJoin='round'; fxctx.globalCompositeOperation='lighter';
+  fxctx.save(); fxctx.translate(ao,ay);   fxctx.strokeStyle='rgba(255,20,60,'+al+')';  fxctx.stroke(path); fxctx.restore();
+  fxctx.save(); fxctx.translate(-ao,-ay); fxctx.strokeStyle='rgba(20,220,255,'+al+')'; fxctx.stroke(path); fxctx.restore();
+  fxctx.strokeStyle='rgba(255,255,255,'+al+')'; fxctx.stroke(path);
+  fxctx.restore();
 }
 function paintShatter(s, fade){
   const cx=s.x, cy=s.y, R=s.R;
-  // FLASH d'impatto
-  ctx.save(); ctx.globalCompositeOperation='lighter';
-  const g=ctx.createRadialGradient(cx,cy,0, cx,cy,R*0.9);
-  g.addColorStop(0,'rgba(255,255,255,'+(0.9*fade).toFixed(2)+')'); g.addColorStop(0.4,'rgba(200,230,255,'+(0.35*fade).toFixed(2)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R*0.9,0,TAU); ctx.fill(); ctx.restore();
-  // RIFRAZIONE per scheggia (sfondo spostato) + bordi cromatici
+  // RIFRAZIONE per scheggia: copia distorta dello sfondo (opaca) sul canvas FX -> ben visibile
   for(const w of s.wedges){
-    ctx.save(); ctx.clip(w.clip); ctx.globalAlpha=fade;
-    ctx.translate(cx+w.dx, cy+w.dy); ctx.scale(w.sc,w.sc); ctx.rotate(w.rot);
-    ctx.drawImage(px2.canvas, -cx, -cy);
-    ctx.restore();
-    chromaStrokeCtx(w.edge, w.elw, (w.eal*fade).toFixed(2), w.ao, w.ay);
+    fxctx.save(); fxctx.clip(w.clip); fxctx.globalAlpha=fade;
+    fxctx.translate(cx+w.dx, cy+w.dy); fxctx.scale(w.sc,w.sc); fxctx.rotate(w.rot);
+    fxctx.drawImage(px2.canvas, -cx, -cy);
+    fxctx.restore();
+    chromaStrokeCtx(w.edge, w.elw, (Math.min(1,w.eal*1.4)*fade).toFixed(2), w.ao, w.ay);
   }
-  // CRICCHE cromatiche
-  for(const c of s.cracks) chromaStrokeCtx(c.path, c.lw, (c.al*fade).toFixed(2), c.ao, c.ay);
-  // schegge brillanti
-  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.fillStyle='rgba(255,255,255,'+(0.85*fade).toFixed(2)+')';
-  for(const p of s.sparks){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,TAU); ctx.fill(); } ctx.restore();
-  ctx.globalAlpha=1;
+  fxctx.globalAlpha=1;
+  // CRICCHE cromatiche (marcate)
+  for(const c of s.cracks) chromaStrokeCtx(c.path, c.lw, (Math.min(1,c.al*1.3)*fade).toFixed(2), c.ao, c.ay);
+  // FLASH d'impatto (additivo, sopra le schegge)
+  fxctx.save(); fxctx.globalCompositeOperation='lighter';
+  const g=fxctx.createRadialGradient(cx,cy,0, cx,cy,R*1.0);
+  g.addColorStop(0,'rgba(255,255,255,'+(1.0*fade).toFixed(2)+')'); g.addColorStop(0.35,'rgba(190,225,255,'+(0.45*fade).toFixed(2)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
+  fxctx.fillStyle=g; fxctx.beginPath(); fxctx.arc(cx,cy,R*1.0,0,TAU); fxctx.fill();
+  fxctx.fillStyle='rgba(255,255,255,'+(0.95*fade).toFixed(2)+')';
+  for(const p of s.sparks){ fxctx.beginPath(); fxctx.arc(p.x,p.y,p.r,0,TAU); fxctx.fill(); }
+  fxctx.restore();
 }
 function drawShatters(){
+  fxctx.clearRect(0,0,W,H);                            // il canvas FX si pulisce ogni frame
   if(!shatters.length) return;
-  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);     // snapshot pulito del frame finale (sorgente della rifrazione)
+  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);       // snapshot del frame finale (sorgente della rifrazione)
   for(let i=shatters.length-1;i>=0;i--){
-    const s=shatters[i], age=(t-s.born)/0.6;          // vita ~0.6s
+    const s=shatters[i], age=(t-s.born)/0.6;           // vita ~0.6s
     if(age>=1){ shatters.splice(i,1); continue; }
     paintShatter(s, Math.max(0,1-age));
   }
