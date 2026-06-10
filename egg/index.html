@@ -668,8 +668,8 @@ function spawnLayer(idx, px, py){
     blend: IMGBLEND[(RNG()*IMGBLEND.length)|0],
     x: atCursor ? px + rr(-0.14,0.14) : rr(-0.45,0.45),    // posizione: cursore (stretta) o casuale
     y: atCursor ? py + rr(-0.14,0.14) : rr(-0.45,0.45),
-    // movimento più lento -> istanze del trail quasi sovrapposte (tail densissimo)
-    vx: rr(-0.2,0.2), vy: rr(-0.2,0.2),
+    // movimento veloce di nuovo (la densità del tail la tengono scroll=0 + decayFG, non la velocità)
+    vx: rr(-0.45,0.45), vy: rr(-0.45,0.45),
     scale: rr(0.12,0.55),                                  // immagini PIÙ PICCOLE
     rot: (RNG()<0.4 ? rr(-3.14,3.14) : rr(-0.4,0.4)), spin: rr(-0.9,0.9),
     // parametri LO-FI: passo temporale, griglia di quantizzazione, ampiezza salti, scatto rotazione
