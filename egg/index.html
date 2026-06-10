@@ -1107,6 +1107,26 @@ function crystalShatter(cx, cy){
     ffx.drawImage(px2.canvas, -cx, -cy);
     ffx.restore();
   }
+  // ---- LINEE DI FRATTURA del vetro: cricche che si diramano dal cursore ----
+  ffx.lineCap='round';
+  const cracks = 7 + (RNG()*7|0);
+  for(let i=0;i<cracks;i++){
+    let ang=RNG()*Math.PI*2, x=cx, y=cy;
+    const segs=4+(RNG()*5|0), len=R*rr(0.5,1.35), step=len/segs;
+    ffx.beginPath(); ffx.moveTo(x,y);
+    for(let s=0;s<segs;s++){
+      ang += rr(-0.32,0.32);
+      x+=Math.cos(ang)*step; y+=Math.sin(ang)*step;
+      ffx.lineTo(x,y);
+      if(RNG()<0.4){ const ba=ang+rr(-0.9,0.9), bl=step*rr(0.5,1.2); ffx.lineTo(x+Math.cos(ba)*bl, y+Math.sin(ba)*bl); ffx.moveTo(x,y); }   // ramo
+    }
+    ffx.strokeStyle='rgba(255,255,255,'+rr(0.3,0.7).toFixed(2)+')';
+    ffx.lineWidth = rr(0.8,2);
+    ffx.stroke();
+  }
+  // qualche scheggia bianca brillante vicino al centro
+  ffx.fillStyle='rgba(255,255,255,0.6)';
+  for(let i=0;i<3;i++){ ffx.beginPath(); ffx.arc(cx+rr(-R*0.2,R*0.2), cy+rr(-R*0.2,R*0.2), rr(0.6,1.6), 0, Math.PI*2); ffx.fill(); }
   ffx.globalAlpha=1;
   kick = Math.max(kick, 0.6);                        // piccola scossa che "rompe" nel mix
 }
@@ -1123,6 +1143,8 @@ document.getElementById('fascistHud').addEventListener('pointerdown', e=>{
   hud.appendChild(ex); setTimeout(()=>ex.remove(), 800);
   playOneShot('/assets/audio/metal-slug-scream.mp3');
   playOneShot('/assets/audio/roblox-explosion.mp3');
+  // VETRO ROTTO (random tra i due sample, già tagliati del silenzio iniziale)
+  playOneShot(RNG()<0.5 ? '/assets/egg/dragon-studio-glass-breaking-504033.mp3' : '/assets/egg/universfield-glass-bottle-breaking-351297.mp3');
   // il click pilota l'opera: scossa datamosh + scarico
   kick = Math.max(kick, 0.9); releasePulse = Math.max(releasePulse, 0.8);
   // ESPLOSIONE: un SACCO di immagini raggruppate INTORNO al cursore
