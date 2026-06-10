@@ -961,6 +961,9 @@ function render(){
   ctx.drawImage(ff, 0, 0);
   ctx.filter = 'none';
 
+  // 9) VETRO ROTTO dei click: disegnato SOPRA TUTTO, con fade (~0.6s)
+  drawShatters();
+
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
 }
 
@@ -1081,69 +1084,73 @@ function playSubKick(){
 }
 boot();   // il loading overlay è gestito da whenReady (resta finché il sito è pronto)
 
-// VETRO ROTTO sotto il cursore: lente a schegge che distorce lo sfondo + cricche con aberrazione
-// cromatica + flash. Disegnato in ff -> persiste con la scia e si fonde col resto. Marcato/visibile.
+// VETRO ROTTO sotto il cursore. Il click MEMORIZZA la geometria (schegge/cricche); il disegno avviene
+// in `drawShatters()` SOPRA TUTTO nel render loop, per ~0.6s con fade -> garantito visibile.
+const shatters = [];
+const TAU = Math.PI*2;
 function crystalShatter(cx, cy){
-  if(!ffx || !px2) return;
-  const R = Math.min(W,H) * rr(0.16,0.28);           // più GRANDE -> ben visibile
-  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);     // snapshot dello sfondo corrente
-  function chromaStroke(path, lw, al){               // stroke con aberrazione: R + ciano sfalsate (screen) + bianco
-    const ao = rr(2,5), ay = ao*rr(-0.7,0.7);
-    ffx.lineWidth=lw; ffx.lineCap='round'; ffx.lineJoin='round';
-    ffx.globalCompositeOperation='screen';
-    ffx.save(); ffx.translate(ao,ay);   ffx.strokeStyle='rgba(255,20,60,'+al+')';  ffx.stroke(path); ffx.restore();
-    ffx.save(); ffx.translate(-ao,-ay); ffx.strokeStyle='rgba(20,220,255,'+al+')'; ffx.stroke(path); ffx.restore();
-    ffx.strokeStyle='rgba(255,255,255,'+al+')'; ffx.stroke(path);
-    ffx.globalCompositeOperation='source-over';
-  }
-  // FLASH d'impatto: nucleo bianco brillante che svanisce (additivo) -> marca chiaramente il punto
-  ffx.save();
-  ffx.globalCompositeOperation='lighter';
-  let g=ffx.createRadialGradient(cx,cy,0, cx,cy,R*0.9);
-  g.addColorStop(0,'rgba(255,255,255,0.9)'); g.addColorStop(0.4,'rgba(200,230,255,0.35)'); g.addColorStop(1,'rgba(0,0,0,0)');
-  ffx.fillStyle=g; ffx.beginPath(); ffx.arc(cx,cy,R*0.9,0,Math.PI*2); ffx.fill();
-  ffx.restore();
-  const wedges = 9 + (RNG()*8|0), base = RNG()*Math.PI*2;
-  for(let i=0;i<wedges;i++){
-    const a0 = base + (i/wedges)*Math.PI*2, a1 = base + ((i+1)/wedges)*Math.PI*2;
-    const r0 = R*rr(0,0.16), r1 = R*rr(0.85,1.2);
-    const apx=cx+Math.cos((a0+a1)/2)*r0, apy=cy+Math.sin((a0+a1)/2)*r0;
+  const R = Math.min(W,H) * rr(0.16,0.28);
+  const wn = 9 + (RNG()*8|0), base = RNG()*TAU, wedges=[];
+  for(let i=0;i<wn;i++){
+    const a0 = base + (i/wn)*TAU, a1 = base + ((i+1)/wn)*TAU;
+    const r0 = R*rr(0,0.16), r1 = R*rr(0.85,1.2), mid=(a0+a1)/2;
+    const apx=cx+Math.cos(mid)*r0, apy=cy+Math.sin(mid)*r0;
     const e0x=cx+Math.cos(a0)*r1, e0y=cy+Math.sin(a0)*r1, e1x=cx+Math.cos(a1)*r1, e1y=cy+Math.sin(a1)*r1;
-    // clip + rifrazione FORTE dello sfondo (spostamento ampio + scala -> ben percepibile)
-    ffx.save();
-    ffx.beginPath(); ffx.moveTo(apx,apy); ffx.lineTo(e0x,e0y); ffx.lineTo(e1x,e1y); ffx.closePath(); ffx.clip();
-    const mid=(a0+a1)/2, displ=R*rr(0.3,0.7)*(RNG()<0.5?1:-1);
-    const dx=Math.cos(mid)*displ, dy=Math.sin(mid)*displ, sc=rr(0.78,1.35);
-    ffx.globalAlpha=1;
-    ffx.translate(cx+dx, cy+dy); ffx.scale(sc,sc); ffx.rotate(rr(-0.35,0.35));
-    ffx.drawImage(px2.canvas, -cx, -cy);
-    ffx.restore();
-    // bordi della scheggia con ABERRAZIONE CROMATICA (marcati)
+    const clip=new Path2D(); clip.moveTo(apx,apy); clip.lineTo(e0x,e0y); clip.lineTo(e1x,e1y); clip.closePath();
     const edge=new Path2D(); edge.moveTo(e0x,e0y); edge.lineTo(apx,apy); edge.lineTo(e1x,e1y);
-    ffx.globalAlpha = rr(0.6,0.9);
-    chromaStroke(edge, rr(1.2,2.8), rr(0.5,0.8).toFixed(2));
+    const displ=R*rr(0.3,0.7)*(RNG()<0.5?1:-1), ao=rr(2,5);
+    wedges.push({clip,edge, dx:Math.cos(mid)*displ, dy:Math.sin(mid)*displ, sc:rr(0.78,1.35), rot:rr(-0.35,0.35), elw:rr(1.2,2.8), eal:rr(0.5,0.8), ao, ay:ao*rr(-0.7,0.7)});
   }
-  // ---- CRICCHE che si diramano dal cursore (aberrazione cromatica, marcate) ----
-  const cracks = 9 + (RNG()*8|0);
-  for(let i=0;i<cracks;i++){
-    let ang=RNG()*Math.PI*2, x=cx, y=cy;
-    const segs=5+(RNG()*5|0), len=R*rr(0.6,1.4), step=len/segs;
+  const cn = 9 + (RNG()*8|0), cracks=[];
+  for(let i=0;i<cn;i++){
+    let ang=RNG()*TAU, x=cx, y=cy; const segs=5+(RNG()*5|0), len=R*rr(0.6,1.4), step=len/segs;
     const cp=new Path2D(); cp.moveTo(x,y);
-    for(let s=0;s<segs;s++){
-      ang += rr(-0.34,0.34);
-      x+=Math.cos(ang)*step; y+=Math.sin(ang)*step;
-      cp.lineTo(x,y);
-      if(RNG()<0.45){ const ba=ang+rr(-0.9,0.9), bl=step*rr(0.5,1.3); cp.lineTo(x+Math.cos(ba)*bl, y+Math.sin(ba)*bl); cp.moveTo(x,y); }   // ramo
-    }
-    ffx.globalAlpha = rr(0.7,1.0);
-    chromaStroke(cp, rr(1.4,3.2), rr(0.55,0.85).toFixed(2));
+    for(let s=0;s<segs;s++){ ang+=rr(-0.34,0.34); x+=Math.cos(ang)*step; y+=Math.sin(ang)*step; cp.lineTo(x,y);
+      if(RNG()<0.45){ const ba=ang+rr(-0.9,0.9), bl=step*rr(0.5,1.3); cp.lineTo(x+Math.cos(ba)*bl, y+Math.sin(ba)*bl); cp.moveTo(x,y); } }
+    cracks.push({path:cp, lw:rr(1.4,3.2), al:rr(0.55,0.85), ao:rr(2,5), ay:rr(-3,3)});
   }
-  // schegge bianche brillanti
-  ffx.globalCompositeOperation='lighter'; ffx.fillStyle='rgba(255,255,255,0.85)';
-  for(let i=0;i<6;i++){ ffx.beginPath(); ffx.arc(cx+rr(-R*0.35,R*0.35), cy+rr(-R*0.35,R*0.35), rr(0.8,2.4), 0, Math.PI*2); ffx.fill(); }
-  ffx.globalCompositeOperation='source-over';
-  ffx.globalAlpha=1;
-  kick = Math.max(kick, 0.85);                       // scossa che "rompe" nel mix
+  const sparks=[]; for(let i=0;i<7;i++) sparks.push({x:cx+rr(-R*0.35,R*0.35), y:cy+rr(-R*0.35,R*0.35), r:rr(0.8,2.6)});
+  shatters.push({x:cx,y:cy,born:t,R,wedges,cracks,sparks});
+  if(shatters.length>10) shatters.shift();
+  kick = Math.max(kick, 0.85);
+}
+function chromaStrokeCtx(path, lw, al, ao, ay){       // stroke con aberrazione (R + ciano sfalsate, screen) + bianco
+  ctx.save(); ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.globalCompositeOperation='screen';
+  ctx.save(); ctx.translate(ao,ay);   ctx.strokeStyle='rgba(255,20,60,'+al+')';  ctx.stroke(path); ctx.restore();
+  ctx.save(); ctx.translate(-ao,-ay); ctx.strokeStyle='rgba(20,220,255,'+al+')'; ctx.stroke(path); ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,'+al+')'; ctx.stroke(path);
+  ctx.restore();
+}
+function paintShatter(s, fade){
+  const cx=s.x, cy=s.y, R=s.R;
+  // FLASH d'impatto
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  const g=ctx.createRadialGradient(cx,cy,0, cx,cy,R*0.9);
+  g.addColorStop(0,'rgba(255,255,255,'+(0.9*fade).toFixed(2)+')'); g.addColorStop(0.4,'rgba(200,230,255,'+(0.35*fade).toFixed(2)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R*0.9,0,TAU); ctx.fill(); ctx.restore();
+  // RIFRAZIONE per scheggia (sfondo spostato) + bordi cromatici
+  for(const w of s.wedges){
+    ctx.save(); ctx.clip(w.clip); ctx.globalAlpha=fade;
+    ctx.translate(cx+w.dx, cy+w.dy); ctx.scale(w.sc,w.sc); ctx.rotate(w.rot);
+    ctx.drawImage(px2.canvas, -cx, -cy);
+    ctx.restore();
+    chromaStrokeCtx(w.edge, w.elw, (w.eal*fade).toFixed(2), w.ao, w.ay);
+  }
+  // CRICCHE cromatiche
+  for(const c of s.cracks) chromaStrokeCtx(c.path, c.lw, (c.al*fade).toFixed(2), c.ao, c.ay);
+  // schegge brillanti
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.fillStyle='rgba(255,255,255,'+(0.85*fade).toFixed(2)+')';
+  for(const p of s.sparks){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,TAU); ctx.fill(); } ctx.restore();
+  ctx.globalAlpha=1;
+}
+function drawShatters(){
+  if(!shatters.length) return;
+  px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);     // snapshot pulito del frame finale (sorgente della rifrazione)
+  for(let i=shatters.length-1;i>=0;i--){
+    const s=shatters[i], age=(t-s.born)/0.6;          // vita ~0.6s
+    if(age>=1){ shatters.splice(i,1); continue; }
+    paintShatter(s, Math.max(0,1-age));
+  }
 }
 
 // ── HUD "1 CLICK = 1 DEAD FASCIST": contatore + esplosione + il gesto ENTRA nell'opera ──
