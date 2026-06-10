@@ -952,8 +952,11 @@ function render(){
   ctx.fillStyle = `rgb(${g},${g},${g})`; ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation='source-over';
 
-  // 8) PRIMO PIANO sopra TUTTO, dopo il dim -> blob nitidi e a piena luminosita'
+  // 8) PRIMO PIANO sopra TUTTO, dopo il dim -> blob nitidi. Boost di SATURAZIONE per contrastare
+  //    il "muddy" del tail densissimo (tante istanze sovrapposte tendono al grigio).
+  ctx.filter = 'saturate(1.7)';
   ctx.drawImage(ff, 0, 0);
+  ctx.filter = 'none';
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
 }
