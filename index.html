@@ -597,6 +597,79 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
   clear: both;
 }
 
+/* ═══ GUESTBOOK — Supabase-backed permanent comments ═══ */
+.gb { display: flex; flex-direction: column; gap: 18px; }
+.gb-form {
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+  border: 1px solid #330000;
+  background: rgba(20, 2, 2, 0.5);
+  padding: 14px;
+}
+.gb-formhead {
+  font-size: 10px; letter-spacing: 0.2em; color: #aa6666; text-transform: uppercase;
+}
+.gb-field { display: flex; flex-direction: column; gap: 4px; }
+.gb-label {
+  font-size: 9px; letter-spacing: 0.25em; color: #cc6666; text-transform: uppercase;
+}
+.gb-input, .gb-textarea {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  background: rgba(6, 0, 0, 0.7);
+  border: 1px solid #441111;
+  color: #ff8888;
+  padding: 8px 10px;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.gb-input::placeholder, .gb-textarea::placeholder { color: #5a2a2a; }
+.gb-input:focus, .gb-textarea:focus {
+  border-color: #ff3333;
+  box-shadow: 0 0 10px rgba(255, 40, 40, 0.25), inset 0 0 12px rgba(0, 0, 0, 0.5);
+}
+.gb-textarea { resize: vertical; min-height: 64px; line-height: 1.6; }
+/* honeypot — pulled off-screen but still in the DOM for bots to trip on */
+.gb-hp { position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.gb-formfoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gb-count { font-size: 9px; letter-spacing: 0.1em; color: #774444; }
+.gb-submit {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  background: rgba(255, 30, 30, 0.07);
+  border: 1px solid #ff3333;
+  color: #ff5555;
+  padding: 7px 16px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: var(--cur-hand), pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.gb-submit:hover { background: #ff3333; color: #000; box-shadow: 0 0 14px rgba(255, 40, 40, 0.5); }
+.gb-submit:disabled { opacity: 0.4; cursor: default; }
+.gb-submit:disabled:hover { background: rgba(255, 30, 30, 0.07); color: #ff5555; box-shadow: none; }
+.gb-status { font-size: 10px; letter-spacing: 0.05em; min-height: 13px; color: #aa6666; }
+.gb-status.err { color: #ff5555; }
+.gb-status.ok  { color: #5fbf7f; }
+.gb-list { display: flex; flex-direction: column; gap: 12px; }
+.gb-list-head {
+  font-size: 9px; letter-spacing: 0.25em; color: #774444; text-transform: uppercase;
+  border-bottom: 1px solid #2a0808; padding-bottom: 6px;
+}
+.gb-entry { border-left: 2px solid #441111; padding: 2px 0 2px 12px; }
+.gb-entry-head {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+.gb-entry-alias { color: #ff5555; font-weight: 700; font-size: 11px; letter-spacing: 0.05em; }
+.gb-entry-alias::before { content: '@'; color: #aa3333; }
+.gb-entry-date { color: #663333; font-size: 9px; letter-spacing: 0.05em; }
+.gb-entry-msg { color: #cc7777; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.gb-empty, .gb-loading { color: #774444; font-size: 11px; letter-spacing: 0.05em; font-style: italic; }
+
 /* Portfolio grid */
 .pf-grid {
   display: grid;
@@ -1448,7 +1521,9 @@ button:focus,
   line-height: 2;
   z-index: 1000;
   margin-top: 5000px;
-  margin-bottom: 500px;
+  /* No extra void below: the message types out in place once scrolled into view,
+     and the controller (#soundboard) already provides its own padding-top gap. */
+  margin-bottom: 0;
   opacity: 0;
   transform: translateY(50px);
   transition: opacity 1s ease, transform 1s ease;
@@ -1623,6 +1698,10 @@ button:focus,
   left: 50%;
   transform: translateX(-50%) translateY(calc(100% + 40px));
   z-index: 8000;
+  /* Single source of truth for the box translucency — every rectangle
+     (main box, NEW RELEASE tab, ✕ tab, play button) uses this exact value so
+     the whole panel reads as one uniform, subtly see-through sheet of glass. */
+  --nr-glass: rgba(6, 1, 1, 0.5);
   /* Column: a header row of two little boxes (NEW RELEASE + ✕) sitting flush
      ON TOP of the main player box — gap:0 so they're attached, not floating. */
   display: flex;
@@ -1639,7 +1718,7 @@ button:focus,
   align-items: center;
   gap: 12px;
   padding: 6px 12px 6px 6px;
-  background: rgba(6, 1, 1, 0.97);
+  background: var(--nr-glass);
   border: 1px solid #ff3333;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -1782,7 +1861,10 @@ button:focus,
   font-size: 7px;
   letter-spacing: 0.28em;
   color: #ff3333;
-  background: rgba(6, 1, 1, 0.97);
+  background: var(--nr-glass);
+  /* Match .nr-main's backdrop blur so the whole rectangle reads uniformly. */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid #ff3333;
   border-bottom: none;
   padding: 6px 11px;
@@ -1898,7 +1980,9 @@ button:focus,
   width: 34px;
   height: 34px;
   border: 1px solid #ff3333;
-  background: rgba(255, 30, 30, 0.07);
+  background: var(--nr-glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   color: #ff4444;
   font-size: 13px;
   line-height: 1;
@@ -1921,7 +2005,10 @@ button:focus,
   justify-content: center;
   flex-shrink: 0;
   width: 28px;
-  background: rgba(6, 1, 1, 0.97);
+  background: var(--nr-glass);
+  /* Match .nr-main's backdrop blur so the whole rectangle reads uniformly. */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid #ff3333;
   border-bottom: none;
   color: #cc6666;
@@ -2369,7 +2456,29 @@ button:focus,
       <span class="win-close" data-close="contact">✕</span>
     </div>
     <div class="win-body" id="guestbookBody">
-      <!-- giscus loaded lazily on first open -->
+      <div class="gb">
+        <form class="gb-form" id="gbForm" autocomplete="off" novalidate>
+          <div class="gb-formhead">leave a permanent trace</div>
+          <div class="gb-field">
+            <label class="gb-label" for="gbAlias">alias</label>
+            <input class="gb-input" id="gbAlias" type="text" maxlength="32" placeholder="anon" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="gb-field">
+            <label class="gb-label" for="gbMsg">message</label>
+            <textarea class="gb-textarea" id="gbMsg" maxlength="1000" placeholder="&gt; ..." spellcheck="false"></textarea>
+          </div>
+          <!-- honeypot: invisible to humans, often auto-filled by bots -->
+          <input class="gb-hp" id="gbHp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="gb-formfoot">
+            <span class="gb-count" id="gbCount">0 / 1000</span>
+            <button type="submit" class="gb-submit" id="gbSubmit">▶ post</button>
+          </div>
+          <div class="gb-status" id="gbStatus" role="status"></div>
+        </form>
+        <div class="gb-list" id="gbList">
+          <div class="gb-loading">loading comments…</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2455,6 +2564,18 @@ const ASCII_ART = `███╗   ███╗██╗██████╗  �
   multimedia · idm · glitch · real-time systems`;
 
 const SECTION_KEYS = ['about', 'portfolio', 'resources', 'links', 'contact'];
+
+// ─────────────────────────────────────────────
+// GUESTBOOK (Supabase) — permanent public comments
+// These are the project's PUBLIC values. The anon key is SAFE to expose: writes
+// are gated server-side by Row-Level-Security policies (insert/select only, no
+// update/delete), so comments can be added & read but never edited or removed.
+// Replace the two placeholders with your project's URL + anon key.
+// ─────────────────────────────────────────────
+const SUPABASE_URL      = 'https://tkpojxsvbzqkpvqunhch.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcG9qeHN2Ynpxa3B2cXVuaGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Mjk2MTEsImV4cCI6MjA5ODIwNTYxMX0.s5PWO15kt2qSm73jzGFq9G7AnIJ-sh_gaSa3ZCSVq74';
+const GUESTBOOK_TABLE   = 'guestbook';
+
 const BOOT_LINES = [
   { text: '> INITIALIZING mi·ɽài://audiovisual OS v0.1', cls: 'out-prompt', pre: 0 },
   { text: '> LOADING AUDIO ENGINE............... [OK]',    cls: 'out-ok',     pre: 180 },
@@ -3043,6 +3164,22 @@ function updateMenuUI() {
   });
 }
 
+// Scroll an opened section into view. If it fits within the viewport we center
+// it vertically; if it's taller than the viewport we align its titlebar ~24px
+// below the top so the start of the section stays visible (centering a tall
+// section would push its titlebar off-screen).
+function centerSection(win) {
+  const rect = win.getBoundingClientRect();
+  const vh   = window.innerHeight;
+  let targetY;
+  if (rect.height <= vh - 48) {
+    targetY = window.scrollY + rect.top - (vh - rect.height) / 2;
+  } else {
+    targetY = window.scrollY + rect.top - 24; // 24px gap above section
+  }
+  window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+}
+
 function openSection(key) {
   const win = document.getElementById('sec-' + key);
   if (!win) return;
@@ -3059,27 +3196,10 @@ function openSection(key) {
   updateMenuUI();
   playMenuOpen(true);
 
-  // Lazy-load giscus on first guestbook open
+  // Lazy-init the guestbook (fetch existing comments) on first open
   if (key === 'contact' && !guestbookLoaded) {
     guestbookLoaded = true;
-    const body   = document.getElementById('guestbookBody');
-    const script = document.createElement('script');
-    script.src                        = 'https://giscus.app/client.js';
-    script.setAttribute('data-repo',          'simoliguori/simoliguori');
-    script.setAttribute('data-repo-id',       'R_kgDORkEgmQ');
-    script.setAttribute('data-category-id',   'DIC_kwDORkEgmc4C7ahJ');
-    // Shared thread across index.html and terminal.html
-    script.setAttribute('data-mapping',       'specific');
-    script.setAttribute('data-term',          'guestbook');
-    script.setAttribute('data-strict',        '0');
-    script.setAttribute('data-reactions-enabled', '1');
-    script.setAttribute('data-emit-metadata', '0');
-    script.setAttribute('data-input-position','bottom');
-    script.setAttribute('data-theme',         'dark');
-    script.setAttribute('data-lang',          'it');
-    script.setAttribute('crossorigin',        'anonymous');
-    script.async = true;
-    body.appendChild(script);
+    initGuestbook();
   }
 
   // Scroll the newly opened section into view. PORTFOLIO is special-cased to
@@ -3094,12 +3214,10 @@ function openSection(key) {
       if (firstProject) {
         firstProject.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
-        win.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        centerSection(win);
       }
     } else {
-      const rect = win.getBoundingClientRect();
-      const targetY = window.scrollY + rect.top - 24; // 24px gap above section
-      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+      centerSection(win);
     }
     // After the scroll animation settles, auto-enter section focus mode.
     // quiet:true prevents doubling up on the playMenuOpen() already fired by openSection.
@@ -4587,6 +4705,119 @@ function initSoundboard() {
   }
 })();
 
+// ═══════════════════════════════════════════════
+// GUESTBOOK — permanent comments via Supabase REST
+// Reads with select; writes with insert. RLS on the server keeps everything
+// append-only (no edits/deletes), so every transmission is permanent.
+// ═══════════════════════════════════════════════
+function initGuestbook() {
+  const form    = document.getElementById('gbForm');
+  const aliasEl = document.getElementById('gbAlias');
+  const msgEl   = document.getElementById('gbMsg');
+  const hpEl    = document.getElementById('gbHp');
+  const countEl = document.getElementById('gbCount');
+  const submit  = document.getElementById('gbSubmit');
+  const statusEl= document.getElementById('gbStatus');
+  const listEl  = document.getElementById('gbList');
+  if (!form || !listEl) return;
+
+  const REST    = SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/' + GUESTBOOK_TABLE;
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+  const configured = SUPABASE_URL.indexOf('YOUR-PROJECT') === -1 &&
+                     SUPABASE_ANON_KEY.indexOf('YOUR-ANON') === -1;
+  const MAX_MSG = 1000, MAX_ALIAS = 32, THROTTLE_MS = 30000;
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg || '';
+    statusEl.className = 'gb-status' + (kind ? ' ' + kind : '');
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+  function fmtDate(iso) {
+    try {
+      const d = new Date(iso), p = n => String(n).padStart(2, '0');
+      return d.getFullYear() + '.' + p(d.getMonth()+1) + '.' + p(d.getDate()) +
+             ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    } catch (e) { return ''; }
+  }
+  function render(rows) {
+    if (!rows || !rows.length) {
+      listEl.innerHTML = '<div class="gb-empty">no comments yet — be the first.</div>';
+      return;
+    }
+    const head = '<div class="gb-list-head">comments</div>';
+    listEl.innerHTML = head + rows.map(r =>
+      '<div class="gb-entry">' +
+        '<div class="gb-entry-head">' +
+          '<span class="gb-entry-alias">' + esc(r.alias) + '</span>' +
+          '<span class="gb-entry-date">' + fmtDate(r.created_at) + '</span>' +
+        '</div>' +
+        '<div class="gb-entry-msg">' + esc(r.message) + '</div>' +
+      '</div>'
+    ).join('');
+  }
+  async function load() {
+    if (!configured) {
+      listEl.innerHTML = '<div class="gb-empty">guestbook offline — backend not configured yet.</div>';
+      return;
+    }
+    listEl.innerHTML = '<div class="gb-loading">loading comments…</div>';
+    try {
+      const res = await fetch(REST + '?select=alias,message,created_at&order=created_at.desc&limit=500', { headers });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      render(await res.json());
+    } catch (e) {
+      listEl.innerHTML = '<div class="gb-empty">could not load comments.</div>';
+    }
+  }
+
+  const updateCount = () => { countEl.textContent = msgEl.value.length + ' / ' + MAX_MSG; };
+  msgEl.addEventListener('input', updateCount);
+  updateCount();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!configured) { setStatus('backend not configured yet.', 'err'); return; }
+    // Honeypot tripped → silently pretend success (likely a bot).
+    if (hpEl.value) { form.reset(); updateCount(); setStatus('posted. ✓', 'ok'); return; }
+
+    const alias   = (aliasEl.value.trim() || 'anon').slice(0, MAX_ALIAS);
+    const message = msgEl.value.trim();
+    if (!message) { setStatus('message is empty.', 'err'); msgEl.focus(); return; }
+    if (message.length > MAX_MSG) { setStatus('message too long.', 'err'); return; }
+
+    const last = +(localStorage.getItem('gb_last') || 0);
+    if (Date.now() - last < THROTTLE_MS) {
+      setStatus('slow down — wait ' + Math.ceil((THROTTLE_MS - (Date.now() - last)) / 1000) + 's.', 'err');
+      return;
+    }
+
+    submit.disabled = true;
+    setStatus('posting…');
+    try {
+      const res = await fetch(REST, {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
+        body: JSON.stringify({ alias, message })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      localStorage.setItem('gb_last', String(Date.now()));
+      form.reset(); updateCount();
+      setStatus('posted. ✓', 'ok');
+      try { playMenuOpen(true); } catch (_) {}
+      load();
+    } catch (err) {
+      setStatus('post failed — try again.', 'err');
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  load();
+}
+
 // ═══ NEW RELEASE FLOATING PLAYER ═══
 (function () {
   const TRACK_URL = 'https://soundcloud.com/eccerobot/ghera-mp3';
@@ -4689,8 +4920,16 @@ function initSoundboard() {
   // completes (in sync with the chime). This is the normal path.
   window.addEventListener('nr:boot-done', revealBar, { once: true });
   // Safety net: only if the boot script never dispatches (e.g. a JS error mid
-  // boot). Long timeout so it never races the intended ~1s delay above.
-  setTimeout(revealBar, 20000);
+  // boot). It must NOT arm until the user has actually initialized (clicked the
+  // splash), otherwise lingering on the "SYSTEM READY" init overlay for 20s
+  // would leak the player onto a screen where boot hasn't even started. So we
+  // start the fallback timer from boot-start, not page load.
+  const initOverlay = document.getElementById('initOverlay');
+  if (initOverlay) {
+    initOverlay.addEventListener('click', () => setTimeout(revealBar, 20000), { once: true });
+  } else {
+    setTimeout(revealBar, 20000);
+  }
 
   // ── Visualizer state ───────────────────────────────────────────────────────
   let waveSamples = null;     // normalized 0..1 amplitude envelope of the track
