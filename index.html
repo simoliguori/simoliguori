@@ -669,6 +669,37 @@ body.scroll-locked .ecce-robot:not(.spawning):not(.spawned) { opacity: 0; }
 .gb-entry-date { color: #663333; font-size: 9px; letter-spacing: 0.05em; }
 .gb-entry-msg { color: #cc7777; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .gb-empty, .gb-loading { color: #774444; font-size: 11px; letter-spacing: 0.05em; font-style: italic; }
+/* edit/delete controls — only rendered on comments you just posted */
+.gb-entry-actions { display: inline-flex; gap: 6px; margin-left: auto; }
+.gb-act {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  background: transparent;
+  border: 1px solid #441111;
+  color: #aa6666;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  cursor: var(--cur-hand), pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.gb-act:hover { color: #ff5555; border-color: #ff3333; background: rgba(255, 40, 40, 0.07); }
+.gb-act[data-act="del"]:hover { color: #000; background: #ff3333; border-color: #ff3333; }
+.gb-edit-ta {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  width: 100%; box-sizing: border-box;
+  background: rgba(6, 0, 0, 0.7);
+  border: 1px solid #441111;
+  color: #ff8888;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 48px;
+  outline: none;
+  margin-bottom: 6px;
+}
+.gb-edit-ta:focus { border-color: #ff3333; box-shadow: 0 0 10px rgba(255, 40, 40, 0.25); }
 
 /* Portfolio grid */
 .pf-grid {
@@ -2461,7 +2492,7 @@ button:focus,
           <div class="gb-formhead">leave a permanent trace</div>
           <div class="gb-field">
             <label class="gb-label" for="gbAlias">alias</label>
-            <input class="gb-input" id="gbAlias" type="text" maxlength="32" placeholder="anon" autocomplete="off" spellcheck="false">
+            <input class="gb-input" id="gbAlias" type="text" maxlength="32" placeholder="@anon" autocomplete="off" spellcheck="false">
           </div>
           <div class="gb-field">
             <label class="gb-label" for="gbMsg">message</label>
@@ -3405,6 +3436,13 @@ function activateSubItem() {
 // KEYBOARD NAVIGATION
 // ─────────────────────────────────────────────
 document.addEventListener('keydown', e => {
+  // Don't hijack keys while the user is typing in a field (e.g. the guestbook
+  // form). Otherwise Backspace would close the section, digits would toggle
+  // other sections, arrows would move menu focus, etc. — let the field have them.
+  const _ae = document.activeElement;
+  const _tag = _ae && _ae.tagName ? _ae.tagName.toUpperCase() : '';
+  if (_tag === 'INPUT' || _tag === 'TEXTAREA' || (_ae && _ae.isContentEditable)) return;
+
   // Ignore navigation keys while boot is still running (or being skipped).
   // The boot sequence's own listener handles Enter for skipping.
   if (!bootDone) return;
@@ -4726,6 +4764,50 @@ function initGuestbook() {
   const configured = SUPABASE_URL.indexOf('YOUR-PROJECT') === -1 &&
                      SUPABASE_ANON_KEY.indexOf('YOUR-ANON') === -1;
   const MAX_MSG = 1000, MAX_ALIAS = 32, THROTTLE_MS = 30000;
+  const RPC = SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/';
+
+  // ── authorship of your own comments ──────────────────────────────────────
+  // Each comment you post gets a secret token, kept only in this browser. You
+  // prove you're the author by sending that token to the server-side RPC, so
+  // you can edit/delete your own comments anytime (from this browser). The
+  // token is never exposed to anyone else, and nothing identifies the user.
+  function readMine() {
+    let arr = [];
+    try { arr = JSON.parse(localStorage.getItem('gb_mine') || '[]'); } catch (e) {}
+    arr = arr.filter(m => m && m.token && m.id != null);
+    const map = new Map();
+    arr.forEach(m => map.set(m.id, m));
+    return map;
+  }
+  function addMine(id, token) {
+    let arr = [];
+    try { arr = JSON.parse(localStorage.getItem('gb_mine') || '[]'); } catch (e) {}
+    arr.push({ id, token, ts: Date.now() });
+    localStorage.setItem('gb_mine', JSON.stringify(arr));
+  }
+  function removeMine(id) {
+    let arr = [];
+    try { arr = JSON.parse(localStorage.getItem('gb_mine') || '[]'); } catch (e) {}
+    localStorage.setItem('gb_mine', JSON.stringify(arr.filter(m => m.id !== id)));
+  }
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = (window.crypto ? crypto.getRandomValues(new Uint8Array(1))[0] : Math.random()*256) & 15;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+  async function rpc(fn, body) {
+    const res = await fetch(RPC + fn, {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json(); // boolean: true if a row was changed
+  }
+
+  let lastRows = [];
 
   function setStatus(msg, kind) {
     statusEl.textContent = msg || '';
@@ -4743,20 +4825,30 @@ function initGuestbook() {
     } catch (e) { return ''; }
   }
   function render(rows) {
+    lastRows = rows || [];
     if (!rows || !rows.length) {
       listEl.innerHTML = '<div class="gb-empty">no comments yet — be the first.</div>';
       return;
     }
+    const mine = readMine();
     const head = '<div class="gb-list-head">comments</div>';
-    listEl.innerHTML = head + rows.map(r =>
-      '<div class="gb-entry">' +
+    listEl.innerHTML = head + rows.map(r => {
+      const owned = mine.has(r.id);
+      const actions = owned
+        ? '<span class="gb-entry-actions">' +
+            '<button class="gb-act" data-act="edit" data-id="' + r.id + '">edit</button>' +
+            '<button class="gb-act" data-act="del"  data-id="' + r.id + '">delete</button>' +
+          '</span>'
+        : '';
+      return '<div class="gb-entry" data-id="' + r.id + '">' +
         '<div class="gb-entry-head">' +
           '<span class="gb-entry-alias">' + esc(r.alias) + '</span>' +
           '<span class="gb-entry-date">' + fmtDate(r.created_at) + '</span>' +
+          actions +
         '</div>' +
         '<div class="gb-entry-msg">' + esc(r.message) + '</div>' +
-      '</div>'
-    ).join('');
+      '</div>';
+    }).join('');
   }
   async function load() {
     if (!configured) {
@@ -4765,7 +4857,7 @@ function initGuestbook() {
     }
     listEl.innerHTML = '<div class="gb-loading">loading comments…</div>';
     try {
-      const res = await fetch(REST + '?select=alias,message,created_at&order=created_at.desc&limit=500', { headers });
+      const res = await fetch(REST + '?select=id,alias,message,created_at&order=created_at.desc&limit=500', { headers });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       render(await res.json());
     } catch (e) {
@@ -4777,13 +4869,22 @@ function initGuestbook() {
   msgEl.addEventListener('input', updateCount);
   updateCount();
 
+  // Alias behaves like a social @handle: strip spaces and any leading "@"
+  // (the list already shows the "@" as a fixed prefix, so storing it would
+  // double up).
+  const cleanAlias = s => s.replace(/\s+/g, '').replace(/^@+/, '');
+  aliasEl.addEventListener('input', () => {
+    const cleaned = cleanAlias(aliasEl.value);
+    if (cleaned !== aliasEl.value) aliasEl.value = cleaned;
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!configured) { setStatus('backend not configured yet.', 'err'); return; }
     // Honeypot tripped → silently pretend success (likely a bot).
     if (hpEl.value) { form.reset(); updateCount(); setStatus('posted. ✓', 'ok'); return; }
 
-    const alias   = (aliasEl.value.trim() || 'anon').slice(0, MAX_ALIAS);
+    const alias   = (cleanAlias(aliasEl.value) || 'anon').slice(0, MAX_ALIAS);
     const message = msgEl.value.trim();
     if (!message) { setStatus('message is empty.', 'err'); msgEl.focus(); return; }
     if (message.length > MAX_MSG) { setStatus('message too long.', 'err'); return; }
@@ -4796,22 +4897,88 @@ function initGuestbook() {
 
     submit.disabled = true;
     setStatus('posting…');
+    const token = uuid();
+    const post = body => fetch(REST, {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=representation' }, headers),
+      body: JSON.stringify(body)
+    });
     try {
-      const res = await fetch(REST, {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
-        body: JSON.stringify({ alias, message })
-      });
+      // Try with an ownership token. If the edit_token column / migration isn't
+      // applied yet, that insert 4xx's — fall back to a plain insert so the
+      // guestbook keeps working (just without edit/delete until the SQL is run).
+      let owned = true;
+      let res = await post({ alias, message, edit_token: token });
+      if (!res.ok) { owned = false; res = await post({ alias, message }); }
       if (!res.ok) throw new Error('HTTP ' + res.status);
+      const inserted = await res.json();
+      const newId = inserted && inserted[0] && inserted[0].id;
+      if (owned && newId != null) addMine(newId, token);
       localStorage.setItem('gb_last', String(Date.now()));
       form.reset(); updateCount();
-      setStatus('posted. ✓', 'ok');
+      setStatus(owned ? 'posted. ✓ — you can edit or delete it' : 'posted. ✓', 'ok');
       try { playMenuOpen(true); } catch (_) {}
       load();
     } catch (err) {
       setStatus('post failed — try again.', 'err');
     } finally {
       submit.disabled = false;
+    }
+  });
+
+  // Edit / delete controls (only shown on comments you just posted). Delegated
+  // so it survives re-renders. Every action re-verifies ownership + window.
+  listEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.gb-act');
+    if (!btn) return;
+    const entry = btn.closest('.gb-entry');
+    const id = +entry.dataset.id;
+    const act = btn.dataset.act;
+
+    if (act === 'cancel') { load(); return; }
+
+    const mine = readMine().get(id);
+    if (!mine) { setStatus('you can only edit your own comments.', 'err'); load(); return; }
+
+    if (act === 'edit') {
+      const row = lastRows.find(r => r.id === id);
+      if (!row) return;
+      const msgBox = entry.querySelector('.gb-entry-msg');
+      msgBox.innerHTML =
+        '<textarea class="gb-edit-ta" maxlength="' + MAX_MSG + '"></textarea>' +
+        '<span class="gb-entry-actions">' +
+          '<button class="gb-act" data-act="save"   data-id="' + id + '">save</button>' +
+          '<button class="gb-act" data-act="cancel" data-id="' + id + '">cancel</button>' +
+        '</span>';
+      const ta = msgBox.querySelector('.gb-edit-ta');
+      ta.value = row.message;
+      ta.focus();
+      return;
+    }
+
+    if (act === 'save') {
+      const ta = entry.querySelector('.gb-edit-ta');
+      const val = (ta ? ta.value.trim() : '');
+      if (!val) { setStatus('message is empty.', 'err'); return; }
+      if (val.length > MAX_MSG) { setStatus('message too long.', 'err'); return; }
+      try {
+        const ok = await rpc('gb_edit', { p_id: id, p_token: mine.token, p_message: val });
+        setStatus(ok ? 'comment updated. ✓' : 'could not update comment.', ok ? 'ok' : 'err');
+        if (!ok) removeMine(id);
+      } catch (_) { setStatus('update failed — try again.', 'err'); }
+      load();
+      return;
+    }
+
+    if (act === 'del') {
+      if (!confirm('delete this comment? this cannot be undone.')) return;
+      try {
+        const ok = await rpc('gb_delete', { p_id: id, p_token: mine.token });
+        setStatus(ok ? 'comment deleted.' : 'could not delete comment.', ok ? 'ok' : 'err');
+        removeMine(id);
+      } catch (_) { setStatus('delete failed — try again.', 'err'); }
+      load();
+      return;
     }
   });
 
