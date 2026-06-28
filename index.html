@@ -4758,6 +4758,9 @@ function initGuestbook() {
   const statusEl= document.getElementById('gbStatus');
   const listEl  = document.getElementById('gbList');
   if (!form || !listEl) return;
+  // Idempotent: only wire listeners once even if called again.
+  if (initGuestbook._done) { return; }
+  initGuestbook._done = true;
 
   const REST    = SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/' + GUESTBOOK_TABLE;
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
@@ -4898,25 +4901,35 @@ function initGuestbook() {
     submit.disabled = true;
     setStatus('posting…');
     const token = uuid();
-    const post = body => fetch(REST, {
-      method: 'POST',
-      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=representation' }, headers),
-      body: JSON.stringify(body)
-    });
     try {
-      // Try with an ownership token. If the edit_token column / migration isn't
-      // applied yet, that insert 4xx's — fall back to a plain insert so the
-      // guestbook keeps working (just without edit/delete until the SQL is run).
-      let owned = true;
-      let res = await post({ alias, message, edit_token: token });
-      if (!res.ok) { owned = false; res = await post({ alias, message }); }
+      // Insert with an ownership token. ?select=id returns just the new id —
+      // we only have read access to id/alias/message/created_at (the token is
+      // hidden), so asking for the whole row back would be denied. If the
+      // migration isn't applied (no edit_token column), fall back to a plain
+      // tokenless insert so the guestbook still works, just without edit/delete.
+      let owned = true, newId = null;
+      let res = await fetch(REST + '?select=id', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=representation' }, headers),
+        body: JSON.stringify({ alias, message, edit_token: token })
+      });
+      if (!res.ok) {
+        owned = false;
+        res = await fetch(REST, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
+          body: JSON.stringify({ alias, message })
+        });
+      }
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const inserted = await res.json();
-      const newId = inserted && inserted[0] && inserted[0].id;
-      if (owned && newId != null) addMine(newId, token);
+      if (owned) {
+        const inserted = await res.json();
+        newId = inserted && inserted[0] && inserted[0].id;
+        if (newId != null) addMine(newId, token);
+      }
       localStorage.setItem('gb_last', String(Date.now()));
       form.reset(); updateCount();
-      setStatus(owned ? 'posted. ✓ — you can edit or delete it' : 'posted. ✓', 'ok');
+      setStatus(owned && newId != null ? 'posted. ✓ — you can edit or delete it' : 'posted. ✓', 'ok');
       try { playMenuOpen(true); } catch (_) {}
       load();
     } catch (err) {
