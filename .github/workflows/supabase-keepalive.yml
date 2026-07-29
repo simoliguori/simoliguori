@@ -2,8 +2,16 @@
 #
 # Supabase pauses free projects after 7 days without API activity, which
 # would take the guestbook down until someone manually restores it. This
-# workflow pings the REST API twice a week (Mon + Thu) with a tiny read
-# query, so the project always counts as active.
+# workflow pings the REST API every day with a tiny read query, so the
+# project always counts as active.
+#
+# Why daily and not twice a week: a single missed or failed run must never
+# be able to open a >7-day gap. GitHub's scheduler routinely delays cron
+# runs by hours (and occasionally drops one), and a run can also fail on a
+# transient network/DNS glitch on the runner — that is exactly what paused
+# the project on 2026-07-20 ("Could not resolve host"), leaving a 7-day gap
+# between the successful pings of Jul 16 and Jul 23. With a daily ping it
+# would take ~7 consecutive failures to reach the pause threshold.
 #
 # The URL and anon key below are the same public values already shipped in
 # index.html — nothing secret is exposed here. The anon key only allows
@@ -16,8 +24,8 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: '17 6 * * 1,4' # 06:17 UTC every Monday and Thursday
-  workflow_dispatch: {}    # allow manual runs from the Actions tab
+    - cron: '17 6 * * *' # 06:17 UTC every day
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
 
 jobs:
   ping:
@@ -28,8 +36,12 @@ jobs:
           SUPABASE_URL='https://tkpojxsvbzqkpvqunhch.supabase.co'
           ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcG9qeHN2Ynpxa3B2cXVuaGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Mjk2MTEsImV4cCI6MjA5ODIwNTYxMX0.s5PWO15kt2qSm73jzGFq9G7AnIJ-sh_gaSa3ZCSVq74'
 
+          # --retry-all-errors so transient DNS/connection failures (curl
+          # exit 6 "Could not resolve host", refused connections, etc.) are
+          # retried too — plain --retry only retries certain HTTP responses.
           status=$(curl -sS -o /tmp/body.txt -w '%{http_code}' \
-            --retry 3 --retry-delay 10 --max-time 30 \
+            --retry 5 --retry-delay 15 --retry-all-errors \
+            --retry-connrefused --max-time 30 \
             -H "apikey: ${ANON_KEY}" \
             -H "Authorization: Bearer ${ANON_KEY}" \
             "${SUPABASE_URL}/rest/v1/guestbook?select=id&limit=1")
