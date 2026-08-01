@@ -213,3 +213,27 @@ Differenze rispetto a `index.html`:
   - Immagini → `python` PIL: ridimensiona ≤1280px, `JPEG quality=72 optimize progressive` (in `img/`).
   - Audio → `ffmpeg -c:a libmp3lame`: musica **128k stereo**, voce/TTS **48k mono**.
   - Vale per ogni nuovo asset aggiunto in futuro (immagini, brani, voci).
+
+## 13. Pipeline WEBGL (riscrittura per mobile — file live `/egg/index.html`)
+La pipeline visiva ora gira su **WebGL** (default) per togliere il lag su mobile; se WebGL manca o gli
+shader non compilano c'è **fallback automatico al 2D** (`draw2D`, la vecchia pipeline, invariata). Il
+tag di stato in basso a sinistra mostra `· gl` o `· 2d` → diagnosi rapida di quale path gira.
+- **Selezione**: `initRenderer()` in `boot()` prova `initGL()`; se ok `cv` è un canvas WebGL e `ctx=null`,
+  altrimenti `ctx=cv.getContext('2d')`. `resize()` chiama `resizeGL()` (ricrea i framebuffer) in GL.
+- **DATAMOSH a shader** (`FS_FB`, ping-pong `glFbo[0/1]`): il frame precedente è ricampionato con
+  **displacement a blocchi** (`uBlocks`) lungo la velocità media dei blob (`uVel`) + strappi random sui
+  colpi (`uKick`/`uRelease`) + **threshold** che smaglia la scia + `uDecay` (~0.86). Tecnica open-source
+  (BUCK/ompuco/Shadertoy). I blob del frame prima rientrano nel feedback → lasciano la scia datamosh.
+- **MENO BLEND / PIÙ STROBO**: le immagini in sovrimpressione (`FS_IMG`) sono in **source-over hard-cut**
+  (niente multiply/overlay/soft-light/saturation del 2D); `drawGL` fa **blink stroboscopico** per-blob e
+  il present (`FS_PP`) aggiunge un **flash full-frame** forte su beat/kick/treble.
+- **STROBO kill-switch** (fotosensibilità): `strobeOn`, tasto **S** o bottone `#strobeToggle` (tap, mobile);
+  resta sempre visibile anche a UI nascosta. Vale in GL e in 2D.
+- **Tunabili** (in `drawGL`): `uDecay` (lunghezza scia), `bedAlpha` (0.26 = iniezione colore/luminosità),
+  `uBlocks` (dimensione blocchi datamosh), `flash` (intensità strobo), soglia blink blob.
+- **FIX AUDIO MOBILE** (`unlockMedia`): majin+TTS venivano avviati in un `setTimeout` (+RISER_S) → **fuori
+  dal gesto utente** → iOS li bloccava. Ora al tap del prompt si sbloccano (play mutato→pausa) dentro il
+  gesto, così il play reale in `startDrop` passa.
+- **Note GL**: texture NPOT → `CLAMP_TO_EDGE` + no mipmap; FBO `RGBA8` (mobile-safe, niente float);
+  `UNPACK_FLIP_Y` sulle texture; matrice blob in clip-space (rotazione in pixel-space → nessuna distorsione).
+- **Verifica**: come sempre headless NON anima → testare su telefono vero (il tag deve dire `· gl`).
