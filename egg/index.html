@@ -62,6 +62,16 @@
   body.uiHidden #uiToggle{ opacity:0; }
   body.uiHidden #uiToggle:hover{ opacity:.3; }
 
+  /* STROBO kill-switch (fotosensibilità): sopra "hide ui". Resta VISIBILE anche a UI nascosta (sicurezza). */
+  #strobeToggle{ position:fixed; left:.6rem; bottom:2.8rem; z-index:40; cursor:pointer;
+    background:rgba(0,0,0,.55); color:#ff4a3a; border:1px solid rgba(255,0,0,.4);
+    font:bold .66rem/1 "Courier New",ui-monospace,monospace; letter-spacing:.1em; padding:.4rem .55rem; border-radius:3px;
+    opacity:.45; transition:opacity .2s; -webkit-tap-highlight-color:transparent; }
+  #strobeToggle:hover{ opacity:1; }
+  #strobeToggle.off{ color:#79ffb0; border-color:rgba(0,255,150,.45); opacity:.9; }   /* strobo spento */
+  #strobeToggle .kbd{ display:none; }
+  @media (hover:hover) and (pointer:fine){ #strobeToggle .kbd{ display:inline; } }
+
   /* "ok thabks" — torna al sito principale, in basso a destra */
   #backHome{ position:fixed; right:.6rem; bottom:.6rem; z-index:40; cursor:pointer;
     background:rgba(0,0,0,.55); color:#ff4a3a; border:1px solid rgba(255,0,0,.4); text-decoration:none;
@@ -183,6 +193,9 @@
 <!-- toggle UI (nascondi/mostra overlay) — tasto H o tap sul bottoncino (mobile) -->
 <button id="uiToggle" title="hide / show UI (H)"><span class="kbd">h = </span>hide ui</button>
 
+<!-- STROBO kill-switch (fotosensibilità): spegne strobo/flash — tasto S o tap. Resta sempre raggiungibile. -->
+<button id="strobeToggle" title="strobo on / off (S)"><span class="kbd">s = </span>strobo</button>
+
 <!-- "ok thabks": torna al sito principale -->
 <a id="backHome" href="/" title="torna al sito principale">ok thabks</a>
 
@@ -214,7 +227,7 @@ function hash(n){ n=(n^61)^(n>>>16); n=n+(n<<3)|0; n=n^(n>>>4); n=Math.imul(n,0x
 
 // ---------- canvas ----------
 const cv = document.getElementById('c');
-const ctx = cv.getContext('2d', { alpha:false });
+let ctx = null;   // 2D context: creato SOLO nel fallback (in modalità WebGL 'cv' è un canvas GL)
 let W=0,H=0,DPR=1;
 const fb = document.createElement('canvas'), fbx = fb.getContext('2d');     // frame precedente
 const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // temp per singolo layer
@@ -225,16 +238,19 @@ let explBlob = null;                     // gif esplosione precaricata in blob -
 fetch('/assets/img/giphy-explosion.gif').then(r=>r.blob()).then(b=>{ explBlob=b; }).catch(()=>{});
 
 function resize(){
-  DPR = Math.min(window.devicePixelRatio||1, 1.0);   // PERF: 1 pixel logico = 1 pixel canvas (Firefox)
+  DPR = Math.min(window.devicePixelRatio||1, 1.0);   // PERF: 1 pixel logico = 1 pixel canvas
   const maxW = 900;
   let w = window.innerWidth, h = window.innerHeight;
   const scale = Math.min(1, maxW/(w*DPR));
   W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
-  cv.width=W; cv.height=H; fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
-  ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
+  cv.width=W; cv.height=H;
   channelCache.clear(); prewarmIdx=0;   // ricostruisci i chroma-key alla nuova risoluzione
+  if(useGL){ resizeGL(); return; }      // modalità WebGL: (ri)crea i framebuffer
+  // --- fallback 2D: dimensiona gli offscreen e pulisci ---
+  fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
+  ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
   fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
-  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+  if(ctx){ ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); }
 }
 window.addEventListener('resize', resize);
 
@@ -880,10 +896,242 @@ function renderForeground(intensity){
   renderLayers(intensity);
 }
 
+// ================= WEBGL: datamosh a SHADER (default) + fallback 2D =================
+// La pipeline visiva gira su WebGL: FEEDBACK/DATAMOSH via ping-pong di framebuffer con
+// displacement a blocchi (tecnica open-source stile BUCK / ompuco / Shadertoy), immagini in
+// sovrimpressione con STACCO stroboscopico (niente blend morbido) e STROBO full-frame al massimo
+// (kill-switch = strobeOn). Se WebGL manca o gli shader non compilano -> fallback al percorso 2D.
+let useGL=false, gl=null, progFB=null, progIMG=null, progPP=null, quadVBO=null;
+let glFbo=null, glCurIdx=0, glIntensity=0;
+const glTexCache=new Map();   // idx -> {tex}  immagini chroma-key (LRU 16)
+const glBedCache=new Map();   // idx -> {tex}  immagini intere per lo sfondo (LRU 4)
+const IDENT3=[1,0,0, 0,1,0, 0,0,1];
+
+const VS_SRC =
+  'attribute vec2 aPos; attribute vec2 aUV;'+
+  'uniform mat3 uM; uniform vec2 uUVScale, uUVOffset;'+
+  'varying vec2 vUV;'+
+  'void main(){ vec3 p=uM*vec3(aPos,1.0); gl_Position=vec4(p.xy,0.0,1.0); vUV=aUV*uUVScale+uUVOffset; }';
+
+// FEEDBACK: campiona il frame precedente con DISPLACEMENT a blocchi (datamosh) + decay + zoom.
+const FS_FB =
+  'precision mediump float;'+
+  'varying vec2 vUV;'+
+  'uniform sampler2D uPrev;'+
+  'uniform float uTime,uDecay,uKick,uRelease,uZoom;'+
+  'uniform vec2 uVel,uBlocks;'+
+  'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }'+
+  'void main(){'+
+  '  vec2 uv=(vUV-0.5)/uZoom+0.5;'+
+  '  vec2 bl=floor(uv*uBlocks)/uBlocks;'+                       // blocchi (datamosh)
+  '  float n=hash(bl+floor(uTime*8.0));'+
+  '  vec2 disp=uVel*(0.6+uKick*2.0);'+                          // scorrimento lungo il moto medio dei blob
+  '  if(n < uKick*0.5+uRelease*0.3){ disp+=(vec2(hash(bl+1.7),hash(bl+3.1))-0.5)*(0.04+uKick*0.12); }'+  // strappi sui colpi
+  '  disp=sign(disp)*max(abs(disp)-n*0.004,0.0);'+              // threshold: la scia si smaglia
+  '  vec2 suv=clamp(uv+disp,0.0,1.0);'+
+  '  vec3 prev=texture2D(uPrev,suv).rgb;'+
+  '  gl_FragColor=vec4(prev*uDecay,1.0);'+
+  '}';
+
+// IMMAGINE: bed (alpha basso, iniezione colore) o blob chroma-key (stacco netto). Niente blend "creativo".
+const FS_IMG =
+  'precision mediump float;'+
+  'varying vec2 vUV;'+
+  'uniform sampler2D uTex; uniform float uAlpha; uniform vec3 uTint;'+
+  'void main(){ vec4 c=texture2D(uTex,vUV); if(c.a<=0.003) discard; gl_FragColor=vec4(c.rgb*uTint,c.a*uAlpha); }';
+
+// PRESENT: grade (sat/contrasto) + kaleido a specchio + aberrazione + STROBO full-frame.
+const FS_PP =
+  'precision mediump float;'+
+  'varying vec2 vUV;'+
+  'uniform sampler2D uTex;'+
+  'uniform float uSat,uContrast,uStrobe,uAberr,uKaleido,uKaleidoY;'+
+  'void main(){'+
+  '  vec2 uv=vUV;'+
+  '  if(uKaleido>0.5) uv.x=0.5-abs(uv.x-0.5);'+
+  '  if(uKaleidoY>0.5) uv.y=0.5-abs(uv.y-0.5);'+
+  '  vec2 o=vec2(uAberr,0.0);'+
+  '  vec3 c; c.r=texture2D(uTex,uv+o).r; c.g=texture2D(uTex,uv).g; c.b=texture2D(uTex,uv-o).b;'+
+  '  float l=dot(c,vec3(0.299,0.587,0.114));'+
+  '  c=mix(vec3(l),c,uSat);'+
+  '  c=(c-0.5)*uContrast+0.5;'+
+  '  c+=uStrobe;'+                                              // lampo full-frame
+  '  gl_FragColor=vec4(clamp(c,0.0,1.0),1.0);'+
+  '}';
+
+function glCompile(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error('shader: '+gl.getShaderInfoLog(s)); return s; }
+function glLink(vs,fs){ const p=gl.createProgram(); gl.attachShader(p,vs); gl.attachShader(p,fs); gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error('link: '+gl.getProgramInfoLog(p)); return p; }
+function loc(p,name){ p._u=p._u||{}; if(!(name in p._u)) p._u[name]=gl.getUniformLocation(p,name); return p._u[name]; }
+function makeTex(){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);   // NPOT: CLAMP + no mipmap
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR); return t; }
+function uploadTex(t,src){ gl.bindTexture(gl.TEXTURE_2D,t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src); }
+function makeFBO(w,h){ const tex=makeTex(); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  const fbo=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+  return {fbo,tex}; }
+function bindQuad(prog){ gl.bindBuffer(gl.ARRAY_BUFFER,quadVBO);
+  const aPos=gl.getAttribLocation(prog,'aPos'); gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,16,0);
+  const aUV=gl.getAttribLocation(prog,'aUV'); gl.enableVertexAttribArray(aUV); gl.vertexAttribPointer(aUV,2,gl.FLOAT,false,16,8); }
+
+function initGL(){
+  const opt={alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false,premultipliedAlpha:false};
+  gl = cv.getContext('webgl',opt) || cv.getContext('experimental-webgl',opt);
+  if(!gl) return false;
+  const vs=glCompile(gl.VERTEX_SHADER,VS_SRC);
+  progFB =glLink(vs,glCompile(gl.FRAGMENT_SHADER,FS_FB));
+  progIMG=glLink(vs,glCompile(gl.FRAGMENT_SHADER,FS_IMG));
+  progPP =glLink(vs,glCompile(gl.FRAGMENT_SHADER,FS_PP));
+  quadVBO=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,quadVBO);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,0,0, 1,-1,1,0, -1,1,0,1, 1,1,1,1]),gl.STATIC_DRAW);
+  gl.clearColor(0,0,0,1); gl.disable(gl.DEPTH_TEST);
+  return true;
+}
+function initRenderer(){
+  try{ useGL=!!initGL(); }catch(e){ useGL=false; gl=null; }
+  if(!useGL){ ctx=cv.getContext('2d',{alpha:false}); }   // fallback 2D sullo stesso canvas
+}
+function resizeGL(){
+  if(glFbo){ for(const f of glFbo){ gl.deleteFramebuffer(f.fbo); gl.deleteTexture(f.tex); } }
+  glFbo=[makeFBO(W,H),makeFBO(W,H)]; glCurIdx=0;
+  for(const f of glFbo){ gl.bindFramebuffer(gl.FRAMEBUFFER,f.fbo); gl.clear(gl.COLOR_BUFFER_BIT); }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H);
+  for(const [,e] of glTexCache) gl.deleteTexture(e.tex); glTexCache.clear();   // KEY_RES cambia con la risoluzione
+  for(const [,e] of glBedCache) gl.deleteTexture(e.tex); glBedCache.clear();
+}
+function getBlobTex(idx){ const c=buildChannels(idx); if(!c) return null;
+  let e=glTexCache.get(idx);
+  if(!e){ e={tex:makeTex()}; uploadTex(e.tex,c.keyed); glTexCache.set(idx,e); }
+  glTexCache.delete(idx); glTexCache.set(idx,e);   // LRU: rimetti in coda
+  while(glTexCache.size>16){ const k=glTexCache.keys().next().value; if(k===idx) break; gl.deleteTexture(glTexCache.get(k).tex); glTexCache.delete(k); }
+  return e.tex; }
+function getBedTex(idx){ const im=images[idx]; if(!im||!im.complete||!im.naturalWidth) return null;
+  let e=glBedCache.get(idx);
+  if(!e){ e={tex:makeTex()}; uploadTex(e.tex,im); glBedCache.set(idx,e); }
+  glBedCache.delete(idx); glBedCache.set(idx,e);
+  while(glBedCache.size>4){ const k=glBedCache.keys().next().value; if(k===idx) break; gl.deleteTexture(glBedCache.get(k).tex); glBedCache.delete(k); }
+  return e.tex; }
+
+function drawBedGL(idx,alpha){ const im=images[idx]; if(!im||!im.complete||!im.naturalWidth) return;
+  const tex=getBedTex(idx); if(!tex) return;
+  const ir=im.naturalWidth/im.naturalHeight, cr=W/H; let sx=1,sy=1;   // cover UV
+  if(ir>cr) sx=cr/ir; else sy=ir/cr;
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.uniform1i(loc(progIMG,'uTex'),0);
+  gl.uniformMatrix3fv(loc(progIMG,'uM'),false,IDENT3);
+  gl.uniform2f(loc(progIMG,'uUVScale'),sx,sy);
+  gl.uniform2f(loc(progIMG,'uUVOffset'),(1-sx)/2,(1-sy)/2);
+  gl.uniform1f(loc(progIMG,'uAlpha'),alpha);
+  gl.uniform3f(loc(progIMG,'uTint'),1,1,1);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4); }
+
+function drawBlobGL(L,a){ const tex=getBlobTex(L.idx); if(!tex) return;
+  // stesso movimento lo-fi a scatti del 2D (drawLayerCanvas), ma la matrice va in clip-space
+  const tq=Math.floor(t*L.stepRate)/L.stepRate, step=Math.floor(t*L.stepRate), ageq=tq-L.born;
+  const pulse=1+bandVal[L.band]*0.18*glIntensity + kick*0.12;
+  let cx=W/2+(L.x+L.vx*ageq)*W+(hash(step*2+(L.born*1000|0))-0.5)*L.jump*W;
+  let cy=H/2+(L.y+L.vy*ageq)*H+(hash(step*2+1+(L.born*1000|0))-0.5)*L.jump*H;
+  cx=Math.round(cx/L.grid)*L.grid; cy=Math.round(cy/L.grid)*L.grid;
+  cx+=ptrX*W*0.07*L.depth; cy+=ptrY*H*0.07*L.depth;
+  const rot=Math.round((L.rot+ageq*L.spin)/L.rotStep)*L.rotStep + ptrX*0.5*L.depth - ptrY*0.25*L.depth;
+  const s=L.scale*pulse, aW=s*W/2, aH=s*H/2, mx=L.mirror?-1:1, cs=Math.cos(rot), sn=Math.sin(rot);
+  // affine pixel-space (rotazione uniforme) -> NDC, column-major per uniformMatrix3fv
+  const M=[ (2/W)*mx*aW*cs, -(2/H)*mx*aW*sn, 0,
+            (2/W)*aH*sn,     (2/H)*aH*cs,    0,
+            2*cx/W-1,        1-2*cy/H,        1 ];
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.uniform1i(loc(progIMG,'uTex'),0);
+  gl.uniformMatrix3fv(loc(progIMG,'uM'),false,M);
+  gl.uniform2f(loc(progIMG,'uUVScale'),1,1); gl.uniform2f(loc(progIMG,'uUVOffset'),0,0);
+  gl.uniform1f(loc(progIMG,'uAlpha'),a);
+  gl.uniform3f(loc(progIMG,'uTint'),1,1,1);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4); }
+
+function drawGL(intensity){
+  glIntensity=intensity;
+  // scadenza layer (come nel 2D: renderLayers li scade da solo)
+  for(let i=layers.length-1;i>=0;i--) if((t-layers[i].born)/layers[i].dur>=1) layers.splice(i,1);
+  if(chaos && layers.length<1) spawnLayer();
+  // avanzamento bed (crossfade continuo, mai schermo nero)
+  bedF += 0.016*(0.10+bandVal[1]*0.45);
+  if(bedF>=1){ bedF=0; bedA=bedB; bedB=(bedB+1+(RNG()*3|0))%N_IMG; }
+  // velocità media dei blob -> displacement del datamosh a shader
+  let avx=0,avy=0,nn=0; for(const L of layers){ avx+=L.vx; avy+=L.vy; nn++; } if(nn){ avx/=nn; avy/=nn; }
+  const bass=bandVal[0], lowMid=bandVal[1], mid=bandVal[2], hiMid=bandVal[3], treble=bandVal[4];
+  kick*=0.78;
+  const cur=glFbo[glCurIdx], prev=glFbo[glCurIdx^1];
+  gl.viewport(0,0,W,H);
+
+  // 1) FEEDBACK/DATAMOSH: prev -> cur (nessun blend, sovrascrive)
+  gl.bindFramebuffer(gl.FRAMEBUFFER,cur.fbo); gl.disable(gl.BLEND);
+  gl.useProgram(progFB); bindQuad(progFB);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,prev.tex);
+  gl.uniform1i(loc(progFB,'uPrev'),0);
+  gl.uniformMatrix3fv(loc(progFB,'uM'),false,IDENT3);
+  gl.uniform2f(loc(progFB,'uUVScale'),1,1); gl.uniform2f(loc(progFB,'uUVOffset'),0,0);
+  gl.uniform1f(loc(progFB,'uTime'),t%600);   // wrap: evita perdita di precisione mediump su sessioni lunghe
+  gl.uniform1f(loc(progFB,'uDecay'),0.86+treble*0.10);
+  gl.uniform1f(loc(progFB,'uKick'),Math.min(1,kick));
+  gl.uniform1f(loc(progFB,'uRelease'),releasePulse);
+  gl.uniform2f(loc(progFB,'uVel'),avx*0.06,avy*0.06);
+  gl.uniform2f(loc(progFB,'uBlocks'),Math.max(6,Math.round(sc.fgCols*6)),Math.max(6,Math.round(sc.fgRows*6)));
+  gl.uniform1f(loc(progFB,'uZoom'),sc.zoomBase+bass*0.05*intensity+kick*0.05);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  // 2) BED: iniezione di colore a bassa opacità (evita il collasso in tinta unita)
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(progIMG); bindQuad(progIMG);
+  const bedAlpha = chaos?0.26:0.5;
+  drawBedGL(bedA, bedAlpha);
+  if(bedF>0) drawBedGL(bedB, bedAlpha*bedF);
+
+  // 3) BLOB in sovrimpressione: STACCO stroboscopico (hard-cut, niente fade morbido)
+  for(const L of layers){
+    const age=(t-L.born)/L.dur;
+    let env; if(age>0.72) env=(1-age)/0.28; else env=1; env=Math.max(0,env);
+    let a = env>0.12 ? L.alphaMax : 0;
+    if(strobeOn && bandVal[L.band]>0.32 && (Math.floor(t*L.stepRate*2+L.band)%2===0)) a=0;   // blink stroboscopico
+    if(a<=0) continue;
+    drawBlobGL(L,a);
+  }
+
+  // 4) PRESENT: grade + kaleido + STROBO full-frame al massimo (kill-switch = strobeOn)
+  if(beat>0.5) strobeFlash=Math.max(strobeFlash,beat);
+  strobeFlash*=0.6;
+  let flash=0;
+  if(strobeOn){
+    flash=strobeFlash*0.95;
+    if(treble>0.5 && (Math.floor(t*30)%2===0)) flash=Math.max(flash,(treble-0.5)*1.4);
+    if(kick>0.6 && RNG()<0.4) flash=Math.max(flash,0.8);
+    flash=Math.min(0.95,flash);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.disable(gl.BLEND);
+  gl.useProgram(progPP); bindQuad(progPP);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,cur.tex);
+  gl.uniform1i(loc(progPP,'uTex'),0);
+  gl.uniformMatrix3fv(loc(progPP,'uM'),false,IDENT3);
+  gl.uniform2f(loc(progPP,'uUVScale'),1,1); gl.uniform2f(loc(progPP,'uUVOffset'),0,0);
+  gl.uniform1f(loc(progPP,'uSat'),1.35);
+  gl.uniform1f(loc(progPP,'uContrast'),1.0+sc.contrast*0.5);
+  gl.uniform1f(loc(progPP,'uStrobe'),flash);
+  gl.uniform1f(loc(progPP,'uAberr'),Math.min(0.02,kick*0.02));
+  gl.uniform1f(loc(progPP,'uKaleido'),(sc.kaleido==='x'||sc.kaleido==='quad')?1:0);
+  gl.uniform1f(loc(progPP,'uKaleidoY'),(sc.kaleido==='y'||sc.kaleido==='quad')?1:0);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  glCurIdx^=1;
+}
+
 function render(){
   requestAnimationFrame(render);
   t += 0.016;
-  ptrVel *= 0.9;   // la velocità del cursore decade (pilota datamosh + reattività)
+  ptrVel *= 0.9;   // la velocità del cursore decade (pilota parallax/tilt delle immagini)
   // PREWARM: pre-costruisci i chroma-key (2/frame) -> niente getImageData a runtime durante il casino
   if(prewarmIdx < N_IMG){ for(let k=0;k<2 && prewarmIdx<N_IMG;k++){ if(buildChannels(prewarmIdx)) prewarmIdx++; else break; } }
   if(playing) readAudio();
@@ -891,7 +1139,7 @@ function render(){
   scheduleGrains();       // pianifica i grani audio (sintesi granulare)
   // stato audio a schermo (diagnostica): visibile in basso a sinistra
   const _pt=document.getElementById('phaseTag');
-  if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus; }
+  if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus+(useGL?' · gl':' · 2d'); }
   // evoluzione a fasi
   phaseT += 0.016;
   if(phaseT > phaseDur){ phaseT=0; phaseDur=rr(9,22); phaseN++; tgt=rollScene();
@@ -899,6 +1147,12 @@ function render(){
   lerpScene(0.02);
 
   const intensity = autoIntensity();
+  if(useGL) drawGL(intensity); else draw2D(intensity);
+  if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain (DOM, comune ai due path)
+}
+
+// ---------- PIPELINE 2D (fallback se WebGL non è disponibile) ----------
+function draw2D(intensity){
   const bass=bandVal[0], lowMid=bandVal[1], mid=bandVal[2], hiMid=bandVal[3], treble=bandVal[4];
 
   // 1) BED: immagine piena sempre presente -> lo schermo non e' MAI nero
@@ -972,8 +1226,6 @@ function render(){
   ctx.filter = 'saturate(1.7)';
   ctx.drawImage(ff, 0, 0);
   ctx.filter = 'none';
-
-  if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
 }
 
 // glitch del manifesto pilotato dal GAIN del mix: più intensità -> sposta/sfarfalla di più
@@ -993,6 +1245,7 @@ let booted=false, bootT=0;
 function boot(){
   if(booted) return; booted=true; bootT=Date.now();
   document.getElementById('phaseTag').textContent = 'intro · seed '+SEED.toString(36);
+  initRenderer();                 // sceglie WebGL (default) o fallback 2D su 'cv'
   resize();
   if(!actx) setupAudio();         // inizia a decodificare il brano (resta SILENZIOSO durante l'intro)
   render();                       // SOLO sfondi che sfumano con gli effetti: niente immagini, niente audio
@@ -1012,12 +1265,27 @@ function whenReady(){
     setTimeout(()=>{ const p=document.getElementById('clickPrompt'); if(p) p.classList.add('show'); armStart(); }, 5000);
   } else setTimeout(whenReady, 200);
 }
+// iOS/mobile: gli <audio> DEVONO ricevere un play() dentro il gesto utente, altrimenti il
+// play() ritardato in startDrop (setTimeout, fuori dal gesto) viene BLOCCATO e restano muti.
+// Qui li "sblocchiamo" partendo mutati e mettendoli subito in pausa: il successivo play() reale passa.
+function unlockMedia(){
+  ['majinAudio','ttsAudio'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    try{
+      el.muted=true;
+      const p=el.play();
+      if(p&&p.then) p.then(()=>{ try{ el.pause(); el.currentTime=0; }catch(e){} el.muted=false; }).catch(()=>{ el.muted=false; });
+      else { try{ el.pause(); }catch(e){} el.muted=false; }
+    }catch(e){}
+  });
+}
 // click sul prompt: sblocca l'audio e fa partire SUBITO riser -> kick -> casino
 function armStart(){
   const go=(e)=>{
     if(started) return; started=true;
     if(!actx) setupAudio();
     actx.resume().then(()=>{ playing=true; }).catch(()=>{});
+    unlockMedia();                        // sblocca majin + tts DENTRO il gesto (necessario su iOS)
     const p=document.getElementById('clickPrompt'); if(p) p.classList.remove('show');   // il prompt sparisce solo ORA
     startDrop();                          // riser (white noise) -> sub kick -> tutto il casino
     ['pointerdown','keydown','touchstart'].forEach(ev=>window.removeEventListener(ev,go));
@@ -1131,11 +1399,19 @@ window.addEventListener('pointermove', e=>{
 // toggle UI (overlay) — tasto H o bottoncino
 function toggleUI(){ document.body.classList.toggle('uiHidden'); }
 document.getElementById('uiToggle').addEventListener('pointerdown', e=>{ e.stopPropagation(); e.preventDefault(); toggleUI(); });
+
+// STROBO kill-switch (fotosensibilità) — tasto S o tap sul bottoncino. Vale sia in GL che in 2D.
+const strobeBtn=document.getElementById('strobeToggle');
+function setStrobe(on){ strobeOn=on; if(strobeBtn) strobeBtn.classList.toggle('off',!on); }
+function toggleStrobe(){ setStrobe(!strobeOn); }
+if(strobeBtn) strobeBtn.addEventListener('pointerdown', e=>{ e.stopPropagation(); e.preventDefault(); toggleStrobe(); });
+
 window.addEventListener('keydown', e=>{
   if(e.code==='Space'){ e.preventDefault(); if(!actx) return;
     if(playing){ actx.suspend(); playing=false; extraEls.forEach(el=>el.pause()); }
     else { actx.resume(); playing=true; nextGrainTime=actx.currentTime; extraEls.forEach(el=>el.play().catch(()=>{})); } }
   else if(e.key==='h'||e.key==='H'){ toggleUI(); }
+  else if(e.key==='s'||e.key==='S'){ toggleStrobe(); }
 });
 })();
 </script>
