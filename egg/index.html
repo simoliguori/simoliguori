@@ -62,16 +62,6 @@
   body.uiHidden #uiToggle{ opacity:0; }
   body.uiHidden #uiToggle:hover{ opacity:.3; }
 
-  /* STROBO kill-switch (fotosensibilità): sopra "hide ui". Resta VISIBILE anche a UI nascosta (sicurezza). */
-  #strobeToggle{ position:fixed; left:.6rem; bottom:2.8rem; z-index:40; cursor:pointer;
-    background:rgba(0,0,0,.55); color:#ff4a3a; border:1px solid rgba(255,0,0,.4);
-    font:bold .66rem/1 "Courier New",ui-monospace,monospace; letter-spacing:.1em; padding:.4rem .55rem; border-radius:3px;
-    opacity:.45; transition:opacity .2s; -webkit-tap-highlight-color:transparent; }
-  #strobeToggle:hover{ opacity:1; }
-  #strobeToggle.off{ color:#79ffb0; border-color:rgba(0,255,150,.45); opacity:.9; }   /* strobo spento */
-  #strobeToggle .kbd{ display:none; }
-  @media (hover:hover) and (pointer:fine){ #strobeToggle .kbd{ display:inline; } }
-
   /* "ok thabks" — torna al sito principale, in basso a destra */
   #backHome{ position:fixed; right:.6rem; bottom:.6rem; z-index:40; cursor:pointer;
     background:rgba(0,0,0,.55); color:#ff4a3a; border:1px solid rgba(255,0,0,.4); text-decoration:none;
@@ -192,9 +182,6 @@
 
 <!-- toggle UI (nascondi/mostra overlay) — tasto H o tap sul bottoncino (mobile) -->
 <button id="uiToggle" title="hide / show UI (H)"><span class="kbd">h = </span>hide ui</button>
-
-<!-- STROBO kill-switch (fotosensibilità): spegne strobo/flash — tasto S o tap. Resta sempre raggiungibile. -->
-<button id="strobeToggle" title="strobo on / off (S)"><span class="kbd">s = </span>strobo</button>
 
 <!-- "ok thabks": torna al sito principale -->
 <a id="backHome" href="/" title="torna al sito principale">ok thabks</a>
@@ -899,8 +886,8 @@ function renderForeground(intensity){
 // ================= WEBGL: datamosh a SHADER (default) + fallback 2D =================
 // La pipeline visiva gira su WebGL: FEEDBACK/DATAMOSH via ping-pong di framebuffer con
 // displacement a blocchi (tecnica open-source stile BUCK / ompuco / Shadertoy), immagini in
-// sovrimpressione con STACCO stroboscopico (niente blend morbido) e STROBO full-frame al massimo
-// (kill-switch = strobeOn). Se WebGL manca o gli shader non compilano -> fallback al percorso 2D.
+// sovrimpressione con STACCO stroboscopico (niente blend morbido) e STROBO full-frame SEMPRE attivo.
+// Sfondo NON simmetrico (niente kaleido): tunnel concentrico dal feedback. Fallback 2D se WebGL manca.
 let useGL=false, gl=null, progFB=null, progIMG=null, progPP=null, quadVBO=null;
 let glFbo=null, glCurIdx=0, glIntensity=0;
 const glTexCache=new Map();   // idx -> {tex}  immagini chroma-key (LRU 16)
@@ -918,16 +905,20 @@ const FS_FB =
   'precision mediump float;'+
   'varying vec2 vUV;'+
   'uniform sampler2D uPrev;'+
-  'uniform float uTime,uDecay,uKick,uRelease,uZoom;'+
+  'uniform float uTime,uDecay,uKick,uRelease,uZoom,uRot,uTear;'+
   'uniform vec2 uVel,uBlocks;'+
   'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }'+
   'void main(){'+
-  '  vec2 uv=(vUV-0.5)/uZoom+0.5;'+
+  '  vec2 c=vUV-0.5;'+                                          // TUNNEL CONCENTRICO: rotazione + zoom
+  '  float ca=cos(uRot), sa=sin(uRot);'+                        // attorno al centro (spirale, niente specchi)
+  '  c=mat2(ca,-sa,sa,ca)*c;'+
+  '  c/=uZoom;'+
+  '  vec2 uv=c+0.5;'+
   '  vec2 bl=floor(uv*uBlocks)/uBlocks;'+                       // blocchi (datamosh)
   '  float n=hash(bl+floor(uTime*8.0));'+
   '  vec2 disp=uVel*(0.6+uKick*2.0);'+                          // scorrimento lungo il moto medio dei blob
-  '  if(n < uKick*0.5+uRelease*0.3){ disp+=(vec2(hash(bl+1.7),hash(bl+3.1))-0.5)*(0.04+uKick*0.12); }'+  // strappi sui colpi
-  '  disp=sign(disp)*max(abs(disp)-n*0.004,0.0);'+              // threshold: la scia si smaglia
+  '  if(n < uTear+uKick*0.6+uRelease*0.4){ disp+=(vec2(hash(bl+1.7),hash(bl+3.1))-0.5)*(0.10+uKick*0.22); }'+  // strappi frequenti/grossi -> schizo + scia evidente
+  '  disp=sign(disp)*max(abs(disp)-n*0.003,0.0);'+              // threshold: la scia si smaglia
   '  vec2 suv=clamp(uv+disp,0.0,1.0);'+
   '  vec3 prev=texture2D(uPrev,suv).rgb;'+
   '  gl_FragColor=vec4(prev*uDecay,1.0);'+
@@ -1068,6 +1059,26 @@ function drawGL(intensity){
   const cur=glFbo[glCurIdx], prev=glFbo[glCurIdx^1];
   gl.viewport(0,0,W,H);
 
+  // ---- FASI: intro puro / riser (tunnel concentrico che sale) / chaos (datamosh dominante) ----
+  const riser = started && !chaos;
+  const gEnv  = Math.min(1, gainEnv*1.7);
+  let bedAlpha, uDecay, uZoom, uRot, uTear, velK;
+  if(chaos){
+    // scia datamosh BEN visibile: decadimento lungo + iniezione bed minima (non la lava via)
+    bedAlpha = 0.05; uDecay = 0.93; uTear = 0.10; velK = 0.12;
+    uZoom = 1.006 + bass*0.05*intensity + kick*0.05;
+    uRot  = 0.006*sc.rotDir + (RNG()-0.5)*kick*0.05;
+  } else if(riser){
+    // EFFETTO CONCENTRICO del riser: spirale che accelera/stringe col volume del riser
+    bedAlpha = 0.20; uDecay = 0.90 + gEnv*0.06; uTear = 0.05; velK = 0.04;
+    uZoom = 1.01 + gEnv*0.10;
+    uRot  = 0.02 + gEnv*0.07;
+  } else {
+    // intro puro: sfondi in crossfade + lieve tunnel
+    bedAlpha = 0.45; uDecay = 0.86; uTear = 0.03; velK = 0.03;
+    uZoom = 1.012; uRot = 0.012;
+  }
+
   // 1) FEEDBACK/DATAMOSH: prev -> cur (nessun blend, sovrascrive)
   gl.bindFramebuffer(gl.FRAMEBUFFER,cur.fbo); gl.disable(gl.BLEND);
   gl.useProgram(progFB); bindQuad(progFB);
@@ -1076,18 +1087,19 @@ function drawGL(intensity){
   gl.uniformMatrix3fv(loc(progFB,'uM'),false,IDENT3);
   gl.uniform2f(loc(progFB,'uUVScale'),1,1); gl.uniform2f(loc(progFB,'uUVOffset'),0,0);
   gl.uniform1f(loc(progFB,'uTime'),t%600);   // wrap: evita perdita di precisione mediump su sessioni lunghe
-  gl.uniform1f(loc(progFB,'uDecay'),0.86+treble*0.10);
+  gl.uniform1f(loc(progFB,'uDecay'),uDecay);
   gl.uniform1f(loc(progFB,'uKick'),Math.min(1,kick));
   gl.uniform1f(loc(progFB,'uRelease'),releasePulse);
-  gl.uniform2f(loc(progFB,'uVel'),avx*0.06,avy*0.06);
+  gl.uniform1f(loc(progFB,'uTear'),uTear);
+  gl.uniform2f(loc(progFB,'uVel'),avx*velK,avy*velK);
   gl.uniform2f(loc(progFB,'uBlocks'),Math.max(6,Math.round(sc.fgCols*6)),Math.max(6,Math.round(sc.fgRows*6)));
-  gl.uniform1f(loc(progFB,'uZoom'),sc.zoomBase+bass*0.05*intensity+kick*0.05);
+  gl.uniform1f(loc(progFB,'uZoom'),uZoom);
+  gl.uniform1f(loc(progFB,'uRot'),uRot);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
   // 2) BED: iniezione di colore a bassa opacità (evita il collasso in tinta unita)
   gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   gl.useProgram(progIMG); bindQuad(progIMG);
-  const bedAlpha = chaos?0.26:0.5;
   drawBedGL(bedA, bedAlpha);
   if(bedF>0) drawBedGL(bedB, bedAlpha*bedF);
 
@@ -1096,21 +1108,18 @@ function drawGL(intensity){
     const age=(t-L.born)/L.dur;
     let env; if(age>0.72) env=(1-age)/0.28; else env=1; env=Math.max(0,env);
     let a = env>0.12 ? L.alphaMax : 0;
-    if(strobeOn && bandVal[L.band]>0.32 && (Math.floor(t*L.stepRate*2+L.band)%2===0)) a=0;   // blink stroboscopico
+    if(bandVal[L.band]>0.32 && (Math.floor(t*L.stepRate*2+L.band)%2===0)) a=0;   // blink stroboscopico (sempre attivo)
     if(a<=0) continue;
     drawBlobGL(L,a);
   }
 
-  // 4) PRESENT: grade + kaleido + STROBO full-frame al massimo (kill-switch = strobeOn)
+  // 4) PRESENT: grade + aberrazione + STROBO full-frame (SEMPRE attivo, niente simmetrie a specchio)
   if(beat>0.5) strobeFlash=Math.max(strobeFlash,beat);
   strobeFlash*=0.6;
-  let flash=0;
-  if(strobeOn){
-    flash=strobeFlash*0.95;
-    if(treble>0.5 && (Math.floor(t*30)%2===0)) flash=Math.max(flash,(treble-0.5)*1.4);
-    if(kick>0.6 && RNG()<0.4) flash=Math.max(flash,0.8);
-    flash=Math.min(0.95,flash);
-  }
+  let flash=strobeFlash*0.95;
+  if(treble>0.5 && (Math.floor(t*30)%2===0)) flash=Math.max(flash,(treble-0.5)*1.4);
+  if(kick>0.6 && RNG()<0.4) flash=Math.max(flash,0.8);
+  flash=Math.min(0.95,flash);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.disable(gl.BLEND);
   gl.useProgram(progPP); bindQuad(progPP);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,cur.tex);
@@ -1121,8 +1130,8 @@ function drawGL(intensity){
   gl.uniform1f(loc(progPP,'uContrast'),1.0+sc.contrast*0.5);
   gl.uniform1f(loc(progPP,'uStrobe'),flash);
   gl.uniform1f(loc(progPP,'uAberr'),Math.min(0.02,kick*0.02));
-  gl.uniform1f(loc(progPP,'uKaleido'),(sc.kaleido==='x'||sc.kaleido==='quad')?1:0);
-  gl.uniform1f(loc(progPP,'uKaleidoY'),(sc.kaleido==='y'||sc.kaleido==='quad')?1:0);
+  gl.uniform1f(loc(progPP,'uKaleido'),0.0);    // niente specchiature: sfondo "schizo", non simmetrico
+  gl.uniform1f(loc(progPP,'uKaleidoY'),0.0);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
   glCurIdx^=1;
@@ -1400,18 +1409,12 @@ window.addEventListener('pointermove', e=>{
 function toggleUI(){ document.body.classList.toggle('uiHidden'); }
 document.getElementById('uiToggle').addEventListener('pointerdown', e=>{ e.stopPropagation(); e.preventDefault(); toggleUI(); });
 
-// STROBO kill-switch (fotosensibilità) — tasto S o tap sul bottoncino. Vale sia in GL che in 2D.
-const strobeBtn=document.getElementById('strobeToggle');
-function setStrobe(on){ strobeOn=on; if(strobeBtn) strobeBtn.classList.toggle('off',!on); }
-function toggleStrobe(){ setStrobe(!strobeOn); }
-if(strobeBtn) strobeBtn.addEventListener('pointerdown', e=>{ e.stopPropagation(); e.preventDefault(); toggleStrobe(); });
-
+// STROBO: sempre attivo (nessun toggle). strobeOn resta true per la pipeline 2D di fallback.
 window.addEventListener('keydown', e=>{
   if(e.code==='Space'){ e.preventDefault(); if(!actx) return;
     if(playing){ actx.suspend(); playing=false; extraEls.forEach(el=>el.pause()); }
     else { actx.resume(); playing=true; nextGrainTime=actx.currentTime; extraEls.forEach(el=>el.play().catch(()=>{})); } }
   else if(e.key==='h'||e.key==='H'){ toggleUI(); }
-  else if(e.key==='s'||e.key==='S'){ toggleStrobe(); }
 });
 })();
 </script>

@@ -226,11 +226,15 @@ tag di stato in basso a sinistra mostra `· gl` o `· 2d` → diagnosi rapida di
   (BUCK/ompuco/Shadertoy). I blob del frame prima rientrano nel feedback → lasciano la scia datamosh.
 - **MENO BLEND / PIÙ STROBO**: le immagini in sovrimpressione (`FS_IMG`) sono in **source-over hard-cut**
   (niente multiply/overlay/soft-light/saturation del 2D); `drawGL` fa **blink stroboscopico** per-blob e
-  il present (`FS_PP`) aggiunge un **flash full-frame** forte su beat/kick/treble.
-- **STROBO kill-switch** (fotosensibilità): `strobeOn`, tasto **S** o bottone `#strobeToggle` (tap, mobile);
-  resta sempre visibile anche a UI nascosta. Vale in GL e in 2D.
-- **Tunabili** (in `drawGL`): `uDecay` (lunghezza scia), `bedAlpha` (0.26 = iniezione colore/luminosità),
-  `uBlocks` (dimensione blocchi datamosh), `flash` (intensità strobo), soglia blink blob.
+  il present (`FS_PP`) aggiunge un **flash full-frame** forte su beat/kick/treble. Lo **STROBO è SEMPRE
+  attivo** (nessun toggle/kill-switch — rimosso su richiesta).
+- **SFONDO "schizo" (niente specchi)**: kaleido disattivato (`uKaleido=0`). L'effetto **concentrico** ora
+  viene dal **tunnel del feedback** (`FS_FB`: rotazione+zoom attorno al centro, `uRot`/`uZoom`), che sale
+  durante il **riser** (pilotato da `gainEnv`) → ricrea l'animazione concentrica prima del drop.
+- **FASI in `drawGL`** (parametri feedback): intro puro / **riser** (tunnel che accelera) / **chaos**
+  (scia datamosh dominante: `uDecay≈0.93`, `bedAlpha≈0.05` per non lavare via la scia, `uTear`/`uVel` alti).
+- **Tunabili** (in `drawGL`): `uDecay` (lunghezza scia), `bedAlpha` (iniezione colore/luminosità sfondo),
+  `uTear` (frequenza strappi datamosh), `velK` (entità smear), `uZoom`/`uRot` (tunnel concentrico), `flash`.
 - **FIX AUDIO MOBILE** (`unlockMedia`): majin+TTS venivano avviati in un `setTimeout` (+RISER_S) → **fuori
   dal gesto utente** → iOS li bloccava. Ora al tap del prompt si sbloccano (play mutato→pausa) dentro il
   gesto, così il play reale in `startDrop` passa.
