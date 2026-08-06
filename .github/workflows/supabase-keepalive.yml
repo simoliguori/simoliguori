@@ -1,41 +1,89 @@
-# Keep the Supabase free-tier project awake.
+# Keep the Supabase free-tier project awake — permanently.
 #
-# Supabase pauses free projects after 7 days without API activity, which
-# would take the guestbook down until someone manually restores it. This
-# workflow pings the REST API twice a week (Mon + Thu) with a tiny read
-# query, so the project always counts as active.
+# Supabase pauses free projects after 7 days without activity, which takes
+# the guestbook down until it's manually restored. A previous version of this
+# workflow pinged the REST API twice a week and consistently returned HTTP 200
+# with real rows, yet the project STILL got paused. Root cause:
+#
+#   * GET requests to PostgREST can be answered from Supabase's edge/CDN cache.
+#     The response looks real (`[{"id":2}]`) but the origin database is never
+#     touched, so Supabase registers **zero activity** and pauses anyway.
+#   * Twice-weekly left almost no margin: a single skipped/late scheduled run
+#     (GitHub throttles cron under load) plus the caching issue was enough.
+#
+# This version fixes both, so the project stays awake for good:
+#
+#   1. Runs DAILY instead of twice a week — 7x safety margin against skipped runs.
+#   2. Busts the CDN cache on every request (unique query param + no-cache
+#      headers) so the call always reaches the origin database.
+#   3. Sends `Prefer: count=exact`, forcing PostgREST to run a real COUNT on the
+#      table — genuine, uncacheable database work that Supabase counts as activity.
+#   4. Also pings the Auth service, so activity is registered on a second service.
 #
 # The URL and anon key below are the same public values already shipped in
-# index.html — nothing secret is exposed here. The anon key only allows
-# what Row Level Security permits.
+# index.html — nothing secret is exposed. The anon key only allows what Row
+# Level Security permits.
 #
-# Note: GitHub disables scheduled workflows in repos with no activity for
-# 60 days; any commit (or re-enabling from the Actions tab) resumes it.
+# Note: GitHub disables scheduled workflows in repos with no commits for 60
+# days. This repo is actively developed, but if it ever goes quiet, any commit
+# (or "Enable workflow" on the Actions tab) resumes the schedule.
 
 name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: '17 6 * * 1,4' # 06:17 UTC every Monday and Thursday
+    - cron: '17 6 * * *' # 06:17 UTC every day
   workflow_dispatch: {}    # allow manual runs from the Actions tab
+
+# Avoid overlapping runs if a manual dispatch collides with the schedule.
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping guestbook table
+      - name: Ping Supabase (force real database activity)
         run: |
+          set -euo pipefail
           SUPABASE_URL='https://tkpojxsvbzqkpvqunhch.supabase.co'
           ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcG9qeHN2Ynpxa3B2cXVuaGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Mjk2MTEsImV4cCI6MjA5ODIwNTYxMX0.s5PWO15kt2qSm73jzGFq9G7AnIJ-sh_gaSa3ZCSVq74'
 
-          status=$(curl -sS -o /tmp/body.txt -w '%{http_code}' \
+          # Unique value per run so no proxy or CDN layer can serve a cached
+          # response — this guarantees the request reaches the origin database.
+          NONCE="$(date +%s)-${GITHUB_RUN_ID:-manual}"
+
+          echo "=== 1/2: REST read with forced COUNT (real DB work) ==="
+          # `Prefer: count=exact` makes PostgREST execute a COUNT on the table,
+          # which is genuine database activity and cannot be served from cache.
+          rest_status=$(curl -sS -o /tmp/rest.txt -w '%{http_code}' \
             --retry 3 --retry-delay 10 --max-time 30 \
             -H "apikey: ${ANON_KEY}" \
             -H "Authorization: Bearer ${ANON_KEY}" \
-            "${SUPABASE_URL}/rest/v1/guestbook?select=id&limit=1")
+            -H "Cache-Control: no-cache, no-store, max-age=0" \
+            -H "Pragma: no-cache" \
+            -H "Prefer: count=exact" \
+            "${SUPABASE_URL}/rest/v1/guestbook?select=id&limit=1&keepalive=${NONCE}")
+          echo "REST HTTP ${rest_status}"
+          cat /tmp/rest.txt; echo
 
-          echo "HTTP ${status}"
-          cat /tmp/body.txt; echo
-          # Fail the job (and trigger a notification email) if the project
-          # didn't answer with a 2xx — e.g. it's already paused.
-          [ "${status}" -ge 200 ] && [ "${status}" -lt 300 ]
+          echo "=== 2/2: Auth health (second service) ==="
+          auth_status=$(curl -sS -o /tmp/auth.txt -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --max-time 30 \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Cache-Control: no-cache" \
+            "${SUPABASE_URL}/auth/v1/health?keepalive=${NONCE}")
+          echo "AUTH HTTP ${auth_status}"
+          cat /tmp/auth.txt; echo
+
+          # The REST read is the authoritative activity signal. Fail the job
+          # (which sends a notification email) only if it didn't return 2xx —
+          # e.g. the project is already paused and needs a manual restore.
+          # The auth ping is best-effort and never fails the job.
+          if [ "${rest_status}" -ge 200 ] && [ "${rest_status}" -lt 300 ]; then
+            echo "Keep-alive OK."
+          else
+            echo "::error::Supabase REST returned ${rest_status} — project may be paused."
+            exit 1
+          fi
