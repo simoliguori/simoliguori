@@ -50,21 +50,26 @@ jobs:
           SUPABASE_URL='https://tkpojxsvbzqkpvqunhch.supabase.co'
           ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcG9qeHN2Ynpxa3B2cXVuaGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Mjk2MTEsImV4cCI6MjA5ODIwNTYxMX0.s5PWO15kt2qSm73jzGFq9G7AnIJ-sh_gaSa3ZCSVq74'
 
-          # Unique value per run so no proxy or CDN layer can serve a cached
-          # response — this guarantees the request reaches the origin database.
+          # Unique value per run, sent as a request header (NOT a query param).
+          # PostgREST treats every unknown query-string key as a column filter,
+          # so a `?keepalive=...` param makes it try to parse the value as a
+          # filter operator and return HTTP 400 — do not put the nonce in the URL.
           NONCE="$(date +%s)-${GITHUB_RUN_ID:-manual}"
 
           echo "=== 1/2: REST read with forced COUNT (real DB work) ==="
-          # `Prefer: count=exact` makes PostgREST execute a COUNT on the table,
-          # which is genuine database activity and cannot be served from cache.
+          # `Prefer: count=exact` makes PostgREST execute a COUNT on the table:
+          # genuine database work, so Supabase registers real activity. Supabase's
+          # Data API is not CDN-cached by default, and the no-cache headers keep
+          # any intermediary from serving a stale response.
           rest_status=$(curl -sS -o /tmp/rest.txt -w '%{http_code}' \
             --retry 3 --retry-delay 10 --max-time 30 \
             -H "apikey: ${ANON_KEY}" \
             -H "Authorization: Bearer ${ANON_KEY}" \
             -H "Cache-Control: no-cache, no-store, max-age=0" \
             -H "Pragma: no-cache" \
+            -H "X-Keepalive-Nonce: ${NONCE}" \
             -H "Prefer: count=exact" \
-            "${SUPABASE_URL}/rest/v1/guestbook?select=id&limit=1&keepalive=${NONCE}")
+            "${SUPABASE_URL}/rest/v1/guestbook?select=id&limit=1")
           echo "REST HTTP ${rest_status}"
           cat /tmp/rest.txt; echo
 
@@ -73,7 +78,8 @@ jobs:
             --retry 3 --retry-delay 10 --max-time 30 \
             -H "apikey: ${ANON_KEY}" \
             -H "Cache-Control: no-cache" \
-            "${SUPABASE_URL}/auth/v1/health?keepalive=${NONCE}")
+            -H "X-Keepalive-Nonce: ${NONCE}" \
+            "${SUPABASE_URL}/auth/v1/health")
           echo "AUTH HTTP ${auth_status}"
           cat /tmp/auth.txt; echo
 
