@@ -7,6 +7,8 @@
 <style>
   :root{ --fg:#e8e3d8; --dim:#8a8378; }
   *{ box-sizing:border-box; margin:0; padding:0; }
+  /* niente selezione del testo: cliccare ripetutamente non evidenzia il manifesto (non distrae dal killing) */
+  html,body,*{ -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
   html,body{ width:100%; height:100%; background:#000; overflow:hidden; }
   body{ font-family:"Courier New",ui-monospace,monospace; color:var(--fg); }
   #stage{ position:fixed; inset:0; }
@@ -212,9 +214,151 @@ const rr = (a,b)=> a + (b-a)*RNG();
 // hash deterministico 0..1 (per movimenti a scatti "tenuti" su ogni step)
 function hash(n){ n=(n^61)^(n>>>16); n=n+(n<<3)|0; n=n^(n>>>4); n=Math.imul(n,0x27d4eb2d); n=n^(n>>>15); return (n>>>0)/4294967296; }
 
-// ---------- canvas ----------
-const cv = document.getElementById('c');
-const ctx = cv.getContext('2d', { alpha:false });
+// ---------- canvas + DATAMOSH GLSL (optical-flow feedback sul frame 2D) ----------
+// La scena 2D viene disegnata su un canvas OFFSCREEN; il canvas visibile #c è WebGL e
+// applica uno shader di datamosh a feedback (ping-pong) -> scia quasi perenne su tutto.
+function buildMosh(gl, glcanvas){
+  const VS = 'attribute vec2 aPos; varying vec2 vUv; void main(){ vUv=aPos*0.5+0.5; gl_Position=vec4(aPos,0.0,1.0); }';
+  // Shader di datamosh (optical-flow): dove il flusso supera la soglia, avanza il backbuffer
+  // (smear/scia), altrimenti mostra il frame corrente (refresh) -> niente mush infinito.
+  const FS = [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH','precision highp float;','#else','precision mediump float;','#endif',
+    'uniform sampler2D currentFrame;',
+    'uniform sampler2D backbuffer;',
+    'uniform vec2 resolution;',
+    'uniform float threshold;',
+    'uniform float offset;',
+    'uniform float time;',
+    'uniform float shift;',
+    'varying vec2 vUv;',
+    'uniform int USE_RGB_SHIFT;',
+    'uniform int USE_HUE_SHIFT;',
+    'const mat3 rgb2yiq = mat3( 0.299, 0.595716, 0.211456, 0.587, -0.274453, -0.522591, 0.114, -0.321263, 0.311135 );',
+    'const mat3 yiq2rgb = mat3( 1.0, 1.0, 1.0, 0.9563, -0.2721, -1.1070, 0.6210, -0.6474, 1.7046 );',
+    'float force = 5.0;',
+    'float lambda = 0.01;',
+    'float inverseX = -1.0;',
+    'float inverseY = -1.0;',
+    'vec3 hueShift(vec3 color, float degree){',
+    '  vec3 yiq = rgb2yiq * color;',
+    '  float h = (degree*0.0174532925) + atan( yiq.b, yiq.g );',
+    '  float chroma = sqrt( yiq.b * yiq.b + yiq.g * yiq.g );',
+    '  vec3 rgb = yiq2rgb * vec3( yiq.r, chroma * cos(h), chroma * sin(h) );',
+    '  return rgb;',
+    '}',
+    'void main(){',
+    '  vec2 st = vUv;',
+    '  vec2 off_x = vec2(offset/resolution.x, 0.0);',
+    '  vec2 off_y = vec2(0.0, offset/resolution.y);',
+    '  vec4 scr_dif; vec4 gradx; vec4 grady; vec4 gradmag; vec4 vx; vec4 vy;',
+    '  vec4 f4l = vec4(lambda); vec4 flow = vec4(0.0);',
+    '  scr_dif = texture2D(currentFrame, st) - texture2D(backbuffer, st);',
+    '  gradx = texture2D(backbuffer, st + off_x) - texture2D(backbuffer, st - off_x);',
+    '  gradx += texture2D(currentFrame, st + off_x) - texture2D(currentFrame, st - off_x);',
+    '  grady = texture2D(backbuffer, st + off_y) - texture2D(backbuffer, st - off_y);',
+    '  grady += texture2D(currentFrame, st + off_y) - texture2D(currentFrame, st - off_y);',
+    '  gradmag = sqrt((gradx*gradx)+(grady*grady)+f4l);',
+    '  vx = scr_dif*(gradx/gradmag);',
+    '  vy = scr_dif*(grady/gradmag);',
+    '  flow.x = -(vx.x + vx.y + vx.z) / 3.0 * inverseX;',
+    '  flow.y = -(vy.x + vy.y + vy.z) / 3.0 * inverseY;',
+    '  flow *= vec4(force);',
+    '  flow.z = length(flow.xy);',
+    '  vec4 newColor = vec4(1.0);',
+    '  if (length(flow.xy) > threshold){',
+    '    flow.x = clamp(flow.x, -1.0, 1.0);',
+    '    flow.y = clamp(flow.y, -1.0, 1.0);',
+    '    vec2 pos = vec2(0.);',
+    '    pos.x = gl_FragCoord.x+flow.x;',
+    '    pos.y = gl_FragCoord.y+flow.y;',
+    '    if(USE_RGB_SHIFT > 0){',
+    '      float r = texture2D(backbuffer, vec2((pos.x+cos(flow.x))/resolution.x, (pos.y+sin(flow.y))/resolution.y)).r;',
+    '      float g = texture2D(backbuffer, vec2(pos.x/resolution.x, pos.y/resolution.y)).g;',
+    '      float b = texture2D(backbuffer, vec2((pos.x-cos(flow.x))/resolution.x, (pos.y-sin(flow.y))/resolution.y)).b;',
+    '      newColor.rgb = vec3(r, g, b);',
+    '    }else{',
+    '      newColor = texture2D(backbuffer, vec2(pos.x/resolution.x, pos.y/resolution.y));',
+    '    }',
+    '    if(USE_HUE_SHIFT > 0){ newColor.rgb = hueShift(newColor.rgb, length(flow.xy)*shift); }',
+    '  }else{',
+    '    newColor = texture2D(currentFrame, vUv);',
+    '  }',
+    '  gl_FragColor = newColor;',
+    '}'
+  ].join('\n');
+  const FS_COPY = 'precision mediump float; varying vec2 vUv; uniform sampler2D tex; void main(){ gl_FragColor=texture2D(tex,vUv); }';
+  function sh(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){ console.warn('mosh shader:', gl.getShaderInfoLog(s)); gl.deleteShader(s); return null; } return s; }
+  function prog(vs,fs){ const v=sh(gl.VERTEX_SHADER,vs), f=sh(gl.FRAGMENT_SHADER,fs); if(!v||!f) return null;
+    const p=gl.createProgram(); gl.attachShader(p,v); gl.attachShader(p,f); gl.bindAttribLocation(p,0,'aPos'); gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS)){ console.warn('mosh link:', gl.getProgramInfoLog(p)); return null; } return p; }
+  const pMosh=prog(VS,FS), pCopy=prog(VS,FS_COPY);
+  if(!pMosh||!pCopy) return null;   // -> fallback 2D
+  const quad=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 3,-1, -1,3]),gl.STATIC_DRAW);   // triangolo fullscreen
+  const uM={ currentFrame:gl.getUniformLocation(pMosh,'currentFrame'), backbuffer:gl.getUniformLocation(pMosh,'backbuffer'),
+    resolution:gl.getUniformLocation(pMosh,'resolution'), threshold:gl.getUniformLocation(pMosh,'threshold'),
+    offset:gl.getUniformLocation(pMosh,'offset'), time:gl.getUniformLocation(pMosh,'time'), shift:gl.getUniformLocation(pMosh,'shift'),
+    urgb:gl.getUniformLocation(pMosh,'USE_RGB_SHIFT'), uhue:gl.getUniformLocation(pMosh,'USE_HUE_SHIFT') };
+  const uCopyTex=gl.getUniformLocation(pCopy,'tex');
+  let sceneTex=null, fbTex=[null,null], fbo=[null,null], src=0, gw=0, gh=0;
+  function texParams(){ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); }
+  function resize(w,h){
+    gw=w; gh=h; glcanvas.width=w; glcanvas.height=h;
+    if(sceneTex) gl.deleteTexture(sceneTex);
+    sceneTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,sceneTex); texParams();
+    for(let i=0;i<2;i++){
+      if(fbTex[i]) gl.deleteTexture(fbTex[i]); if(fbo[i]) gl.deleteFramebuffer(fbo[i]);
+      fbTex[i]=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,fbTex[i]); texParams();
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+      fbo[i]=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fbo[i]);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,fbTex[i],0);
+      gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null); src=0;
+  }
+  function drawQuad(){ gl.bindBuffer(gl.ARRAY_BUFFER,quad); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); gl.drawArrays(gl.TRIANGLES,0,3); }
+  function present(src2d, p){
+    if(!gw) return;
+    const dst=src^1;
+    gl.bindTexture(gl.TEXTURE_2D,sceneTex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src2d);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+    // pass datamosh -> fbo[dst]
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fbo[dst]); gl.viewport(0,0,gw,gh);
+    gl.useProgram(pMosh);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sceneTex); gl.uniform1i(uM.currentFrame,0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,fbTex[src]); gl.uniform1i(uM.backbuffer,1);
+    gl.uniform2f(uM.resolution,gw,gh);
+    gl.uniform1f(uM.threshold,p.threshold); gl.uniform1f(uM.offset,p.offset);
+    gl.uniform1f(uM.time,p.time); gl.uniform1f(uM.shift,p.shift);
+    gl.uniform1i(uM.urgb,1); gl.uniform1i(uM.uhue,1);
+    drawQuad();
+    // present fbo[dst] -> schermo
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,gw,gh);
+    gl.useProgram(pCopy);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbTex[dst]); gl.uniform1i(uCopyTex,0);
+    drawQuad();
+    src=dst;
+  }
+  return { resize, present };
+}
+const glcanvas = document.getElementById('c');
+let glctx=null;
+try{ glctx = glcanvas.getContext('webgl',{alpha:false,depth:false,stencil:false,antialias:false,preserveDrawingBuffer:false}) || glcanvas.getContext('experimental-webgl'); }catch(e){}
+let Mosh=null;
+if(glctx){ try{ Mosh=buildMosh(glctx, glcanvas); }catch(e){ Mosh=null; } }
+let cv, ctx, USE_GL=false;
+if(Mosh){ USE_GL=true; cv=document.createElement('canvas'); ctx=cv.getContext('2d',{alpha:false}); }
+else {
+  // fallback 2D: se un contesto webgl era stato preso ma lo shader è fallito, sostituisci il
+  // canvas (dopo webgl non si può ottenere il 2d sullo stesso elemento)
+  let target=glcanvas;
+  if(glctx && glcanvas.parentNode){ const c2=document.createElement('canvas'); glcanvas.parentNode.replaceChild(c2,glcanvas); target=c2; }
+  cv=target; ctx=target.getContext('2d',{alpha:false});
+}
 let W=0,H=0,DPR=1;
 const fb = document.createElement('canvas'), fbx = fb.getContext('2d');     // frame precedente
 const layer = document.createElement('canvas'), lx = layer.getContext('2d'); // temp per singolo layer
@@ -235,6 +379,7 @@ function resize(){
   channelCache.clear(); prewarmIdx=0;   // ricostruisci i chroma-key alla nuova risoluzione
   fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
   ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+  if(USE_GL && Mosh) Mosh.resize(W,H);   // ridimensiona texture/FBO del datamosh GLSL
 }
 window.addEventListener('resize', resize);
 
@@ -427,9 +572,27 @@ function playRealTrack(){
   audioKeep.push(fwd,fg,rev,rg);
 }
 
+// ONE-SHOT dei click: decodificati UNA volta in AudioBuffer (in RAM durante il loading)
+// -> playback a latenza ~0. Prima si creava un <audio> nuovo a ogni click = fetch/decode/alloc
+// -> lag/ritardo. Ora vanno su un BUS DEDICATO (sfxBus) che BYPASSA il limiter del mix:
+// non vengono schiacciati/ducked dalla musica -> restano forti e "snappy".
+const oneShotBuf = Object.create(null);
+const SFX_URLS = ['/assets/audio/metal-slug-scream.mp3','/assets/audio/roblox-explosion.mp3'];
+let sfxBus=null, sfxLoaded=0;
+function loadOneShot(url){
+  if(!actx) return;
+  fetch(url).then(r=>r.arrayBuffer()).then(a=>actx.decodeAudioData(a))
+    .then(b=>{ oneShotBuf[url]=b; sfxLoaded++; })
+    .catch(()=>{ sfxLoaded++; });   // conta comunque -> non blocca il loader se un file manca
+}
 function setupAudio(){
   actx = new (window.AudioContext||window.webkitAudioContext)();
   analyser = actx.createAnalyser(); analyser.fftSize = 4096; analyser.smoothingTimeConstant = 0.78;
+  // BUS SFX dedicato: limiter LEGGERO -> arriva forte a destination senza passare dal master del mix
+  sfxBus = actx.createDynamicsCompressor();
+  sfxBus.threshold.value=-2; sfxBus.knee.value=8; sfxBus.ratio.value=4; sfxBus.attack.value=0.001; sfxBus.release.value=0.09;
+  sfxBus.connect(actx.destination); audioKeep.push(sfxBus);
+  SFX_URLS.forEach(loadOneShot);   // pre-decodifica gli one-shot in RAM (durante il caricamento)
   freq = new Uint8Array(analyser.frequencyBinCount);
   wave = new Uint8Array(analyser.fftSize);   // time-domain -> RMS (gain reale del mix)
   // bus dei grani -> waveshaper drive -> bitcrusher lo-fi (layerato) -> analyser -> uscita
@@ -637,7 +800,9 @@ function readAudio(){
 
 // ---------- scena evolutiva (si auto-modula a fasi, seminata) ----------
 const BLEND_POOL = ['source-over','source-over','source-over','multiply','overlay','screen','difference','lighten'];
-const KALEIDO = ['x','x','quad','quad','y','tile2'];   // simmetrie a specchio (coprono tutto)
+// meno simmetria: 'none' lascia il frame ASIMMETRICO (più schizofrenico), le simmetrie a
+// specchio restano ma minoritarie -> non sembra più tutto specchiato/centrato
+const KALEIDO = ['none','none','none','x','quad','y','tile2'];
 const DUOS = [ [12,10,18, 235,232,222], [10,12,12, 240,80,60], [8,10,16, 90,200,255],
                [16,8,8, 250,210,90], [10,14,10, 150,255,120] ]; // [ombra r,g,b , luce r,g,b ]
 function rollScene(){
@@ -659,7 +824,7 @@ function rollScene(){
   };
 }
 let sc = rollScene(), tgt = rollScene();
-let phaseDur = rr(10,22), phaseT = 0, phaseN = 0;
+let phaseDur = rr(6,14), phaseT = 0, phaseN = 0;   // fasi più corte -> muta più spesso (schizofrenico)
 function lerpScene(k){
   for(const key in sc){
     if(typeof sc[key]==='number') sc[key] += (tgt[key]-sc[key])*k;
@@ -677,20 +842,24 @@ function spawnLayer(idx, px, py){
   if(idx==null) idx = nextImgIdx();
   buildChannels(idx);
   const atCursor = px!=null;   // se passate px/py (es. click): blob raggruppati INTORNO al cursore
+  // posizione ERRATICA e ASIMMETRICA: bias verso i bordi (pow<1 spinge agli estremi),
+  // segno indipendente per asse -> niente disposizione simmetrica/centrata
+  const erratic = ()=>{ const s = RNG()<0.5?-1:1; return s * Math.pow(RNG(),0.5) * 0.78; };
+  const fast = RNG()<0.28;                       // ogni tanto uno schizza velocissimo
   layers.push({
-    idx, born:t, dur: rr(0.45,2.8), band: (RNG()*BANDS)|0,   // durate corte/erratiche -> ricambio rapido
+    idx, born:t, dur: rr(0.35,2.4), band: (RNG()*BANDS)|0,   // durate corte/erratiche -> ricambio rapido
     depth: rr(0.4,1.3),                                     // profondità per parallax/tilt al cursore
     blend: IMGBLEND[(RNG()*IMGBLEND.length)|0],
-    x: atCursor ? px + rr(-0.14,0.14) : rr(-0.45,0.45),    // posizione: cursore (stretta) o casuale
-    y: atCursor ? py + rr(-0.14,0.14) : rr(-0.45,0.45),
-    // movimento veloce di nuovo (la densità del tail la tengono scroll=0 + decayFG, non la velocità)
-    vx: rr(-0.45,0.45), vy: rr(-0.45,0.45),
-    scale: rr(0.12,0.55),                                  // immagini PIÙ PICCOLE
-    rot: (RNG()<0.4 ? rr(-3.14,3.14) : rr(-0.4,0.4)), spin: rr(-0.9,0.9),
+    x: atCursor ? px + rr(-0.18,0.18) : erratic(),         // cursore (stretta) o erratica asimmetrica
+    y: atCursor ? py + rr(-0.18,0.18) : erratic(),
+    // movimento erratico: a volte lentissimo, a volte schizza fuori dallo schermo
+    vx: rr(-0.5,0.5)*(fast?2.4:1), vy: rr(-0.5,0.5)*(fast?2.4:1),
+    scale: (RNG()<0.2 ? rr(0.5,1.0) : rr(0.12,0.5)),        // per lo più piccole, ma qualcuna INVADENTE
+    rot: (RNG()<0.55 ? rr(-3.14,3.14) : rr(-0.4,0.4)), spin: rr(-1.4,1.4),   // rotazioni più selvagge
     // parametri LO-FI: passo temporale, griglia di quantizzazione, ampiezza salti, scatto rotazione
-    stepRate: [4,5,6,8,10,12][(RNG()*6)|0], grid: (14 + (RNG()*26|0)),
-    jump: rr(0.04,0.16), rotStep: (Math.PI/180)*[15,22.5,30,45,90][(RNG()*5)|0],
-    alphaMax: rr(0.8,1.0), mirror: RNG()<0.5
+    stepRate: [3,4,5,6,8,10,12,16][(RNG()*8)|0], grid: (10 + (RNG()*34|0)),
+    jump: rr(0.05,0.28), rotStep: (Math.PI/180)*[12,15,22.5,30,45,90][(RNG()*6)|0],
+    alphaMax: rr(0.9,1.0), mirror: RNG()<0.5                // più opache -> più evidenti
   });
   while(layers.length > Math.max(1, maxOverlap)) layers.shift();   // cap = intensità del brano (maxOverlap)
 }
@@ -894,7 +1063,7 @@ function render(){
   if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus; }
   // evoluzione a fasi
   phaseT += 0.016;
-  if(phaseT > phaseDur){ phaseT=0; phaseDur=rr(9,22); phaseN++; tgt=rollScene();
+  if(phaseT > phaseDur){ phaseT=0; phaseDur=rr(6,14); phaseN++; tgt=rollScene();
     document.getElementById('phaseTag').textContent = 'autonoma · seed '+SEED.toString(36)+' · fase '+phaseN; }
   lerpScene(0.02);
 
@@ -974,6 +1143,18 @@ function render(){
   ctx.filter = 'none';
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
+
+  // 9) DATAMOSH GLSL: la scena 2D (offscreen) passa nello shader optical-flow -> scia quasi
+  //    perenne sullo sfondo. Soglia bassa = più smear; crolla su kick/tensione = scatti bruschi.
+  if(USE_GL && Mosh){
+    const thr = Math.max(0.015, 0.12 - tension*0.05 - kick*0.10 - releasePulse*0.06);
+    Mosh.present(cv, {
+      threshold: thr,
+      offset: 1.0 + kick*2.4 + releasePulse*1.2,   // passo del gradiente: più grosso sui colpi
+      time: t,
+      shift: 34 + kick*100 + tension*46            // deriva di tinta (hue) più forte sui colpi
+    });
+  }
 }
 
 // glitch del manifesto pilotato dal GAIN del mix: più intensità -> sposta/sfarfalla di più
@@ -1005,7 +1186,8 @@ function boot(){
 const MIN_LOAD_MS = 4500;   // durata minima della schermata di caricamento (VHS)
 function whenReady(){
   const elapsed = Date.now()-bootT;
-  const ready = (imgLoaded >= N_IMG*0.85);
+  // aspetta immagini (≥85%) E gli one-shot del click decodificati in RAM -> primo click già snappy
+  const ready = (imgLoaded >= N_IMG*0.85) && (sfxLoaded >= SFX_URLS.length);
   if((ready && elapsed >= MIN_LOAD_MS) || elapsed > 12000){
     const o=document.getElementById('loadOverlay'); if(o){ o.classList.add('done'); setTimeout(()=>o.remove(), 800); }
     // 5s di SOLO sfondo che blenda e fa le sue cose, POI compare il prompt e SOLO allora è cliccabile/triggerabile
@@ -1097,7 +1279,21 @@ boot();   // il loading overlay è gestito da whenReady (resta finché il sito �
 
 // ── HUD "1 CLICK = 1 DEAD FASCIST": contatore + esplosione + il gesto ENTRA nell'opera ──
 let killCount=0; const killEl=document.getElementById('killCount');
-function playOneShot(url){ try{ const a=new Audio(url); a.volume=1; a.play().catch(()=>{}); a.addEventListener('ended',()=>a.remove()); }catch(e){} }
+// ONE-SHOT a latenza ~0: BufferSource pre-decodificato -> sfxBus dedicato (bypassa il limiter
+// del mix) -> FORTE e immediato. Fallback a <audio> solo se il buffer non è ancora pronto.
+function playOneShot(url, vol){
+  const b = oneShotBuf[url];
+  if(b && actx && sfxBus){
+    try{
+      const s=actx.createBufferSource(); s.buffer=b;
+      const g=actx.createGain(); g.gain.value = vol==null ? 3.2 : vol;   // GRIDO/ESPLOSIONE ben sopra il mix
+      s.connect(g); g.connect(sfxBus);
+      s.start();
+      return;
+    }catch(e){}
+  }
+  try{ const a=new Audio(url); a.volume=1; a.play().catch(()=>{}); a.addEventListener('ended',()=>a.remove()); }catch(e){}
+}
 document.getElementById('fascistHud').addEventListener('pointerdown', e=>{
   if(!chaos) return;                       // i kill solo dopo il drop (durante la tregua: niente)
   const hud=document.getElementById('fascistHud');
