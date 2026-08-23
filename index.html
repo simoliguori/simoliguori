@@ -1552,8 +1552,13 @@ button:focus,
   line-height: 2;
   z-index: 1000;
   margin-top: 5000px;
-  /* No extra void below: the message types out in place once scrolled into view,
-     and the controller (#soundboard) already provides its own padding-top gap. */
+  /* Fill the viewport and center the monologue so it sits mid-screen as you
+     scroll down into it (the text grows from the centre while it types). */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
   margin-bottom: 0;
   opacity: 0;
   transform: translateY(50px);
@@ -1618,6 +1623,9 @@ button:focus,
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+  /* Once the monologue is done the site stretches: a full viewport of void opens
+     up so the controller sits well below, reached only by scrolling further. */
+  margin-top: 100vh;
   transition: opacity 1.4s ease, transform 1.4s ease, visibility 0s linear 0s;
 }
 /* hint nascosto sopra il controller: nero su nero, si rivela solo evidenziando il testo */
@@ -1788,7 +1796,8 @@ button:focus,
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
-#nr-player.nr-hidden {
+#nr-player.nr-hidden,
+body.lightbox-open #nr-player {
   transform: translateX(-50%) translateY(calc(100% + 40px));
   opacity: 0;
   pointer-events: none;
@@ -4117,6 +4126,8 @@ function initSoundboard() {
     lb.setAttribute('aria-hidden', 'false');
     isOpen = true;
     document.body.style.overflow = 'hidden';
+    // Get the floating player out of the way while the lightbox overlay is up.
+    document.body.classList.add('lightbox-open');
 
     if (!firstOpenDone) {
       firstOpenDone = true;
@@ -4129,6 +4140,7 @@ function initSoundboard() {
     lb.setAttribute('aria-hidden', 'true');
     isOpen = false;
     document.body.style.overflow = '';
+    document.body.classList.remove('lightbox-open');
     tRotX = 0; tRotY = 0;
   }
 
@@ -5022,6 +5034,7 @@ function initGuestbook() {
     <div class="nr-main">
       <a class="nr-cover-link" href="${TRACK_URL}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
         <div class="nr-cover-box" id="nr-cover-box">
+          <img class="nr-cover" id="nr-cover-img" src="assets/img/ghera-cover.jpg" alt="ghera cover">
           <span class="nr-cover-ph" id="nr-cover-ph">♪</span>
         </div>
       </a>
@@ -5054,19 +5067,21 @@ function initGuestbook() {
   const vizCanvas  = document.getElementById('nr-viz');
   const vizCtx     = vizCanvas.getContext('2d');
 
-  // ── Fetch cover + metadata via oEmbed ──────────────────────────────────────
+  // ── Local cover art (bundled) ──────────────────────────────────────────────
+  // The artwork ships with the site so the bar always shows the real cover even
+  // if SoundCloud's oEmbed/CDN is blocked or slow. The ♪ glyph only shows if the
+  // local file itself fails to load.
+  const coverImg = document.getElementById('nr-cover-img');
+  if (coverImg) {
+    coverImg.addEventListener('load', function () { if (coverPh) coverPh.remove(); });
+    coverImg.addEventListener('error', function () { coverImg.remove(); });
+    if (coverImg.complete && coverImg.naturalWidth > 0 && coverPh) coverPh.remove();
+  }
+
+  // ── Fetch metadata via oEmbed (title/artist only) ──────────────────────────
   fetch('https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(TRACK_URL))
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      if (d.thumbnail_url) {
-        const img = document.createElement('img');
-        img.className = 'nr-cover';
-        img.alt = 'Track cover';
-        img.src = d.thumbnail_url;
-        // Drop the placeholder glyph and let the artwork fill the cover box.
-        if (coverPh) coverPh.remove();
-        coverBox.appendChild(img);
-      }
       if (d.title) {
         // oEmbed often appends " by Artist" — strip it. Keep natural case;
         // the bar lowercases title + artist via CSS (text-transform).
