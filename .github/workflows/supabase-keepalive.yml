@@ -1,0 +1,106 @@
+# Keep the Supabase free-tier project awake — permanently.
+#
+# Supabase pauses free projects after 7 days without activity, which takes the
+# guestbook down until it's manually restored.
+#
+# History of what did NOT work: a scheduled REST *read* (even one returning
+# real rows with `Prefer: count=exact`) was not enough — the project still got
+# paused ~2 days after a confirmed successful read. Read-only requests are not a
+# reliable "activity" signal for the free-tier auto-pause.
+#
+# What this does instead — the strongest possible signal: a real database
+# **write**, then an immediate **delete**. Every run:
+#
+#   1. INSERTs a throwaway row into the guestbook (a genuine write — impossible
+#      to serve from any cache, so Supabase always registers activity).
+#   2. DELETEs that exact row via the `gb_delete` RPC using its ownership token,
+#      so nothing is ever left visible in the guestbook.
+#
+# It runs DAILY, giving a 7x margin: GitHub can skip or delay several scheduled
+# runs and the project still never reaches 7 idle days.
+#
+# The URL and anon key below are the same public values already shipped in
+# index.html — nothing secret is exposed. The anon key only allows what Row
+# Level Security permits (anon insert, and delete only via the token-checked
+# gb_delete RPC — exactly what the website itself uses).
+#
+# Note: GitHub disables scheduled workflows in repos with no commits for 60
+# days. This repo is actively developed, but if it ever goes quiet, any commit
+# (or "Enable workflow" on the Actions tab) resumes the schedule.
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # 06:17 UTC every day
+  workflow_dispatch: {}    # allow manual runs from the Actions tab
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write + delete a throwaway row (real DB activity)
+        run: |
+          set -uo pipefail
+          SUPABASE_URL='https://tkpojxsvbzqkpvqunhch.supabase.co'
+          ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcG9qeHN2Ynpxa3B2cXVuaGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Mjk2MTEsImV4cCI6MjA5ODIwNTYxMX0.s5PWO15kt2qSm73jzGFq9G7AnIJ-sh_gaSa3ZCSVq74'
+
+          # Ownership token so we can delete exactly the row we created.
+          TOKEN="$(cat /proc/sys/kernel/random/uuid)"
+
+          echo "=== 1/2: INSERT throwaway keep-alive row ==="
+          body=$(curl -sS -o /tmp/ins.txt -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --max-time 30 \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -X POST "${SUPABASE_URL}/rest/v1/guestbook?select=id" \
+            -d "{\"alias\":\"keepalive-bot\",\"message\":\"automated keep-alive ping (auto-deleted)\",\"edit_token\":\"${TOKEN}\"}")
+          echo "INSERT HTTP ${body}"
+          cat /tmp/ins.txt; echo
+
+          # The write is the activity signal that keeps the project awake.
+          # If it didn't succeed (2xx), fail the job so the failure email fires.
+          if ! { [ "${body}" -ge 200 ] && [ "${body}" -lt 300 ]; }; then
+            echo "::error::INSERT returned ${body} — project may be paused or RLS changed."
+            exit 1
+          fi
+
+          NEW_ID="$(jq -r '.[0].id // empty' /tmp/ins.txt 2>/dev/null)"
+          if [ -z "${NEW_ID}" ]; then
+            echo "::warning::Could not read the new row id; skipping delete. A stray keep-alive row may remain."
+            echo "Keep-alive activity registered (insert succeeded)."
+            exit 0
+          fi
+          echo "Inserted row id=${NEW_ID}"
+
+          echo "=== 2/2: DELETE that row via gb_delete RPC ==="
+          # Best-effort with retries. The activity is already registered by the
+          # insert above, so a delete hiccup must NOT fail the job — but we retry
+          # hard because we don't want a visible row lingering in the guestbook.
+          del_ok=0
+          for attempt in 1 2 3 4 5; do
+            del=$(curl -sS -o /tmp/del.txt -w '%{http_code}' --max-time 30 \
+              -H "apikey: ${ANON_KEY}" \
+              -H "Authorization: Bearer ${ANON_KEY}" \
+              -H "Content-Type: application/json" \
+              -X POST "${SUPABASE_URL}/rest/v1/rpc/gb_delete" \
+              -d "{\"p_id\":${NEW_ID},\"p_token\":\"${TOKEN}\"}")
+            echo "DELETE attempt ${attempt}: HTTP ${del} — $(cat /tmp/del.txt)"
+            # gb_delete returns the boolean `true` on a successful delete.
+            if [ "${del}" -ge 200 ] && [ "${del}" -lt 300 ] && grep -q true /tmp/del.txt; then
+              del_ok=1; break
+            fi
+            sleep 5
+          done
+
+          if [ "${del_ok}" -eq 1 ]; then
+            echo "Keep-alive OK — row ${NEW_ID} inserted and deleted."
+          else
+            echo "::warning::Row ${NEW_ID} was inserted (activity registered) but could not be deleted. Remove it manually if it shows up in the guestbook."
+          fi
