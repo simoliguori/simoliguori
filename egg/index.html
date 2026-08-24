@@ -439,9 +439,9 @@ function resize(){
   if(USE_GL && Mosh) Mosh.resize(W,H);   // ridimensiona texture/FBO del datamosh GLSL
   fitManifesto();                        // altezza del box = multiplo esatto della riga (niente righe mozzate)
 }
-// Il monologo deve vedersi TUTTO: invece di tagliarlo, la dimensione del carattere viene
-// rimpicciolita finché l'intero testo entra nello spazio disponibile. Poi l'altezza del box
-// si adatta al contenuto reale -> nessuna riga mozzata, nessun bordo "sfocato".
+// MOBILE: box DIMEZZATO + lettere LEGGIBILI -> il testo non ci sta, quindi scorre da solo.
+// DESKTOP: come prima, il corpo si adatta finché l'intero monologo è visibile senza tagli.
+let manScrolls = false, manScrollAcc = 0;   // stato dello scorrimento automatico
 function fitManifesto(){
   const inner = document.getElementById('manifestoInner');
   const wrap  = document.getElementById('manifesto');
@@ -451,8 +451,18 @@ function fitManifesto(){
   const avail = wrap.clientHeight - (parseFloat(wcs.paddingTop)||0) - (parseFloat(wcs.paddingBottom)||0);
   if(avail <= 0) return;
   const cs0 = getComputedStyle(inner);
-  const chrome = (parseFloat(cs0.paddingTop)||0)+(parseFloat(cs0.paddingBottom)||0)
-               + (parseFloat(cs0.borderTopWidth)||0)+(parseFloat(cs0.borderBottomWidth)||0);
+  const borders = (parseFloat(cs0.borderTopWidth)||0)+(parseFloat(cs0.borderBottomWidth)||0);
+
+  if(IS_MOBILE){
+    // box a METÀ dello spazio disponibile, carattere LEGGIBILE (non si rimpicciolisce)
+    inner.style.fontSize = Math.max(11, Math.min(13, window.innerWidth*0.032)).toFixed(2)+'px';
+    inner.style.height = Math.round(avail*0.5) + 'px';
+    inner.scrollTop = 0; manScrollAcc = 0;
+    manScrolls = inner.scrollHeight > inner.clientHeight + 1;   // scorre solo se serve davvero
+    return;
+  }
+
+  manScrolls = false; inner.scrollTop = 0;
   // altezza fissata allo spazio disponibile: così scrollHeight e clientHeight sono confrontabili
   // sulla STESSA base (entrambi escludono i bordi, entrambi includono il padding) -> misura esatta.
   inner.style.height = avail + 'px';
@@ -473,8 +483,18 @@ function fitManifesto(){
     fs = Math.max(3.2, fs-0.12); inner.style.fontSize = fs.toFixed(2)+'px';
   }
   // il box si stringe sul contenuto reale: altezza border-box = contenuto+padding (scrollHeight) + bordi
-  const borders = (parseFloat(cs0.borderTopWidth)||0)+(parseFloat(cs0.borderBottomWidth)||0);
   inner.style.height = Math.min(avail, inner.scrollHeight + borders) + 'px';
+}
+// scorrimento automatico del monologo (mobile): lento e continuo, riparte da capo alla fine
+function autoScrollManifesto(dt){
+  if(!manScrolls) return;
+  const inner = document.getElementById('manifestoInner');
+  if(!inner) return;
+  const max = inner.scrollHeight - inner.clientHeight;
+  if(max <= 0) return;
+  manScrollAcc += dt * 16;                   // ~16 px/s: leggibile, non frenetico
+  if(manScrollAcc >= max + 40) manScrollAcc = 0;   // piccola pausa a fondo pagina, poi ricomincia
+  inner.scrollTop = Math.min(max, manScrollAcc);
 }
 window.addEventListener('resize', resize);
 
@@ -1268,6 +1288,7 @@ function render(){
   }
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
+  if(chaos) autoScrollManifesto(dt);   // mobile: il monologo scorre da solo (dt reale = velocità costante)
 
   // 9) DATAMOSH GLSL a DUE STRATI:
   //    - SFONDO: forza piena, hue-shift marcato -> i colori si fondono/impastano (l'effetto figo)
