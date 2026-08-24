@@ -89,20 +89,17 @@
   #manifesto{ position:fixed; inset:0; z-index:14; pointer-events:none; overflow:hidden;
     display:flex; align-items:center; justify-content:center; padding:62px 12px 28px; }   /* il padding-top libera la top bar */
   #manifestoInner{
-    width:min(880px,92vw); max-height:100%; overflow:hidden;   /* pannello LIMITATO al viewport: niente crop mezzo-riga */
-    padding:20px 22px 24px; text-align:center; color:#ff2a2a;
-    font:bold clamp(8.5px,2.4vw,12px)/1.8 "Courier New",ui-monospace,monospace; letter-spacing:1px;   /* scala col viewport */
+    width:min(760px,90vw); max-height:min(74vh,100%); overflow:hidden;   /* rettangolo NETTO e compatto -> più sfondo visibile attorno */
+    padding:16px 20px; text-align:center; color:#ff2a2a;
+    font:bold clamp(8.5px,2.4vw,12px)/1.75 "Courier New",ui-monospace,monospace; letter-spacing:1px;   /* scala col viewport */
     background:rgba(0,0,0,.62); border:1px solid rgba(255,0,0,.5); border-radius:2px;  /* box rosso/nero come il top, meno trasparente */
-    text-shadow:0 0 2px #000, 0 0 4px #000, 0 0 9px rgba(255,0,0,.5);   /* contorno nero + glow rosso */
+    text-shadow:0 0 2px #000, 0 0 4px #000, 0 0 8px rgba(255,0,0,.45);   /* contorno nero + glow rosso */
     will-change:transform,opacity;   /* il glitch è guidato da JS in base al gain (vedi glitchManifesto) */
-    /* invece di tagliare netto, il pannello SFUMA in alto e in basso dentro il datamosh */
-    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 6%,#000 85%,transparent 100%);
-            mask-image:linear-gradient(180deg,transparent 0,#000 6%,#000 85%,transparent 100%);
   }
   @keyframes mFlicker{ 0%,95%,100%{opacity:.9; transform:translate(0,0);} 96%{opacity:.5; transform:translate(-1px,1px);} 98%{opacity:1; transform:translate(1px,-1px);} 99%{opacity:.7;} }
   @media (max-width:600px){
-    #manifesto{ padding:60px 7px 16px; align-items:center; }   /* centrato sotto la barra, margini stretti */
-    #manifestoInner{ line-height:1.65; padding:16px 13px 18px; letter-spacing:.5px; }
+    #manifesto{ padding:58px 8px 16px; align-items:center; }   /* centrato sotto la barra, margini stretti */
+    #manifestoInner{ width:92vw; max-height:58vh; line-height:1.6; padding:12px 12px; letter-spacing:.5px; }   /* rettangolo compatto: sfondo sopra/sotto */
     /* barra in alto: spaziatura ridotta così "1 CLICK = 1 DEAD FASCIST" sta pulito su schermo stretto */
     #faBanner{ font-size:.66rem; letter-spacing:.08em; padding-left:.3rem; padding-right:.3rem; }
     #faCounter{ font-size:1em; letter-spacing:.04em; }
@@ -375,12 +372,22 @@ let decayFG = 0.995;  // scia di primo piano AL MASSIMO: persistenza lunghissima
 let explBlob = null;                     // gif esplosione precaricata in blob -> object-URL istantaneo per click
 fetch('/assets/img/giphy-explosion.gif').then(r=>r.blob()).then(b=>{ explBlob=b; }).catch(()=>{});
 
+let IS_MOBILE = false;
+// Firefox (soprattutto mobile) è MOLTO più lento di Chrome su canvas2d: `ctx.filter`, i blend
+// non separabili ('saturation'/'overlay') e gli snapshot a frame pieno gli costano tantissimo.
+const IS_FF = /firefox|fxios/i.test(navigator.userAgent||'');
+// QUALITÀ ADATTIVA: misurata sugli FPS reali (non solo UA) -> degrada da sola su device deboli
+let fpsAvg = 60, qLow = false, qUltra = false;
 function resize(){
+  // mobile: risoluzione interna PIÙ BASSA -> molti meno pixel da moshare/uploadare = più FPS
+  IS_MOBILE = Math.min(window.innerWidth, window.innerHeight) <= 760
+              || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
   DPR = Math.min(window.devicePixelRatio||1, 1.0);   // PERF: 1 pixel logico = 1 pixel canvas (Firefox)
-  const maxW = 900;
+  const maxW = IS_MOBILE ? 560 : 900;
+  const resScale = IS_MOBILE ? 0.72 : 1;              // downscale extra su mobile (il datamosh maschera il calo di nitidezza)
   let w = window.innerWidth, h = window.innerHeight;
   const scale = Math.min(1, maxW/(w*DPR));
-  W = Math.round(w*DPR*scale); H = Math.round(h*DPR*scale);
+  W = Math.max(1, Math.round(w*DPR*scale*resScale)); H = Math.max(1, Math.round(h*DPR*scale*resScale));
   cv.width=W; cv.height=H; fb.width=W; fb.height=H; layer.width=W; layer.height=H; post.width=W; post.height=H;
   ff.width=W; ff.height=H; ffx.clearRect(0,0,W,H);
   channelCache.clear(); prewarmIdx=0;   // ricostruisci i chroma-key alla nuova risoluzione
@@ -749,7 +756,7 @@ function updateTension(dt){
   // INTENSITÀ -> QUANTITÀ di immagini sovrapposte: poche nei tratti calmi, tante nei picchi/scarichi
   burstBoost *= 0.95;   // l'extra di immagini dei click (intorno al cursore) decade piano
   // PERF: cap DURO sul numero di immagini (il vero costo è buildChannels/getImageData per ogni nuova)
-  maxOverlap = Math.min(12, Math.round(3 + tension*6 + releasePulse*4 + burstBoost));   // meno simultanee = meno lag (ricambio resta rapido)
+  maxOverlap = Math.min(IS_MOBILE?7:12, Math.round(3 + tension*6 + releasePulse*4 + burstBoost));   // mobile: meno simultanee = più FPS
   if(chaos){   // immagini sovrapposte solo dopo il drop (durante la tregua: nessuna)
     imgSpawnAcc += dt * (1.6 + tension*6 + releasePulse*9);   // comparsa RAPIDA/erratica
     while(imgSpawnAcc >= 1){ imgSpawnAcc -= 1; if(layers.length < maxOverlap) spawnLayer(); }
@@ -953,6 +960,9 @@ function drawBed(intensity){
 
 // ---------- post: datamosh tear (spostamento a bande dell'intero frame) ----------
 function datamoshTear(intensity){
+  // PERF: in modalità ridotta si salta del tutto — il datamosh GLSL fa già lo strappo,
+  // quindi non si perde l'effetto, si perde solo un post-process 2D costoso.
+  if(qLow && USE_GL) return;
   const amt = (bandVal[2]*60 + kick*220) * sc.moshAmt * intensity;
   if(amt < 2) return;
   px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);   // snapshot
@@ -1000,10 +1010,18 @@ function kaleido(mode){
 
 // ---------- post: dai piu' grinta allo sfondo frattale (contrasto + saturazione, ben visibile) ----------
 function bgGrade(){
+  if(qUltra) return;   // device molto lento: niente grading (lo shader dà già colore/contrasto)
   // contrasto: frame su se stesso in overlay -> lo sfondo "stacca" invece di sbiadire
   px2.clearRect(0,0,W,H); px2.drawImage(cv,0,0);
   ctx.globalCompositeOperation='overlay';
   ctx.globalAlpha = (0.35 + sc.contrast*0.4) * (chaos?1:0.5); ctx.drawImage(post,0,0); ctx.globalAlpha=1;   // meno stacco prima del drop
+  // PERF: 'saturation' è un blend NON separabile = molto lento su Firefox. In modalità ridotta
+  // si usa un velo 'multiply'/'source-over' economico che dà comunque colore (vivo o soffuso).
+  if(qLow){
+    if(!chaos){ ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=0.16; ctx.fillStyle='#6b6b6b'; ctx.fillRect(0,0,W,H); }
+    ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+    return;
+  }
   // saturazione: BOOST durante il casino, ma DESATURATA/soffusa prima del trigger
   ctx.globalCompositeOperation='saturation';
   if(chaos){ ctx.globalAlpha = 0.5; ctx.fillStyle='hsl(0,100%,50%)'; }   // colori vivi
@@ -1056,20 +1074,32 @@ function renderForeground(intensity){
   renderLayers(intensity);
 }
 
+let _lastFrame = 0;
 function render(){
   requestAnimationFrame(render);
-  t += 0.016;
+  // TEMPO REALE (delta-time): il moto non dipende più dagli FPS. A 60fps dt≈0.016, ma su
+  // mobile a 30/20fps il tempo avanza comunque alla giusta velocità -> niente "rallentatore".
+  const _now = performance.now();
+  let dt = _lastFrame ? (_now - _lastFrame)/1000 : 0.016;
+  _lastFrame = _now;
+  dt = Math.min(Math.max(dt, 0.001), 0.05);   // clamp: FPS bassi non rallentano; stalli/tab nascosta non teletrasportano
+  t += dt;
+  // QUALITÀ ADATTIVA: media mobile degli FPS -> spegne gli effetti costosi quando il device arranca.
+  // (Firefox mobile parte già in modalità ridotta: canvas2d lì è molto più lento che su Chrome.)
+  fpsAvg += (1/dt - fpsAvg) * 0.05;
+  qLow   = (IS_MOBILE && IS_FF) || fpsAvg < 46;   // niente ctx.filter / blend non separabili / tear 2D
+  qUltra = fpsAvg < 26;                            // in più: niente grading di sfondo
   ptrVel *= 0.9;   // la velocità del cursore decade (pilota datamosh + reattività)
   // PREWARM: pre-costruisci i chroma-key (2/frame) -> niente getImageData a runtime durante il casino
   if(prewarmIdx < N_IMG){ for(let k=0;k<2 && prewarmIdx<N_IMG;k++){ if(buildChannels(prewarmIdx)) prewarmIdx++; else break; } }
   if(playing) readAudio();
-  updateTension(0.016);   // envelope di tensione (accumulo/rilascio) + spawn immagini
+  updateTension(dt);   // envelope di tensione (accumulo/rilascio) + spawn immagini
   scheduleGrains();       // pianifica i grani audio (sintesi granulare)
   // stato audio a schermo (diagnostica): visibile in basso a sinistra
   const _pt=document.getElementById('phaseTag');
   if(_pt){ _pt.style.opacity=0.9; _pt.textContent='audio: '+(actx?actx.state:'-')+' · '+audioStatus; }
   // evoluzione a fasi
-  phaseT += 0.016;
+  phaseT += dt;
   if(phaseT > phaseDur){ phaseT=0; phaseDur=rr(6,14); phaseN++; tgt=rollScene();
     document.getElementById('phaseTag').textContent = 'autonoma · seed '+SEED.toString(36)+' · fase '+phaseN; }
   lerpScene(0.02);
@@ -1098,10 +1128,14 @@ function render(){
 
   // velo cromatico molto leggero (non deve sbiancare ne' coprire i colori originali)
   const hue = (t*sc.hueSpin + sc.hueBase + lowMid*160) % 360;
-  ctx.globalCompositeOperation='soft-light';
-  ctx.fillStyle = `hsla(${hue}, 70%, 45%, ${sc.hueTint*(0.15+mid*0.4)})`;
-  ctx.fillRect(0,0,W,H);
-  ctx.globalCompositeOperation='source-over';
+  // PERF: 'soft-light' è non separabile (lento su Firefox) -> in ridotto niente velo
+  // (lo shader applica già il suo hue-shift, quindi il colore non sparisce).
+  if(!qLow){
+    ctx.globalCompositeOperation='soft-light';
+    ctx.fillStyle = `hsla(${hue}, 70%, 45%, ${sc.hueTint*(0.15+mid*0.4)})`;
+    ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='source-over';
+  }
 
   // 2) DATAMOSH 2D a bande sui transienti
   datamoshTear(intensity);
@@ -1145,9 +1179,9 @@ function render(){
 
   // 8) PRIMO PIANO sopra TUTTO, dopo il dim -> blob nitidi. Boost di SATURAZIONE per contrastare
   //    il "muddy" del tail densissimo (tante istanze sovrapposte tendono al grigio).
-  ctx.filter = 'saturate(1.7)';
-  ctx.drawImage(ff, 0, 0);
-  ctx.filter = 'none';
+  // PERF: `ctx.filter` è lentissimo su Firefox -> in modalità ridotta si disegna senza filtro
+  if(qLow){ ctx.drawImage(ff, 0, 0); }
+  else { ctx.filter = 'saturate(1.7)'; ctx.drawImage(ff, 0, 0); ctx.filter = 'none'; }
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
 
