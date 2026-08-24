@@ -89,7 +89,7 @@
   #manifesto{ position:fixed; inset:0; z-index:14; pointer-events:none; overflow:hidden;
     display:flex; align-items:center; justify-content:center; padding:62px 12px 28px; }   /* il padding-top libera la top bar */
   #manifestoInner{
-    width:min(760px,90vw); max-height:min(74vh,100%); overflow:hidden;   /* rettangolo NETTO e compatto -> più sfondo visibile attorno */
+    width:min(760px,90vw); max-height:100%; overflow:hidden;   /* rettangolo NETTO; l'altezza la fissa fitManifesto() sul contenuto */
     padding:16px 20px; text-align:center; color:#ff2a2a;
     font:bold clamp(8.5px,2.4vw,12px)/1.75 "Courier New",ui-monospace,monospace; letter-spacing:1px;   /* scala col viewport */
     background:rgba(0,0,0,.62); border:1px solid rgba(255,0,0,.5); border-radius:2px;  /* box rosso/nero come il top, meno trasparente */
@@ -99,7 +99,7 @@
   @keyframes mFlicker{ 0%,95%,100%{opacity:.9; transform:translate(0,0);} 96%{opacity:.5; transform:translate(-1px,1px);} 98%{opacity:1; transform:translate(1px,-1px);} 99%{opacity:.7;} }
   @media (max-width:600px){
     #manifesto{ padding:58px 8px 16px; align-items:center; }   /* centrato sotto la barra, margini stretti */
-    #manifestoInner{ width:92vw; max-height:58vh; line-height:1.6; padding:12px 12px; letter-spacing:.5px; }   /* rettangolo compatto: sfondo sopra/sotto */
+    #manifestoInner{ width:92vw; line-height:1.6; padding:12px 12px; letter-spacing:.5px; }   /* altezza gestita da fitManifesto() */
     /* barra in alto: spaziatura ridotta così "1 CLICK = 1 DEAD FASCIST" sta pulito su schermo stretto */
     #faBanner{ font-size:.66rem; letter-spacing:.08em; padding-left:.3rem; padding-right:.3rem; }
     #faCounter{ font-size:1em; letter-spacing:.04em; }
@@ -119,9 +119,11 @@
     opacity:0; visibility:hidden; transition:opacity .5s ease; }   /* nascosto finché non compare a 10s */
   #clickPrompt.show{ opacity:1; visibility:visible; }
   #clickPrompt span{
-    color:#ff1e1e; font:bold clamp(1.1rem,5vw,2.4rem)/1.3 "Courier New",ui-monospace,monospace;
-    letter-spacing:.18em; text-shadow:0 0 14px rgba(255,0,0,.6), 0 0 4px rgba(255,0,0,.85), 0 0 2px #000;  /* solo rosso, niente ciano/magenta */
-    padding:1rem 1.6rem; background:rgba(0,0,0,.6); border:1px solid rgba(255,0,0,.55); border-radius:3px;  /* box nero/rosso trasparente */
+    /* piccolo e centrato: non tocca più i bordi dello schermo */
+    color:#ff1e1e; font:bold clamp(.62rem,2vw,.9rem)/1.35 "Courier New",ui-monospace,monospace;
+    letter-spacing:.12em; text-shadow:0 0 10px rgba(255,0,0,.55), 0 0 3px rgba(255,0,0,.8), 0 0 2px #000;  /* solo rosso, niente ciano/magenta */
+    padding:.5rem .8rem; background:rgba(0,0,0,.6); border:1px solid rgba(255,0,0,.55); border-radius:3px;  /* box nero/rosso trasparente */
+    max-width:min(20rem,72vw);   /* resta compatto al centro, niente hug dei bordi */
     animation: promptPulse 1.1s ease-in-out infinite;
   }
   @keyframes promptPulse{ 0%,100%{opacity:.78;} 50%{opacity:1;} }
@@ -237,9 +239,10 @@ function buildMosh(gl, glcanvas){
     'varying vec2 vUv;',
     'uniform int USE_RGB_SHIFT;',
     'uniform int USE_HUE_SHIFT;',
+    'uniform float force;',        // parametrizzato: forte sullo sfondo, debole sulle immagini
+    'uniform int ALPHA_AWARE;',    // 1 = preserva l alpha (strato immagini sovrapposte)
     'const mat3 rgb2yiq = mat3( 0.299, 0.595716, 0.211456, 0.587, -0.274453, -0.522591, 0.114, -0.321263, 0.311135 );',
     'const mat3 yiq2rgb = mat3( 1.0, 1.0, 1.0, 0.9563, -0.2721, -1.1070, 0.6210, -0.6474, 1.7046 );',
-    'float force = 5.0;',
     'float lambda = 0.01;',
     'float inverseX = -1.0;',
     'float inverseY = -1.0;',
@@ -280,6 +283,7 @@ function buildMosh(gl, glcanvas){
     '      float g = texture2D(backbuffer, vec2(pos.x/resolution.x, pos.y/resolution.y)).g;',
     '      float b = texture2D(backbuffer, vec2((pos.x-cos(flow.x))/resolution.x, (pos.y-sin(flow.y))/resolution.y)).b;',
     '      newColor.rgb = vec3(r, g, b);',
+    '      newColor.a = texture2D(backbuffer, vec2(pos.x/resolution.x, pos.y/resolution.y)).a;',
     '    }else{',
     '      newColor = texture2D(backbuffer, vec2(pos.x/resolution.x, pos.y/resolution.y));',
     '    }',
@@ -287,6 +291,7 @@ function buildMosh(gl, glcanvas){
     '  }else{',
     '    newColor = texture2D(currentFrame, vUv);',
     '  }',
+    '  if(ALPHA_AWARE == 0){ newColor.a = 1.0; }',   // sfondo: sempre opaco
     '  gl_FragColor = newColor;',
     '}'
   ].join('\n');
@@ -303,49 +308,87 @@ function buildMosh(gl, glcanvas){
   const uM={ currentFrame:gl.getUniformLocation(pMosh,'currentFrame'), backbuffer:gl.getUniformLocation(pMosh,'backbuffer'),
     resolution:gl.getUniformLocation(pMosh,'resolution'), threshold:gl.getUniformLocation(pMosh,'threshold'),
     offset:gl.getUniformLocation(pMosh,'offset'), time:gl.getUniformLocation(pMosh,'time'), shift:gl.getUniformLocation(pMosh,'shift'),
-    urgb:gl.getUniformLocation(pMosh,'USE_RGB_SHIFT'), uhue:gl.getUniformLocation(pMosh,'USE_HUE_SHIFT') };
+    urgb:gl.getUniformLocation(pMosh,'USE_RGB_SHIFT'), uhue:gl.getUniformLocation(pMosh,'USE_HUE_SHIFT'),
+    force:gl.getUniformLocation(pMosh,'force'), alpha:gl.getUniformLocation(pMosh,'ALPHA_AWARE') };
   const uCopyTex=gl.getUniformLocation(pCopy,'tex');
-  let sceneTex=null, fbTex=[null,null], fbo=[null,null], src=0, gw=0, gh=0;
+  let gw=0, gh=0;
   function texParams(){ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); }
+  // Un CANALE = una catena di feedback indipendente (texture scena + ping-pong FBO).
+  // Ne usiamo DUE: sfondo (datamosh forte) e immagini sovrapposte (datamosh attenuato).
+  function makeChannel(){ return { sceneTex:null, fbTex:[null,null], fbo:[null,null], src:0 }; }
+  const chBg = makeChannel(), chFg = makeChannel();
+  function allocChannel(ch, w, h, opaque){
+    if(ch.sceneTex) gl.deleteTexture(ch.sceneTex);
+    ch.sceneTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,ch.sceneTex); texParams();
+    for(let i=0;i<2;i++){
+      if(ch.fbTex[i]) gl.deleteTexture(ch.fbTex[i]); if(ch.fbo[i]) gl.deleteFramebuffer(ch.fbo[i]);
+      ch.fbTex[i]=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,ch.fbTex[i]); texParams();
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+      ch.fbo[i]=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,ch.fbo[i]);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,ch.fbTex[i],0);
+      gl.clearColor(0,0,0, opaque?1:0); gl.clear(gl.COLOR_BUFFER_BIT);   // FG parte TRASPARENTE
+    }
+    ch.src=0;
+  }
   function resize(w,h){
     gw=w; gh=h; glcanvas.width=w; glcanvas.height=h;
-    if(sceneTex) gl.deleteTexture(sceneTex);
-    sceneTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,sceneTex); texParams();
-    for(let i=0;i<2;i++){
-      if(fbTex[i]) gl.deleteTexture(fbTex[i]); if(fbo[i]) gl.deleteFramebuffer(fbo[i]);
-      fbTex[i]=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,fbTex[i]); texParams();
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
-      fbo[i]=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fbo[i]);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,fbTex[i],0);
-      gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
-    }
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null); src=0;
+    allocChannel(chBg,w,h,true); allocChannel(chFg,w,h,false);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
   }
   function drawQuad(){ gl.bindBuffer(gl.ARRAY_BUFFER,quad); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); gl.drawArrays(gl.TRIANGLES,0,3); }
-  function present(src2d, p){
-    if(!gw) return;
-    const dst=src^1;
-    gl.bindTexture(gl.TEXTURE_2D,sceneTex);
+  // esegue il pass di datamosh del canale e restituisce la texture risultante
+  function moshPass(ch, src2d, p, alphaAware){
+    const dst=ch.src^1;
+    gl.bindTexture(gl.TEXTURE_2D,ch.sceneTex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, alphaAware);   // FG: alpha premoltiplicata -> blend pulito
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src2d);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
-    // pass datamosh -> fbo[dst]
-    gl.bindFramebuffer(gl.FRAMEBUFFER,fbo[dst]); gl.viewport(0,0,gw,gh);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,ch.fbo[dst]); gl.viewport(0,0,gw,gh);
+    gl.disable(gl.BLEND);                                            // si SCRIVE nel buffer, non si fonde
     gl.useProgram(pMosh);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sceneTex); gl.uniform1i(uM.currentFrame,0);
-    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,fbTex[src]); gl.uniform1i(uM.backbuffer,1);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,ch.sceneTex); gl.uniform1i(uM.currentFrame,0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,ch.fbTex[ch.src]); gl.uniform1i(uM.backbuffer,1);
     gl.uniform2f(uM.resolution,gw,gh);
     gl.uniform1f(uM.threshold,p.threshold); gl.uniform1f(uM.offset,p.offset);
     gl.uniform1f(uM.time,p.time); gl.uniform1f(uM.shift,p.shift);
-    gl.uniform1i(uM.urgb,1); gl.uniform1i(uM.uhue,1);
+    gl.uniform1f(uM.force,p.force);
+    gl.uniform1i(uM.urgb,p.rgbShift?1:0); gl.uniform1i(uM.uhue,p.hueShift?1:0);
+    gl.uniform1i(uM.alpha,alphaAware?1:0);
     drawQuad();
-    // present fbo[dst] -> schermo
+    ch.src=dst;
+    return ch.fbTex[dst];
+  }
+  // DUE STRATI: lo sfondo prende il datamosh pieno (colori che si fondono), le immagini
+  // sovrapposte passano da un secondo shader con parametri MOLTO più blandi -> restano leggibili.
+  // carica un canvas nella texture del canale senza pass di datamosh (composizione diretta)
+  function uploadOnly(ch, src2d){
+    gl.bindTexture(gl.TEXTURE_2D,ch.sceneTex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src2d);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+    return ch.sceneTex;
+  }
+  // pFg null -> il primo piano viene solo composto (niente secondo pass): risparmio su device lenti
+  function present(bg2d, fg2d, pBg, pFg){
+    if(!gw) return;
+    const texBg = moshPass(chBg, bg2d, pBg, false);
+    const texFg = fg2d ? (pFg ? moshPass(chFg, fg2d, pFg, true) : uploadOnly(chFg, fg2d)) : null;
     gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,gw,gh);
     gl.useProgram(pCopy);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbTex[dst]); gl.uniform1i(uCopyTex,0);
+    gl.disable(gl.BLEND);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texBg); gl.uniform1i(uCopyTex,0);
     drawQuad();
-    src=dst;
+    if(texFg){
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);   // premoltiplicata
+      gl.bindTexture(gl.TEXTURE_2D,texFg);
+      drawQuad();
+      gl.disable(gl.BLEND);
+    }
   }
   return { resize, present };
 }
@@ -394,6 +437,44 @@ function resize(){
   fbx.fillStyle='#000'; fbx.fillRect(0,0,W,H);
   ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
   if(USE_GL && Mosh) Mosh.resize(W,H);   // ridimensiona texture/FBO del datamosh GLSL
+  fitManifesto();                        // altezza del box = multiplo esatto della riga (niente righe mozzate)
+}
+// Il monologo deve vedersi TUTTO: invece di tagliarlo, la dimensione del carattere viene
+// rimpicciolita finché l'intero testo entra nello spazio disponibile. Poi l'altezza del box
+// si adatta al contenuto reale -> nessuna riga mozzata, nessun bordo "sfocato".
+function fitManifesto(){
+  const inner = document.getElementById('manifestoInner');
+  const wrap  = document.getElementById('manifesto');
+  if(!inner || !wrap) return;
+  inner.style.height=''; inner.style.fontSize='';       // reset: riparti dal CSS
+  const wcs = getComputedStyle(wrap);
+  const avail = wrap.clientHeight - (parseFloat(wcs.paddingTop)||0) - (parseFloat(wcs.paddingBottom)||0);
+  if(avail <= 0) return;
+  const cs0 = getComputedStyle(inner);
+  const chrome = (parseFloat(cs0.paddingTop)||0)+(parseFloat(cs0.paddingBottom)||0)
+               + (parseFloat(cs0.borderTopWidth)||0)+(parseFloat(cs0.borderBottomWidth)||0);
+  // altezza fissata allo spazio disponibile: così scrollHeight e clientHeight sono confrontabili
+  // sulla STESSA base (entrambi escludono i bordi, entrambi includono il padding) -> misura esatta.
+  inner.style.height = avail + 'px';
+  const room = Math.max(24, inner.clientHeight);        // spazio reale per il contenuto
+  let fs = parseFloat(cs0.fontSize) || 11;
+  // l'altezza del testo cresce ~col QUADRATO del corpo (righe più corte E più alte):
+  // con questa stima bastano poche iterazioni per convergere.
+  for(let i=0;i<7;i++){
+    inner.style.fontSize = fs.toFixed(2)+'px';
+    const h = inner.scrollHeight;
+    if(h <= room && h > room*0.88) break;               // entra e sfrutta bene lo spazio
+    fs *= Math.sqrt(room/Math.max(1,h));
+    fs = Math.max(3.2, Math.min(14, fs));
+  }
+  // rifinitura: scendi finché il testo entra DAVVERO (niente ultimo pelo di overflow)
+  let guard=0;
+  while(inner.scrollHeight > inner.clientHeight && fs > 3.2 && guard++ < 80){
+    fs = Math.max(3.2, fs-0.12); inner.style.fontSize = fs.toFixed(2)+'px';
+  }
+  // il box si stringe sul contenuto reale: altezza border-box = contenuto+padding (scrollHeight) + bordi
+  const borders = (parseFloat(cs0.borderTopWidth)||0)+(parseFloat(cs0.borderBottomWidth)||0);
+  inner.style.height = Math.min(avail, inner.scrollHeight + borders) + 'px';
 }
 window.addEventListener('resize', resize);
 
@@ -1177,24 +1258,39 @@ function render(){
   ctx.fillStyle = `rgb(${g},${g},${g})`; ctx.fillRect(0,0,W,H);
   ctx.globalCompositeOperation='source-over';
 
-  // 8) PRIMO PIANO sopra TUTTO, dopo il dim -> blob nitidi. Boost di SATURAZIONE per contrastare
-  //    il "muddy" del tail densissimo (tante istanze sovrapposte tendono al grigio).
-  // PERF: `ctx.filter` è lentissimo su Firefox -> in modalità ridotta si disegna senza filtro
-  if(qLow){ ctx.drawImage(ff, 0, 0); }
-  else { ctx.filter = 'saturate(1.7)'; ctx.drawImage(ff, 0, 0); ctx.filter = 'none'; }
+  // 8) PRIMO PIANO. Con i DUE STRATI GLSL il primo piano NON viene fuso qui: resta sul suo
+  //    canvas (ff) e passa dal secondo shader, così il blending di colore dello sfondo non lo
+  //    invade. Nel fallback 2D (niente WebGL) invece si compone qui come prima.
+  if(!(USE_GL && Mosh)){
+    // PERF: `ctx.filter` è lentissimo su Firefox -> in modalità ridotta si disegna senza filtro
+    if(qLow){ ctx.drawImage(ff, 0, 0); }
+    else { ctx.filter = 'saturate(1.7)'; ctx.drawImage(ff, 0, 0); ctx.filter = 'none'; }
+  }
 
   if(chaos) glitchManifesto();   // glitch del box centrale RESPONSIVE al gain
 
-  // 9) DATAMOSH GLSL: la scena 2D (offscreen) passa nello shader optical-flow -> scia quasi
-  //    perenne sullo sfondo. Soglia bassa = più smear; crolla su kick/tensione = scatti bruschi.
+  // 9) DATAMOSH GLSL a DUE STRATI:
+  //    - SFONDO: forza piena, hue-shift marcato -> i colori si fondono/impastano (l'effetto figo)
+  //    - IMMAGINI: forza bassa, niente hue-shift, soglia alta -> restano nitide e leggibili,
+  //      con solo un accenno di scia. Ogni strato ha il PROPRIO feedback indipendente.
   if(USE_GL && Mosh){
     const thr = Math.max(0.015, 0.12 - tension*0.05 - kick*0.10 - releasePulse*0.06);
-    Mosh.present(cv, {
+    const pBg = {
       threshold: thr,
       offset: 1.0 + kick*2.4 + releasePulse*1.2,   // passo del gradiente: più grosso sui colpi
       time: t,
-      shift: 34 + kick*100 + tension*46            // deriva di tinta (hue) più forte sui colpi
-    });
+      shift: 34 + kick*100 + tension*46,           // deriva di tinta (hue) più forte sui colpi
+      force: 5.0, rgbShift:true, hueShift:true
+    };
+    const pFg = {
+      threshold: Math.max(0.10, thr*3.2),          // soglia ALTA -> smear solo sui movimenti forti
+      offset: 1.0 + kick*0.5,
+      time: t,
+      shift: 6 + kick*10,                          // quasi nessuna deriva di tinta
+      force: 1.15 + kick*0.5,                      // scia breve invece che impasto
+      rgbShift:true, hueShift:false                // niente hue-shift: colori originali
+    };
+    Mosh.present(cv, ff, pBg, qUltra ? null : pFg);   // device molto lento: primo piano solo composto
   }
 }
 
