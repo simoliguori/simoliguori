@@ -764,7 +764,14 @@ function Glyph({
     pointerEvents: 'none',
     mixBlendMode: 'screen'
   };
-  const innerAnim = entering ? 'mirai-glyph-in 0.34s steps(5) both' : calm ? 'mirai-soft-flicker ' + R.fl + 's steps(10) ' + R.fd + 's infinite' : 'none';
+  // Ambient effects (chroma for non-calm via ghost spans; soft-flicker for the
+  // calm ://audiovisual tail) must be alive WHILE typing too, not only once the
+  // word is finished. So layer the per-glyph spawn-in over the same ambient
+  // animation the finished glyph carries: the flicker is simply delayed until
+  // after this glyph's own spawn (0.34s) instead of waiting for the whole word.
+  const spawn = entering ? 'mirai-glyph-in 0.34s steps(5) both' : '';
+  const flick = calm ? 'mirai-soft-flicker ' + R.fl + 's steps(10) ' + (entering ? '0.34' : R.fd) + 's infinite' : '';
+  const innerAnim = [spawn, flick].filter(Boolean).join(', ') || 'none';
   return /*#__PURE__*/React.createElement("span", {
     style: {
       position: 'relative',
