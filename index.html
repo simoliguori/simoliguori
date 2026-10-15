@@ -2072,6 +2072,277 @@ body.lightbox-open #nr-player {
   /* Too cramped for both text and a meaningful waveform — drop the viz. */
   .nr-viz { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ABOUT · ARTIST STATEMENT (bilingual) + floating thesis reference
+   ═══════════════════════════════════════════════════════════════════ */
+.bio-statement { margin: 6px 0 2px; }
+.bio-statement::after { content: ''; display: block; clear: both; }
+
+/* IT / EN language toggle */
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid #441111;
+  margin: 2px 0 14px;
+  user-select: none;
+}
+.lang-btn {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  background: transparent;
+  border: 0;
+  color: #aa5555;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 4px 13px;
+  cursor: var(--cur-hand), pointer;
+  transition: color 0.15s, background 0.15s, text-shadow 0.15s;
+}
+.lang-btn + .lang-btn { border-left: 1px solid #441111; }
+.lang-btn:hover { color: #ff6666; }
+.lang-btn.active {
+  color: #ff6666;
+  background: rgba(255, 40, 40, 0.08);
+  text-shadow: 0 0 8px rgba(255, 70, 70, 0.5);
+}
+
+/* Prose body */
+.bio-body { font-size: 12.5px; line-height: 1.95; color: #b65555; }
+.bio-body p { margin: 0 0 13px; }
+.bio-body p:last-child { margin-bottom: 0; }
+.bio-body strong { color: #ff7a7a; font-weight: 700; }
+.bio-body em { color: #db6b6b; font-style: italic; }
+.bio-lead {
+  color: #ff6666;
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #3a1010;
+  text-shadow: 0 0 8px rgba(255, 70, 70, 0.35);
+}
+.bio-statement[data-lang="it"] .l-en { display: none; }
+.bio-statement[data-lang="en"] .l-it { display: none; }
+
+/* Ecce homo scripture block */
+.bio-scripture {
+  clear: both;
+  border-left: 2px solid #5a1818;
+  background: rgba(25, 6, 6, 0.5);
+  padding: 10px 14px;
+  margin: 4px 0 15px;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: #9a5a5a;
+}
+.bio-scripture .vnum { color: #ff5555; font-weight: 700; }
+.bio-scripture .ecce { color: #ff8a8a; font-weight: 700; }
+.bio-scripture .trans {
+  display: block;
+  margin-top: 7px;
+  color: #7a4444;
+  font-style: italic;
+}
+
+/* Media cards — the thesis reference (floats right at the thesis paragraph)
+   and the Uochi Toki track (floats left at the Ecce Robot paragraph). The
+   statement text wraps around each. Wider on desktop. */
+.thesis-card, .uochi-card {
+  width: 232px;
+  max-width: 44%;
+  border: 1px solid #2a0808;
+  background: #080303;
+  padding: 5px;
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.thesis-card { float: right; margin: 4px 0 12px 22px; }
+.uochi-card  { float: left;  margin: 4px 22px 12px 0; }
+.thesis-card:hover, .uochi-card:hover {
+  border-color: #ff3333;
+  box-shadow: 0 0 22px rgba(255, 60, 60, 0.22);
+  transform: translateY(-2px);
+}
+.thesis-card img, .uochi-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(0.3) contrast(1.08) brightness(0.9);
+  transition: filter 0.25s;
+}
+.thesis-card:hover img, .uochi-card:hover img { filter: none; }
+.thesis-cap { display: block; padding: 7px 4px 3px; text-align: center; }
+.thesis-cap-k {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: #aa5555;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.thesis-cap-t {
+  display: block;
+  font-size: 10px;
+  color: #ff5555;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+.thesis-cap-x {
+  display: block;
+  font-size: 8px;
+  color: #774444;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+.thesis-card.sub-focused, .uochi-card.sub-focused {
+  border-color: #ff5555;
+  box-shadow: 0 0 26px rgba(255, 60, 60, 0.5);
+  transform: translateY(-3px);
+}
+.thesis-card.sub-focused img, .uochi-card.sub-focused img { filter: none; }
+
+/* Inline thesis trigger inside the prose */
+.thesis-open {
+  color: #ff6a6a;
+  text-decoration: none;
+  border-bottom: 1px dashed #aa3333;
+  cursor: var(--cur-hand), pointer;
+  transition: text-shadow 0.15s, color 0.15s, border-color 0.15s;
+}
+.thesis-open:hover {
+  color: #ff9a9a;
+  text-shadow: 0 0 8px rgba(255, 90, 90, 0.6);
+  border-bottom-color: #ff5555;
+}
+
+/* Cohesive styling for every clickable element inside the statement prose:
+   same color as the links + a persistent underline (overrides the thesis
+   trigger's dashed border). Linked artist/work names stay italic via <em>. */
+.bio-body .win-link,
+.bio-body .thesis-open {
+  color: #ff5555;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  border-bottom: none;
+}
+.bio-body .win-link:hover,
+.bio-body .thesis-open:hover {
+  color: #ff8a8a;
+  text-shadow: 0 0 8px rgba(255, 90, 90, 0.6);
+  text-decoration: underline;
+}
+/* Keyboard sub-focus on prose links: drop the red box/outline the generic
+   .win-link.sub-focused rule adds, so the auto-focused first link just gets
+   the same brighter-underline treatment as the other clickable elements. */
+.bio-body .win-link.sub-focused,
+.bio-body .thesis-open.sub-focused {
+  background: transparent;
+  outline: none;
+  padding: 0;
+  color: #ff8a8a;
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(255, 90, 90, 0.6);
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .thesis-card { width: 132px; max-width: 42%; margin: 2px 0 10px 12px; }
+  .uochi-card  { width: 132px; max-width: 42%; margin: 2px 12px 10px 0; }
+  .bio-body { font-size: 12px; line-height: 1.85; }
+}
+
+/* ═══ THESIS MODAL — center-screen PDF reader ═══ */
+.thesis-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.82);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+.thesis-modal.open { opacity: 1; visibility: visible; pointer-events: auto; }
+.thesis-modal-win {
+  width: min(920px, 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #5a1414;
+  background: #0a0303;
+  box-shadow: 0 0 40px rgba(200, 0, 0, 0.25), inset 0 0 40px rgba(0, 0, 0, 0.6);
+  transform: translateY(12px) scale(0.985);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.thesis-modal.open .thesis-modal-win { transform: none; }
+.thesis-modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid #330000;
+  background: linear-gradient(90deg, #120000, #200000);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+.thesis-modal-bar .tm-title { color: #ff5555; }
+.tm-bar-right { display: inline-flex; align-items: center; gap: 12px; }
+.tm-lang { display: inline-flex; border: 1px solid #552222; }
+.tm-lang-btn {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  background: transparent;
+  border: 0;
+  color: #aa5555;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  padding: 2px 9px;
+  cursor: var(--cur-hand), pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.tm-lang-btn + .tm-lang-btn { border-left: 1px solid #552222; }
+.tm-lang-btn:hover { color: #ff6666; }
+.tm-lang-btn.active { color: #ff6666; background: rgba(255, 40, 40, 0.1); }
+.tm-lang-btn:disabled { color: #553333; opacity: 0.6; cursor: default; }
+.tm-lang-btn:disabled:hover { color: #553333; background: transparent; }
+.thesis-modal-close {
+  cursor: var(--cur-hand), pointer;
+  color: #cc6666;
+  border: 1px solid #552222;
+  padding: 1px 7px;
+  font-size: 12px;
+  transition: all 0.1s;
+  user-select: none;
+}
+.thesis-modal-close:hover { background: #ff3333; color: #000; border-color: #ff3333; }
+.thesis-modal-body { flex: 1; min-height: 0; background: #111; }
+.thesis-modal-body iframe { width: 100%; height: 100%; border: 0; display: block; }
+.thesis-modal-foot {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 14px;
+  border-top: 1px solid #330000;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.thesis-modal-foot a {
+  color: #bb7777;
+  text-decoration: none;
+  transition: color 0.15s, text-shadow 0.15s;
+}
+.thesis-modal-foot a:hover { color: #ff7777; text-shadow: 0 0 8px rgba(255, 100, 100, 0.6); }
+@media (max-width: 600px) and (orientation: portrait) {
+  .thesis-modal { padding: 10px; }
+  .thesis-modal-bar { font-size: 10px; }
+}
 </style>
 </head>
 <body class="scroll-locked">
@@ -2209,6 +2480,76 @@ body.lightbox-open #nr-player {
       <span class="win-line">Electronic music @ Conservatorio S. Pietro a Majella</span>
       <span class="win-section-label">[ TOOLS ]</span>
       <span class="win-line">Ableton Live · TouchDesigner · Max/MSP · DaVinci Resolve</span>
+
+      <span class="win-section-label">[ STATEMENT / INSPIRATIONS ]</span>
+      <div class="bio-statement" data-lang="it">
+        <div class="lang-toggle" role="group" aria-label="statement language">
+          <button type="button" class="lang-btn active" data-lang="it">IT</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+
+        <!-- ─────────── ITALIANO ─────────── -->
+        <div class="bio-body l-it">
+          <p class="bio-lead">Non lascio spazio al gatekeeping.</p>
+          <p>I miei lavori derivano in primis da un profondo desiderio di comunicazione attraverso un impatto abrasivo ed a tratti confusionario. Ciò che faccio è concepito come una corrispondenza a 360° tra ciò che è visto e ciò che è sentito, con un'attenzione quasi maniacale ed ossessiva verso l'intento di suscitare un'interpolazione attraverso questi elementi.</p>
+          <p>Questo bisogno di comunicazione viscerale è nato ascoltando <em>Roger Waters</em>: per quanto resti un personaggio controverso, la cui spinta nasce spesso da una frustrazione fuorviata, è forse il singolo comunicatore che mi ha segnato di più. È proprio il suo stage designer, <em><a href="https://www.instagram.com/deadskinboy/?hl=it" target="_blank" rel="noopener" class="win-link">Sean Evans</a></em> — che ha collaborato anche con i <em>Radiohead</em> per <em>Kid A Mnesia</em> — il motivo per cui ho deciso di inserirmi nel mondo delle proiezioni e dello stage design. Allo stesso modo <em>Laurie Anderson</em> — e in particolare il continuum multimediale di <em>Big Science</em> — gioca con l'intersezione di medium scenografici teatrali commisti a un suono che richiama macchinari pesanti d'industria che dipingono una distopia estremamente lungimirante. Non a caso <em>Arca</em>, altra mia enorme ispirazione, ha riconosciuto il genio del soundscape di <em>Laurie Anderson</em> nel proprio <em><a href="https://laurieanderson.bandcamp.com/track/big-science-arca-remix" target="_blank" rel="noopener" class="win-link">remix di Big Science</a></em>.</p>
+          <a class="thesis-card" href="assets/docs/jumping-is-not-a-crime.html" data-thesis target="_blank" rel="noopener" aria-label="Open reference thesis — Jumping is not a crime">
+            <img src="assets/img/previews/thesis-cover.jpg" loading="lazy" alt="Thesis cover — Jumping is not a crime">
+            <span class="thesis-cap">
+              <span class="thesis-cap-k">[ reference thesis ]</span>
+              <span class="thesis-cap-t">Jumping is not a crime</span>
+              <span class="thesis-cap-x">↳ click to read</span>
+            </span>
+          </a>
+          <p>In quanto figlio di internet, buona parte di ciò che faccio nasce da lì. Da adolescente mi sono formato sui suoni e sulle immagini della prima <em>Drain Gang</em> — <em>Bladee</em>, <em>Ecco2k</em>, i beat abrasivi di <em>Whitearmor</em>, e sono rimasto folgorato dal microcosmo narrativo di figure come <em>Yabujin</em>: l'estetica early internet e Y2K, la post-ironia, la malinconia digitale dei soundfont e dei campioni su CD-ROM. Il paradigma di cui parlo è racchiuso perfettamente nella mia tesi per l'esame di storia della musica elettronica, <em><span class="thesis-open" data-thesis role="button" tabindex="0">Jumping is not a crime</span></em>, dove rapporto la suddetta scena ad una trasposizione postmoderna dell'hauntologia di <em>Mark Fisher</em>.</p>
+          <p>Da questa tesi nasce il moniker <strong>mi·rài</strong>, dedicato alla mia pratica musicale: un richiamo ai principi hauntologici di <em>Fisher</em> in chiave post-moderna — il futuro che ci era stato promesso, la cui ambizione positivista, risalente a qualche decennio prima del Y2K, è ormai diventata un'estetica a sé stante.</p>
+          <a class="uochi-card" href="https://uochitoki.bandcamp.com/track/ecce-robot" target="_blank" rel="noopener" aria-label="Uochi Toki — Ecce Robot su Bandcamp">
+            <img src="assets/img/previews/uochitoki-ecce-robot.jpg" loading="lazy" alt="Uochi Toki — Idioti (copertina)">
+            <span class="thesis-cap">
+              <span class="thesis-cap-k">[ listen · bandcamp ]</span>
+              <span class="thesis-cap-t">Uochi Toki — Ecce Robot</span>
+              <span class="thesis-cap-x">da «Idioti» · 2015 · ↳ bandcamp</span>
+            </span>
+          </a>
+          <p>Il macro-progetto <strong>Ecce Robot</strong> prende invece il nome dall'omonimo brano degli <em>Uochi Toki</em>, che sento come la sinossi contemporanea più vicina alla mia pratica. È il progetto "ad ombrello" della mia pratica visiva, con un imprinting rivolto alla collettività e al multimediale. mi·rài ed Ecce Robot sono l'uno la controparte dell'altro: il suono e l'immagine della stessa ricerca.</p>
+          <div class="bio-scripture">
+            Exivit iterum Pilatus foras, et dicit eis: «Ecce adduco vobis eum foras, ut cognoscatis quia in eo nullam causam invenio». (Exivit ergo Jesus portans coronam spineam, et purpureum vestimentum). Et dicit eis: <span class="ecce">«Ecce homo»</span>. Cum ergo vidissent eum pontifices et ministri, clamabant dicentes: «Crucifige, crucifige eum!».
+            <span class="trans">Pilato uscì di nuovo e disse loro: «Ecco, io ve lo conduco fuori, perché sappiate che non trovo in lui alcun peccato». Gesù dunque uscì, portando la corona di spine e il mantello di porpora. E Pilato disse loro: «Ecco l'uomo». Come lo videro, i capi dei sacerdoti e le guardie gridarono: «Crocifiggilo! Crocifiggilo!».</span>
+          </div>
+          <p>Mi riconosco in una metodicità quasi ostinata — qualcosa che di solito viene considerato antitetico alla pratica creativa e portato come un fardello. Per me è il contrario: è proprio quel raziocinio a dare forma al mio modo di lavorare, soprattutto quando si tratta di arte generativa e algoritmica — di domare la macchina per tirarne fuori qualcosa di profondamente personale.</p>
+        </div>
+
+        <!-- ─────────── ENGLISH ─────────── -->
+        <div class="bio-body l-en">
+          <p class="bio-lead">No gatekeeping here.</p>
+          <p>My work stems first and foremost from a deep desire for communication through an abrasive and at times confusing impact. What I do is conceived as a 360° correspondence between what is seen and what is heard, with an almost maniacal and obsessive attention toward the intent of eliciting an interpolation across these elements.</p>
+          <p>This need for visceral communication was born listening to <em>Roger Waters</em>: however controversial a figure he remains, his drive often arising from a misguided frustration, he is potentially the single communicator who marked me most. It is precisely his stage designer, <em><a href="https://www.instagram.com/deadskinboy/?hl=it" target="_blank" rel="noopener" class="win-link">Sean Evans</a></em> — who also collaborated with <em>Radiohead</em> on <em>Kid A Mnesia</em> — who is the reason I decided to step into the world of projections and stage design. In the same way <em>Laurie Anderson</em> — and in particular the multimedia continuum of <em>Big Science</em> — plays with the intersection of scenographic, theatrical media mingled with a sound that recalls heavy industrial machinery, painting an extremely far-sighted dystopia. Not by chance <em>Arca</em> — another huge inspiration of mine — recognized the genius of <em>Laurie Anderson</em>'s soundscape in her own <em><a href="https://laurieanderson.bandcamp.com/track/big-science-arca-remix" target="_blank" rel="noopener" class="win-link">Big Science remix</a></em>.</p>
+          <a class="thesis-card" href="assets/docs/jumping-is-not-a-crime.html" data-thesis target="_blank" rel="noopener" aria-label="Open reference thesis — Jumping is not a crime">
+            <img src="assets/img/previews/thesis-cover.jpg" loading="lazy" alt="Thesis cover — Jumping is not a crime">
+            <span class="thesis-cap">
+              <span class="thesis-cap-k">[ reference thesis ]</span>
+              <span class="thesis-cap-t">Jumping is not a crime</span>
+              <span class="thesis-cap-x">↳ click to read</span>
+            </span>
+          </a>
+          <p>As a child of the internet, much of what I do is born there. As a teenager I was shaped by the sounds and images of early <em>Drain Gang</em> — <em>Bladee</em>, <em>Ecco2k</em>, <em>Whitearmor</em>'s abrasive beats — and I was struck by the narrative microcosm of figures like <em>Yabujin</em>: the early internet and Y2K aesthetic, post-irony, the digital melancholy of soundfonts and CD-ROM samples. The paradigm I'm speaking of is captured perfectly in my thesis for the History of Electronic Music exam, <em><span class="thesis-open" data-thesis role="button" tabindex="0">Jumping is not a crime</span></em>, where I relate the aforementioned scene to a postmodern transposition of <em>Mark Fisher</em>'s hauntology.</p>
+          <p>From this thesis comes the moniker <strong>mi·rài</strong>, devoted to my musical practice: a nod to <em>Fisher</em>'s hauntological principles in a postmodern key — the future we had been promised, whose positivist ambition, dating back to a few decades before Y2K, has by now become an aesthetic in its own right.</p>
+          <a class="uochi-card" href="https://uochitoki.bandcamp.com/track/ecce-robot" target="_blank" rel="noopener" aria-label="Uochi Toki — Ecce Robot on Bandcamp">
+            <img src="assets/img/previews/uochitoki-ecce-robot.jpg" loading="lazy" alt="Uochi Toki — Idioti (cover)">
+            <span class="thesis-cap">
+              <span class="thesis-cap-k">[ listen · bandcamp ]</span>
+              <span class="thesis-cap-t">Uochi Toki — Ecce Robot</span>
+              <span class="thesis-cap-x">from Idioti · 2015 · ↳ bandcamp</span>
+            </span>
+          </a>
+          <p>The macro-project <strong>Ecce Robot</strong> takes its name instead from the <em>Uochi Toki</em> track of the same name, which I feel to be the contemporary synopsis closest to my practice. It is the "umbrella" project of my visual practice, with an imprinting turned toward the collective and the multimedia. mi·rài and Ecce Robot are each the counterpart of the other: the sound and the image of the same research.</p>
+          <div class="bio-scripture">
+            Exivit iterum Pilatus foras, et dicit eis: «Ecce adduco vobis eum foras, ut cognoscatis quia in eo nullam causam invenio». (Exivit ergo Jesus portans coronam spineam, et purpureum vestimentum). Et dicit eis: <span class="ecce">«Ecce homo»</span>. Cum ergo vidissent eum pontifices et ministri, clamabant dicentes: «Crucifige, crucifige eum!».
+            <span class="trans">Pilate went outside again and said to them: «Look, I am bringing him out to you, so that you may know that I find no case against him.» So Jesus came out, wearing the crown of thorns and the purple robe. And Pilate said to them: <strong>«Behold the man.»</strong> When the chief priests and the officers saw him, they shouted: «Crucify him! Crucify him!».</span>
+          </div>
+          <p>I recognize myself in an almost stubborn methodicity — something that is usually considered antithetical to creative practice and carried as a burden. For me it is the opposite: it is precisely that rationality that gives shape to my way of working, above all when it comes to generative and algorithmic art — in taming the machine to draw out of it something deeply personal.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2587,6 +2928,28 @@ body.lightbox-open #nr-player {
     </div>
     <div class="pf-lb-hint hint-desktop"><span class="k">← →</span> ARROWS <span class="sep">·</span> <span class="k">ESC / BACKSPACE</span> CLOSE <span class="sep">·</span> <span class="k">MOVE</span> TO TILT</div>
     <div class="pf-lb-hint hint-mobile"><span class="k">SWIPE ← →</span> <span class="sep">·</span> <span class="k">TAP ✕</span> CLOSE</div>
+  </div>
+
+  <!-- ═══ THESIS MODAL — center-screen PDF reader ═══ -->
+  <div id="thesisModal" class="thesis-modal" role="dialog" aria-modal="true" aria-label="Reference thesis — Jumping is not a crime" aria-hidden="true">
+    <div class="thesis-modal-win">
+      <div class="thesis-modal-bar">
+        <span class="tm-title">// JUMPING IS NOT A CRIME</span>
+        <span class="tm-bar-right">
+          <span class="tm-lang" role="group" aria-label="thesis language">
+            <button type="button" class="tm-lang-btn active" data-tlang="it">IT</button>
+            <button type="button" class="tm-lang-btn" data-tlang="en" disabled title="English version — export pending">EN</button>
+          </span>
+          <span class="thesis-modal-close" id="thesisModalClose" role="button" tabindex="0" aria-label="Close">✕</span>
+        </span>
+      </div>
+      <div class="thesis-modal-body">
+        <iframe id="thesisFrame" title="Jumping is not a crime — thesis PDF" loading="lazy"></iframe>
+      </div>
+      <div class="thesis-modal-foot">
+        <a id="thesisOpenTab" href="assets/docs/jumping-is-not-a-crime.html" target="_blank" rel="noopener">↗ open in new tab</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3301,7 +3664,9 @@ function navigate(delta) {
 function getFocusableItems(key) {
   const win = document.getElementById('sec-' + key);
   if (!win) return [];
-  return [...win.querySelectorAll('a[href]')];
+  // Only visible links — skips the hidden-language copy of the thesis card
+  // (the inactive IT/EN body is display:none, so offsetParent is null).
+  return [...win.querySelectorAll('a[href]')].filter(el => el.offsetParent !== null);
 }
 
 function updateSubFocusUI({ scroll = true } = {}) {
@@ -5328,6 +5693,130 @@ function initGuestbook() {
     if (widget && isPlaying) widget.pause();
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   });
+})();
+
+// ─────────────────────────────────────────────
+// ABOUT · bilingual statement toggle + thesis modal
+// ─────────────────────────────────────────────
+(function () {
+  // ── Language toggle (IT / EN), persisted per visitor ──
+  const stmt = document.querySelector('.bio-statement');
+  if (stmt) {
+    let saved = null;
+    try { saved = localStorage.getItem('miraiBioLang'); } catch (e) {}
+    if (saved === 'it' || saved === 'en') stmt.setAttribute('data-lang', saved);
+
+    const btns = stmt.querySelectorAll('.lang-btn');
+    const syncBtns = () => btns.forEach(b =>
+      b.classList.toggle('active', b.getAttribute('data-lang') === stmt.getAttribute('data-lang')));
+    syncBtns();
+
+    btns.forEach(btn => btn.addEventListener('click', () => {
+      const lang = btn.getAttribute('data-lang');
+      stmt.setAttribute('data-lang', lang);
+      syncBtns();
+      try { localStorage.setItem('miraiBioLang', lang); } catch (e) {}
+      if (typeof playMenuNav === 'function') playMenuNav();
+    }));
+  }
+
+  // ── Thesis modal (center-screen reader, IT/EN) ──
+  const modal = document.getElementById('thesisModal');
+  const frame = document.getElementById('thesisFrame');
+  const openTab = document.getElementById('thesisOpenTab');
+  const DOCS = {
+    it: 'assets/docs/jumping-is-not-a-crime.html',
+    en: 'assets/docs/jumping-is-not-a-crime-en.html'
+  };
+  let modalOpen = false;
+  let thesisLang = 'it';
+  let loadedLang = null;
+  try { const s = localStorage.getItem('miraiThesisLang'); if (s === 'it' || s === 'en') thesisLang = s; } catch (e) {}
+
+  function loadThesisDoc(lang) {
+    if (!frame || loadedLang === lang) return;
+    frame.setAttribute('src', DOCS[lang]);
+    loadedLang = lang;
+    if (openTab) openTab.setAttribute('href', DOCS[lang]);
+  }
+  function syncLangButtons() {
+    if (!modal) return;
+    modal.querySelectorAll('.tm-lang-btn').forEach(b =>
+      b.classList.toggle('active', b.getAttribute('data-tlang') === thesisLang));
+  }
+  function setThesisLang(lang) {
+    thesisLang = lang;
+    try { localStorage.setItem('miraiThesisLang', lang); } catch (e) {}
+    syncLangButtons();
+    loadThesisDoc(lang);
+  }
+
+  function openThesis() {
+    if (!modal) return;
+    // Lazy-load the current language's self-contained HTML only on first open
+    loadThesisDoc(thesisLang);
+    syncLangButtons();
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    modalOpen = true;
+    if (typeof playMenuOpen === 'function') playMenuOpen(true);
+  }
+  function closeThesis() {
+    if (!modal || !modalOpen) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    modalOpen = false;
+    if (typeof playMenuOpen === 'function') playMenuOpen(false);
+  }
+
+  // Any element flagged [data-thesis] opens the modal (the floating card + the
+  // inline links in both languages). The card is a real <a href=pdf> so it still
+  // works if JS fails.
+  document.querySelectorAll('[data-thesis]').forEach(el => {
+    el.addEventListener('click', e => { e.preventDefault(); openThesis(); });
+    // keyboard: the inline <span role=button> opens on Enter/Space
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThesis(); }
+    });
+  });
+
+  if (modal) {
+    modal.addEventListener('click', e => { if (e.target === modal) closeThesis(); });
+    const x = document.getElementById('thesisModalClose');
+    if (x) {
+      x.addEventListener('click', closeThesis);
+      x.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeThesis(); }
+      });
+    }
+    // IT/EN language toggle
+    modal.querySelectorAll('.tm-lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        setThesisLang(btn.getAttribute('data-tlang'));
+      });
+    });
+    syncLangButtons();
+    // The English export is optional: enable EN only once the file is present.
+    const enBtn = modal.querySelector('.tm-lang-btn[data-tlang="en"]');
+    if (enBtn) {
+      fetch(DOCS.en, { method: 'HEAD' })
+        .then(r => { if (!r.ok) throw 0; enBtn.disabled = false; enBtn.removeAttribute('title'); })
+        .catch(() => {
+          enBtn.disabled = true;
+          enBtn.title = 'English version — export pending';
+          if (thesisLang === 'en') setThesisLang('it');
+        });
+    }
+  }
+
+  // ESC / Backspace close — capture phase so it beats the section + lightbox
+  // handlers, and swallow every key while open so shortcuts don't fire behind it.
+  document.addEventListener('keydown', e => {
+    if (!modalOpen) return;
+    if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); closeThesis(); }
+    e.stopImmediatePropagation();
+  }, true);
 })();
 
 </script>
